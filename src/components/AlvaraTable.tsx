@@ -18,9 +18,10 @@ interface AlvaraTableProps {
   alvaras: Alvara[];
   onDelete: (id: string) => void;
   onEdit: (alvara: Alvara) => void;
+  showIssueDate?: boolean; // Para mostrar data de emissão em alvarás em funcionamento
 }
 
-export function AlvaraTable({ alvaras, onDelete, onEdit }: AlvaraTableProps) {
+export function AlvaraTable({ alvaras, onDelete, onEdit, showIssueDate = false }: AlvaraTableProps) {
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
@@ -52,6 +53,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit }: AlvaraTableProps) {
             <TableHead className="font-semibold">CNPJ</TableHead>
             <TableHead className="font-semibold">Tipo</TableHead>
             <TableHead className="font-semibold">Solicitação</TableHead>
+            {showIssueDate && <TableHead className="font-semibold">Emissão</TableHead>}
             <TableHead className="font-semibold">Vencimento</TableHead>
             <TableHead className="font-semibold">Prazo</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
@@ -71,6 +73,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit }: AlvaraTableProps) {
               </TableCell>
               <TableCell>{alvara.type}</TableCell>
               <TableCell>{formatDate(alvara.requestDate)}</TableCell>
+              {showIssueDate && <TableCell>{formatDate(alvara.issueDate)}</TableCell>}
               <TableCell>{formatDate(alvara.expirationDate)}</TableCell>
               <TableCell className="text-muted-foreground">
                 {getDaysText(alvara)}

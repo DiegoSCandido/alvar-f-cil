@@ -14,12 +14,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
+import {
   Plus,
   Search,
   Clock,
   CheckCircle,
   AlertTriangle,
   XCircle,
+  FileText,
+  Building2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/o2con-logo.png';
@@ -31,9 +39,40 @@ const Index = () => {
   const [editingAlvara, setEditingAlvara] = useState<Alvara | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<'novos' | 'funcionamento'>('novos');
 
+  // Separar alvarás em duas categorias
+  // Novos: alvarás sem data de emissão (ainda em processo de abertura)
+  // Em funcionamento: alvarás com data de emissão (já emitidos)
+  const { novosAlvaras, alvarasEmFuncionamento } = useMemo(() => {
+    const novos = alvaras.filter((a) => !a.issueDate);
+    const emFuncionamento = alvaras.filter((a) => a.issueDate);
+    return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento };
+  }, [alvaras]);
+
+  // Estatísticas para novos alvarás
+  const statsNovos = useMemo(() => {
+    return {
+      total: novosAlvaras.length,
+      pending: novosAlvaras.filter((a) => a.status === 'pending').length,
+    };
+  }, [novosAlvaras]);
+
+  // Estatísticas para alvarás em funcionamento
+  const statsFuncionamento = useMemo(() => {
+    return {
+      total: alvarasEmFuncionamento.length,
+      valid: alvarasEmFuncionamento.filter((a) => a.status === 'valid').length,
+      expiring: alvarasEmFuncionamento.filter((a) => a.status === 'expiring').length,
+      expired: alvarasEmFuncionamento.filter((a) => a.status === 'expired').length,
+    };
+  }, [alvarasEmFuncionamento]);
+
+  // Filtrar alvarás baseado na aba ativa
   const filteredAlvaras = useMemo(() => {
-    return alvaras.filter((alvara) => {
+    const alvarasToFilter = activeTab === 'novos' ? novosAlvaras : alvarasEmFuncionamento;
+    
+    return alvarasToFilter.filter((alvara) => {
       const matchesSearch =
         alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alvara.clientCnpj.includes(searchTerm) ||
@@ -44,15 +83,28 @@ const Index = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [alvaras, searchTerm, statusFilter]);
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, statusFilter]);
 
   const handleAddAlvara = (data: AlvaraFormData) => {
     if (editingAlvara) {
+      const wasEmAbertura = !editingAlvara.issueDate;
+      const isNowConcluido = !!data.issueDate;
+      
       updateAlvara(editingAlvara.id, data);
-      toast({
-        title: 'Alvará atualizado',
-        description: 'As alterações foram salvas com sucesso.',
-      });
+      
+      // Se o alvará foi concluído (tinha issueDate vazio e agora tem), mudar para aba de funcionamento
+      if (wasEmAbertura && isNowConcluido) {
+        setActiveTab('funcionamento');
+        toast({
+          title: 'Alvará concluído!',
+          description: 'O alvará foi movido para a aba de alvarás em funcionamento.',
+        });
+      } else {
+        toast({
+          title: 'Alvará atualizado',
+          description: 'As alterações foram salvas com sucesso.',
+        });
+      }
     } else {
       addAlvara(data);
       toast({
@@ -112,84 +164,179 @@ const Index = () => {
       </header>
 
       <main className="container py-6 space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Pendentes"
-            value={stats.pending}
-            icon={Clock}
-            variant="pending"
-          />
-          <StatCard
-            title="Válidos"
-            value={stats.valid}
-            icon={CheckCircle}
-            variant="valid"
-          />
-          <StatCard
-            title="Vencendo"
-            value={stats.expiring}
-            icon={AlertTriangle}
-            variant="expiring"
-          />
-          <StatCard
-            title="Vencidos"
-            value={stats.expired}
-            icon={XCircle}
-            variant="expired"
-          />
-        </div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'novos' | 'funcionamento')}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="novos" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Novos Alvarás
+              {statsNovos.total > 0 && (
+                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
+                  {statsNovos.total}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="funcionamento" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              Em Funcionamento
+              {statsFuncionamento.total > 0 && (
+                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
+                  {statsFuncionamento.total}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por cliente, CNPJ ou tipo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+          {/* Tab: Novos Alvarás */}
+          <TabsContent value="novos" className="space-y-6 mt-6">
+            {/* Stats Grid para Novos Alvarás */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <StatCard
+                title="Total em Abertura"
+                value={statsNovos.total}
+                icon={FileText}
+                variant="pending"
+              />
+              <StatCard
+                title="Pendentes"
+                value={statsNovos.pending}
+                icon={Clock}
+                variant="pending"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por cliente, CNPJ ou tipo..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as AlvaraStatus | 'all')}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendentes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Results info */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <p>
+                {filteredAlvaras.length} de {novosAlvaras.length} alvarás em abertura
+              </p>
+              {statusFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStatusFilter('all')}
+                >
+                  Limpar filtro
+                </Button>
+              )}
+            </div>
+
+            {/* Table */}
+            <AlvaraTable
+              alvaras={filteredAlvaras}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              showIssueDate={false}
             />
-          </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as AlvaraStatus | 'all')}
-          >
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="valid">Válidos</SelectItem>
-              <SelectItem value="expiring">Vencendo</SelectItem>
-              <SelectItem value="expired">Vencidos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          </TabsContent>
 
-        {/* Results info */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>
-            {filteredAlvaras.length} de {alvaras.length} alvarás
-          </p>
-          {statusFilter !== 'all' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setStatusFilter('all')}
-            >
-              Limpar filtro
-            </Button>
-          )}
-        </div>
+          {/* Tab: Alvarás em Funcionamento */}
+          <TabsContent value="funcionamento" className="space-y-6 mt-6">
+            {/* Stats Grid para Alvarás em Funcionamento */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Total"
+                value={statsFuncionamento.total}
+                icon={Building2}
+                variant="valid"
+              />
+              <StatCard
+                title="Válidos"
+                value={statsFuncionamento.valid}
+                icon={CheckCircle}
+                variant="valid"
+              />
+              <StatCard
+                title="Vencendo"
+                value={statsFuncionamento.expiring}
+                icon={AlertTriangle}
+                variant="expiring"
+              />
+              <StatCard
+                title="Vencidos"
+                value={statsFuncionamento.expired}
+                icon={XCircle}
+                variant="expired"
+              />
+            </div>
 
-        {/* Table */}
-        <AlvaraTable
-          alvaras={filteredAlvaras}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por cliente, CNPJ ou tipo..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as AlvaraStatus | 'all')}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="valid">Válidos</SelectItem>
+                  <SelectItem value="expiring">Vencendo</SelectItem>
+                  <SelectItem value="expired">Vencidos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Results info */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <p>
+                {filteredAlvaras.length} de {alvarasEmFuncionamento.length} alvarás em funcionamento
+              </p>
+              {statusFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStatusFilter('all')}
+                >
+                  Limpar filtro
+                </Button>
+              )}
+            </div>
+
+            {/* Table */}
+            <AlvaraTable
+              alvaras={filteredAlvaras}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              showIssueDate={true}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Form Dialog */}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alvara, AlvaraFormData } from '@/types/alvara';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,9 @@ export function AlvaraForm({
   onSubmit,
   editingAlvara,
 }: AlvaraFormProps) {
+  // Verificar se é um alvará em abertura (sem data de emissão)
+  const isAlvaraEmAbertura = editingAlvara && !editingAlvara.issueDate;
+
   const [formData, setFormData] = useState<AlvaraFormData>(() => ({
     clientName: editingAlvara?.clientName || '',
     clientCnpj: editingAlvara?.clientCnpj || '',
@@ -53,18 +56,37 @@ export function AlvaraForm({
     notes: editingAlvara?.notes || '',
   }));
 
+  // Atualizar formData quando editingAlvara mudar ou quando o dialog abrir/fechar
+  useEffect(() => {
+    if (open) {
+      if (editingAlvara) {
+        setFormData({
+          clientName: editingAlvara.clientName,
+          clientCnpj: editingAlvara.clientCnpj,
+          type: editingAlvara.type,
+          requestDate: editingAlvara.requestDate,
+          issueDate: editingAlvara.issueDate,
+          expirationDate: editingAlvara.expirationDate,
+          notes: editingAlvara.notes || '',
+        });
+      } else {
+        setFormData({
+          clientName: '',
+          clientCnpj: '',
+          type: '',
+          requestDate: new Date(),
+          issueDate: undefined,
+          expirationDate: undefined,
+          notes: '',
+        });
+      }
+    }
+  }, [editingAlvara, open]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({
-      clientName: '',
-      clientCnpj: '',
-      type: '',
-      requestDate: new Date(),
-      issueDate: undefined,
-      expirationDate: undefined,
-      notes: '',
-    });
+    // Não resetar aqui - o useEffect vai cuidar disso quando editingAlvara mudar
   };
 
   const formatDateForInput = (date?: Date) => {
@@ -98,6 +120,8 @@ export function AlvaraForm({
                 }
                 placeholder="Empresa XYZ Ltda"
                 required
+                disabled={isAlvaraEmAbertura}
+                className={isAlvaraEmAbertura ? 'bg-muted cursor-not-allowed' : ''}
               />
             </div>
             <div className="space-y-2">
@@ -110,9 +134,16 @@ export function AlvaraForm({
                 }
                 placeholder="00.000.000/0000-00"
                 required
+                disabled={isAlvaraEmAbertura}
+                className={isAlvaraEmAbertura ? 'bg-muted cursor-not-allowed' : ''}
               />
             </div>
           </div>
+          {isAlvaraEmAbertura && (
+            <p className="text-xs text-muted-foreground">
+              Os dados da empresa não podem ser alterados em alvarás em abertura.
+            </p>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="type">Tipo de Alvará *</Label>
