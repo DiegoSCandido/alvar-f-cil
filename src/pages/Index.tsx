@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAlvaras } from '@/hooks/useAlvaras';
+import { useClientes } from '@/hooks/useClientes';
 import { AlvaraTable } from '@/components/AlvaraTable';
 import { AlvaraForm } from '@/components/AlvaraForm';
 import { StatCard } from '@/components/StatCard';
@@ -28,12 +29,15 @@ import {
   XCircle,
   FileText,
   Building2,
+  Users,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 import o2conLogo from '@/assets/o2contole-logo.png';
 
 const Index = () => {
   const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara } = useAlvaras();
+  const { clientes, getClienteById } = useClientes();
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAlvara, setEditingAlvara] = useState<Alvara | null>(null);
@@ -86,11 +90,29 @@ const Index = () => {
   }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, statusFilter]);
 
   const handleAddAlvara = (data: AlvaraFormData) => {
+    if (!data.clienteId) {
+      toast({
+        title: 'Cliente obrigatório',
+        description: 'Selecione um cliente para continuar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!data.type) {
+      toast({
+        title: 'Tipo obrigatório',
+        description: 'Selecione um tipo de alvará para continuar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (editingAlvara) {
       const wasEmAbertura = !editingAlvara.issueDate;
       const isNowConcluido = !!data.issueDate;
       
-      updateAlvara(editingAlvara.id, data);
+      updateAlvara(editingAlvara.id, data, getClienteById);
       
       // Se o alvará foi concluído (tinha issueDate vazio e agora tem), mudar para aba de funcionamento
       if (wasEmAbertura && isNowConcluido) {
@@ -106,7 +128,7 @@ const Index = () => {
         });
       }
     } else {
-      addAlvara(data);
+      addAlvara(data, getClienteById);
       toast({
         title: 'Alvará cadastrado',
         description: 'O novo alvará foi adicionado ao sistema.',
@@ -155,10 +177,18 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={handleOpenForm} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Novo Alvará
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/clientes">
+                <Button variant="outline" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Clientes
+                </Button>
+              </Link>
+              <Button onClick={handleOpenForm} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Alvará
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -345,6 +375,7 @@ const Index = () => {
         onOpenChange={setIsFormOpen}
         onSubmit={handleAddAlvara}
         editingAlvara={editingAlvara}
+        clientes={clientes}
       />
     </div>
   );

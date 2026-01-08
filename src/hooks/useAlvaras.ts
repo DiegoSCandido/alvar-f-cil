@@ -4,47 +4,8 @@ import { calculateAlvaraStatus, generateId } from '@/lib/alvara-utils';
 
 const STORAGE_KEY = 'alvaras-data';
 
-// Sample data for demonstration
-const sampleAlvaras: Alvara[] = [
-  {
-    id: generateId(),
-    clientName: 'Padaria Sabor & Arte',
-    clientCnpj: '12345678000190',
-    type: 'Alvará Sanitário',
-    requestDate: new Date('2024-01-15'),
-    issueDate: new Date('2024-02-01'),
-    expirationDate: new Date('2025-02-01'),
-    status: 'valid',
-  },
-  {
-    id: generateId(),
-    clientName: 'Restaurante Bom Prato',
-    clientCnpj: '98765432000121',
-    type: 'Alvará de Funcionamento',
-    requestDate: new Date('2024-06-01'),
-    issueDate: new Date('2024-06-15'),
-    expirationDate: new Date('2025-01-20'),
-    status: 'expiring',
-  },
-  {
-    id: generateId(),
-    clientName: 'Academia Força Total',
-    clientCnpj: '11223344000155',
-    type: 'Alvará de Bombeiros',
-    requestDate: new Date('2023-08-10'),
-    issueDate: new Date('2023-09-01'),
-    expirationDate: new Date('2024-09-01'),
-    status: 'expired',
-  },
-  {
-    id: generateId(),
-    clientName: 'Clínica Saúde Integral',
-    clientCnpj: '55667788000199',
-    type: 'Alvará Sanitário',
-    requestDate: new Date('2025-01-05'),
-    status: 'pending',
-  },
-];
+// Sample data for demonstration - removido pois agora precisa de clienteId válido
+const sampleAlvaras: Alvara[] = [];
 
 export function useAlvaras() {
   const [alvaras, setAlvaras] = useState<Alvara[]>([]);
@@ -82,21 +43,40 @@ export function useAlvaras() {
     }
   }, [alvaras, isLoading]);
 
-  const addAlvara = (data: AlvaraFormData) => {
+  const addAlvara = (data: AlvaraFormData, getClienteById?: (id: string) => { nomeFantasia: string; cnpj: string } | undefined) => {
+    const cliente = getClienteById?.(data.clienteId);
     const newAlvara: Alvara = {
       id: generateId(),
-      ...data,
+      clienteId: data.clienteId,
+      clientName: cliente?.nomeFantasia || '',
+      clientCnpj: cliente?.cnpj || '',
+      type: data.type,
+      requestDate: data.requestDate,
+      issueDate: data.issueDate,
+      expirationDate: data.expirationDate,
+      notes: data.notes,
       status: 'pending',
     };
     newAlvara.status = calculateAlvaraStatus(newAlvara);
     setAlvaras((prev) => [...prev, newAlvara]);
   };
 
-  const updateAlvara = (id: string, data: AlvaraFormData) => {
+  const updateAlvara = (id: string, data: AlvaraFormData, getClienteById?: (id: string) => { nomeFantasia: string; cnpj: string } | undefined) => {
     setAlvaras((prev) =>
       prev.map((a) => {
         if (a.id === id) {
-          const updated = { ...a, ...data };
+          const cliente = getClienteById?.(data.clienteId);
+          const updated: Alvara = {
+            ...a,
+            clienteId: data.clienteId,
+            clientName: cliente?.nomeFantasia || a.clientName,
+            clientCnpj: cliente?.cnpj || a.clientCnpj,
+            type: data.type,
+            requestDate: data.requestDate,
+            issueDate: data.issueDate,
+            expirationDate: data.expirationDate,
+            notes: data.notes,
+          };
           updated.status = calculateAlvaraStatus(updated);
           return updated;
         }

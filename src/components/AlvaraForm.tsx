@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Alvara, AlvaraFormData } from '@/types/alvara';
+import { Alvara, AlvaraFormData, ALVARA_TYPES, AlvaraType } from '@/types/alvara';
+import { Cliente } from '@/types/cliente';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,22 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const ALVARA_TYPES = [
-  'Alvará de Funcionamento',
-  'Alvará Sanitário',
-  'Alvará de Bombeiros',
-  'Alvará Ambiental',
-  'Licença de Publicidade',
-  'Alvará de Construção',
-  'Outro',
-];
+import { formatCnpj } from '@/lib/alvara-utils';
+import { Link } from 'react-router-dom';
 
 interface AlvaraFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: AlvaraFormData) => void;
   editingAlvara?: Alvara | null;
+  clientes: Cliente[];
 }
 
 export function AlvaraForm({
@@ -42,14 +36,14 @@ export function AlvaraForm({
   onOpenChange,
   onSubmit,
   editingAlvara,
+  clientes,
 }: AlvaraFormProps) {
   // Verificar se é um alvará em abertura (sem data de emissão)
   const isAlvaraEmAbertura = editingAlvara && !editingAlvara.issueDate;
 
   const [formData, setFormData] = useState<AlvaraFormData>(() => ({
-    clientName: editingAlvara?.clientName || '',
-    clientCnpj: editingAlvara?.clientCnpj || '',
-    type: editingAlvara?.type || '',
+    clienteId: editingAlvara?.clienteId || '',
+    type: editingAlvara?.type || ('' as AlvaraType),
     requestDate: editingAlvara?.requestDate || new Date(),
     issueDate: editingAlvara?.issueDate,
     expirationDate: editingAlvara?.expirationDate,
@@ -61,8 +55,7 @@ export function AlvaraForm({
     if (open) {
       if (editingAlvara) {
         setFormData({
-          clientName: editingAlvara.clientName,
-          clientCnpj: editingAlvara.clientCnpj,
+          clienteId: editingAlvara.clienteId,
           type: editingAlvara.type,
           requestDate: editingAlvara.requestDate,
           issueDate: editingAlvara.issueDate,
@@ -71,9 +64,8 @@ export function AlvaraForm({
         });
       } else {
         setFormData({
-          clientName: '',
-          clientCnpj: '',
-          type: '',
+          clienteId: '',
+          type: '' as AlvaraType,
           requestDate: new Date(),
           issueDate: undefined,
           expirationDate: undefined,
@@ -109,47 +101,55 @@ export function AlvaraForm({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="clientName">Nome do Cliente *</Label>
-              <Input
-                id="clientName"
-                value={formData.clientName}
-                onChange={(e) =>
-                  setFormData({ ...formData, clientName: e.target.value })
-                }
-                placeholder="Empresa XYZ Ltda"
-                required
-                disabled={isAlvaraEmAbertura}
-                className={isAlvaraEmAbertura ? 'bg-muted cursor-not-allowed' : ''}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clientCnpj">CNPJ *</Label>
-              <Input
-                id="clientCnpj"
-                value={formData.clientCnpj}
-                onChange={(e) =>
-                  setFormData({ ...formData, clientCnpj: e.target.value })
-                }
-                placeholder="00.000.000/0000-00"
-                required
-                disabled={isAlvaraEmAbertura}
-                className={isAlvaraEmAbertura ? 'bg-muted cursor-not-allowed' : ''}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="clienteId">Cliente *</Label>
+            <Select
+              value={formData.clienteId}
+              onValueChange={(value) => setFormData({ ...formData, clienteId: value })}
+              required
+              disabled={isAlvaraEmAbertura}
+            >
+              <SelectTrigger className={isAlvaraEmAbertura ? 'bg-muted cursor-not-allowed' : ''}>
+                <SelectValue placeholder="Selecione o cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                {clientes.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    <p>Nenhum cliente cadastrado</p>
+                    <Link to="/clientes" className="text-primary underline mt-2 block">
+                      Cadastrar cliente
+                    </Link>
+                  </div>
+                ) : (
+                  clientes.map((cliente) => (
+                    <SelectItem key={cliente.id} value={cliente.id}>
+                      {cliente.nomeFantasia} - {formatCnpj(cliente.cnpj)}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {isAlvaraEmAbertura && (
+              <p className="text-xs text-muted-foreground">
+                O cliente não pode ser alterado em alvarás em abertura.
+              </p>
+            )}
+            {clientes.length === 0 && !isAlvaraEmAbertura && (
+              <p className="text-xs text-muted-foreground">
+                <Link to="/clientes" className="text-primary underline">
+                  Cadastre um cliente
+                </Link>{' '}
+                antes de criar um alvará.
+              </p>
+            )}
           </div>
-          {isAlvaraEmAbertura && (
-            <p className="text-xs text-muted-foreground">
-              Os dados da empresa não podem ser alterados em alvarás em abertura.
-            </p>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="type">Tipo de Alvará *</Label>
             <Select
               value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value })}
+              onValueChange={(value) => setFormData({ ...formData, type: value as AlvaraType })}
+              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
