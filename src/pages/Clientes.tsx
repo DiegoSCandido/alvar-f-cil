@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
 import o2conLogo from '@/assets/o2contole-logo.png';
 
 const ClientesPage = () => {
@@ -76,13 +75,11 @@ const ClientesPage = () => {
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/">
-                <img
-                  src={o2conLogo}
-                  alt="O2con Soluções Contábeis"
-                  className="h-10 object-contain"
-                />
-              </Link>
+              <img
+                src={o2conLogo}
+                alt="O2con Soluções Contábeis"
+                className="h-10 object-contain"
+              />
               <div className="h-8 w-px bg-border" />
               <div>
                 <h1 className="text-lg font-bold text-foreground">Cadastro de Clientes</h1>
@@ -92,11 +89,6 @@ const ClientesPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/">
-                <Button variant="outline" className="gap-2">
-                  Voltar
-                </Button>
-              </Link>
               <Button onClick={handleOpenForm} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Novo Cliente
@@ -106,7 +98,7 @@ const ClientesPage = () => {
         </div>
       </header>
 
-      <main className="container py-6 space-y-6">
+      <main className="container py-6 space-y-6 pl-72">
         {/* Stats */}
         <div className="flex items-center gap-4">
           <div className="bg-card rounded-lg border p-4 flex items-center gap-3">
