@@ -30,7 +30,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import o2conLogo from '@/assets/o2con-logo.png';
+import o2conLogo from '@/assets/O2contole-LOGO.png';
 
 const Index = () => {
   const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara } = useAlvaras();
