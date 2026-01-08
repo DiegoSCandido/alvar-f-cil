@@ -6,33 +6,37 @@
 
 @layer base {
   :root {
+    /* O2con Brand Colors */
     --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    --foreground: 220 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 220 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 220 25% 15%;
 
-    --primary: 210 90% 40%;
+    /* Primary: O2con Blue #005ca9 */
+    --primary: 207 100% 33%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 92%;
-    --secondary-foreground: 220 20% 20%;
+    /* Secondary: O2con Magenta #951b81 */
+    --secondary: 311 69% 34%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 210 15% 95%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 210 80% 95%;
-    --accent-foreground: 210 90% 30%;
+    /* Accent uses the magenta */
+    --accent: 311 50% 95%;
+    --accent-foreground: 311 69% 34%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 210 20% 90%;
     --input: 210 20% 90%;
-    --ring: 210 90% 40%;
+    --ring: 207 100% 33%;
 
     --radius: 0.75rem;
 
@@ -43,47 +47,47 @@
     --status-expiring-bg: 40 90% 95%;
     --status-expired: 0 75% 55%;
     --status-expired-bg: 0 75% 95%;
-    --status-pending: 210 90% 50%;
-    --status-pending-bg: 210 90% 95%;
+    --status-pending: 207 100% 45%;
+    --status-pending-bg: 207 80% 95%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 207 100% 33%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent: 311 50% 95%;
+    --sidebar-accent-foreground: 311 69% 34%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 207 100% 45%;
   }
 
   .dark {
-    --background: 220 20% 8%;
+    --background: 220 25% 8%;
     --foreground: 210 20% 98%;
 
-    --card: 220 20% 12%;
+    --card: 220 25% 12%;
     --card-foreground: 210 20% 98%;
 
-    --popover: 220 20% 12%;
+    --popover: 220 25% 12%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 210 80% 55%;
+    --primary: 207 90% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 311 60% 45%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 220 15% 18%;
     --muted-foreground: 210 10% 60%;
 
-    --accent: 210 50% 20%;
-    --accent-foreground: 210 80% 70%;
+    --accent: 311 40% 20%;
+    --accent-foreground: 311 60% 70%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 210 80% 55%;
+    --ring: 207 90% 50%;
 
     --status-valid: 145 60% 45%;
     --status-valid-bg: 145 40% 15%;
@@ -91,17 +95,17 @@
     --status-expiring-bg: 40 40% 15%;
     --status-expired: 0 65% 50%;
     --status-expired-bg: 0 40% 15%;
-    --status-pending: 210 80% 55%;
-    --status-pending-bg: 210 40% 15%;
+    --status-pending: 207 80% 55%;
+    --status-pending-bg: 207 40% 15%;
 
-    --sidebar-background: 240 5.9% 10%;
+    --sidebar-background: 220 25% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 207 90% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 311 40% 20%;
+    --sidebar-accent-foreground: 311 60% 70%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 207 90% 50%;
   }
 }
 
@@ -131,5 +135,9 @@
   
   .status-pending {
     @apply bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending))];
+  }
+
+  .brand-gradient {
+    background: linear-gradient(135deg, hsl(207, 100%, 33%) 0%, hsl(311, 69%, 34%) 100%);
   }
 }

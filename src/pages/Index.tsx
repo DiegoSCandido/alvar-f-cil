@@ -3,7 +3,6 @@ import { useAlvaras } from '@/hooks/useAlvaras';
 import { AlvaraTable } from '@/components/AlvaraTable';
 import { AlvaraForm } from '@/components/AlvaraForm';
 import { StatCard } from '@/components/StatCard';
-import { StatusBadge } from '@/components/StatusBadge';
 import { Alvara, AlvaraFormData, AlvaraStatus } from '@/types/alvara';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  FileText,
   Plus,
   Search,
   Clock,
@@ -24,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import o2conLogo from '@/assets/o2con-logo.png';
 
 const Index = () => {
   const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara } = useAlvaras();
@@ -90,13 +89,16 @@ const Index = () => {
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg">
-                <FileText className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center gap-4">
+              <img 
+                src={o2conLogo} 
+                alt="O2con Soluções Contábeis" 
+                className="h-10 object-contain"
+              />
+              <div className="h-8 w-px bg-border" />
               <div>
-                <h1 className="text-xl font-bold">Gestão de Alvarás</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-lg font-bold text-foreground">Gestão de Alvarás</h1>
+                <p className="text-xs text-muted-foreground">
                   Controle de documentos e vencimentos
                 </p>
               </div>
