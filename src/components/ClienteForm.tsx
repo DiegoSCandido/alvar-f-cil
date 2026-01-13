@@ -173,13 +173,22 @@ export function ClienteForm({
     }
   };
 
+  // Função para limpar o CNPJ (remover pontos, barras e hífens)
+  function limparCNPJ(cnpj: string) {
+    return cnpj.replace(/\D/g, '');
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-      await onSubmit(formData);
+      const formDataLimpo = {
+        ...formData,
+        cnpj: limparCNPJ(formData.cnpj),
+      };
+      await onSubmit(formDataLimpo);
       onOpenChange(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao salvar cliente';

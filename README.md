@@ -66,7 +66,7 @@ npm run dev
 
 The application will be available at:
 
-http://localhost:5173
+http://localhost:8080
 
 📁 Project Structure
 src/
