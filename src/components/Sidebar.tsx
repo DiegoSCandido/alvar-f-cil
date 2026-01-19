@@ -1,16 +1,19 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, FileText, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Users, FileText, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
     {
       label: 'Início',
-      path: '/',
+      path: '/dashboard',
       icon: Home,
     },
     {
@@ -24,6 +27,12 @@ const Sidebar = () => {
       icon: FileText,
     },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setIsOpen(false);
+  };
 
   return (
     <>
@@ -51,6 +60,7 @@ const Sidebar = () => {
       <aside className={cn(
         'fixed lg:relative left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 shadow-lg z-40',
         'transition-transform duration-300 transform lg:transform-none',
+        'flex flex-col',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         'lg:mt-0 mt-16'
       )}>
@@ -60,7 +70,7 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex flex-col gap-2 p-6">
+        <nav className="flex-1 flex flex-col gap-2 p-6">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -83,6 +93,22 @@ const Sidebar = () => {
             );
           })}
         </nav>
+
+        {/* User Info & Logout */}
+        <div className="border-t border-slate-200 p-6 space-y-4">
+          {user && (
+            <div className="text-xs text-slate-500 px-1">
+              <p className="font-medium text-slate-700 truncate">{user.email}</p>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Sair</span>
+          </button>
+        </div>
       </aside>
     </>
   );

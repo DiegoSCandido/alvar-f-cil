@@ -18,10 +18,17 @@ async function apiCall<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // Adiciona token ao header se existir
+  const token = localStorage.getItem('authToken');
+  const authHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   const config: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...headers,
     },
   };
@@ -31,6 +38,15 @@ async function apiCall<T>(
   }
 
   const response = await fetch(url, config);
+
+  // Se receber 401, significa que o token expirou
+  if (response.status === 401) {
+    // Limpa o localStorage e redireciona para login
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+    throw new Error('Sessão expirada. Por favor, faça login novamente.');
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
