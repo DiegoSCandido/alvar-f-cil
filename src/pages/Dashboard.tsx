@@ -14,7 +14,7 @@ const Dashboard = () => {
           Bem-vindo
         </h1>
         <p className="text-muted-foreground text-sm sm:text-base">
-          {user?.email}
+          {user?.fullName}
         </p>
       </div>
 
