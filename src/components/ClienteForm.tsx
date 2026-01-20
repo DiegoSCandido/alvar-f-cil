@@ -74,6 +74,7 @@ export function ClienteForm({
   const [novaAtividadeDescricao, setNovaAtividadeDescricao] = useState('');
   const [atividades, setAtividades] = useState<any[]>([]);
   const [atividadesLoading, setAtividadesLoading] = useState(false);
+  const [atividadesSecundariasAPI, setAtividadesSecundariasAPI] = useState<Array<{ code: string; text: string }>>([]);
 
   // Estados para documentos
   const [nomeDocumento, setNomeDocumento] = useState('');
@@ -187,6 +188,14 @@ export function ClienteForm({
           ...formData,
           ...novosDados,
         });
+        
+        // Armazenar atividades secundárias da API
+        if (cnpjData.atividades_secundarias && cnpjData.atividades_secundarias.length > 0) {
+          setAtividadesSecundariasAPI(cnpjData.atividades_secundarias);
+        } else {
+          setAtividadesSecundariasAPI([]);
+        }
+        
         // Formatando CNPJ para exibição
         const cnpjFormatado = `${cnpjLimpo.substring(0, 2)}.${cnpjLimpo.substring(2, 5)}.${cnpjLimpo.substring(5, 8)}/${cnpjLimpo.substring(8, 12)}-${cnpjLimpo.substring(12)}`;
         setFormData(prev => ({ ...prev, cnpj: cnpjFormatado }));
@@ -195,6 +204,7 @@ export function ClienteForm({
       const message = err instanceof Error ? err.message : 'Erro ao buscar CNPJ';
       setError(message);
       console.error('Erro ao buscar CNPJ:', err);
+      setAtividadesSecundariasAPI([]);
     } finally {
       setSearchingCNPJ(false);
     }
@@ -210,7 +220,46 @@ export function ClienteForm({
         ...formData,
         cnpj: limparCNPJ(formData.cnpj),
       };
-      await onSubmit(formDataLimpo);
+      
+      // Fazer submit do cliente
+      const result = await onSubmit(formDataLimpo);
+      
+      // Se há atividades secundárias da API e é um novo cliente (não está editando)
+      if (atividadesSecundariasAPI.length > 0 && !editingCliente && result) {
+        // Salvar as atividades secundárias automaticamente
+        try {
+          const clienteId = typeof result === 'object' && result.id ? result.id : null;
+          
+          if (clienteId) {
+            for (const atividade of atividadesSecundariasAPI) {
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/atividades-secundarias/${clienteId}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      codigo: atividade.code,
+                      descricao: atividade.text,
+                    }),
+                  }
+                );
+                
+                if (!response.ok) {
+                  console.warn(`Erro ao salvar atividade: ${atividade.code}`);
+                }
+              } catch (err) {
+                console.warn('Erro ao salvar atividade:', err);
+              }
+            }
+            console.log(`✅ ${atividadesSecundariasAPI.length} atividades secundárias salvas automaticamente`);
+          }
+        } catch (atividadeErr) {
+          console.warn('Aviso: Erro ao salvar atividades secundárias', atividadeErr);
+        }
+      }
+      
+      setAtividadesSecundariasAPI([]);
       onOpenChange(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao salvar cliente';
@@ -337,6 +386,15 @@ export function ClienteForm({
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {atividadesSecundariasAPI.length > 0 && !editingCliente && (
+          <Alert className="mb-4 border-green-200 bg-green-50">
+            <AlertCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              ✨ {atividadesSecundariasAPI.length} atividade(s) secundária(s) encontrada(s) serão salvas automaticamente
+            </AlertDescription>
           </Alert>
         )}
 
