@@ -552,6 +552,24 @@ export function ClienteForm({
 
           {/* Aba Atividades Secundárias */}
           <TabsContent value="atividades" className="space-y-4">
+            {/* Alerta com atividades encontradas da API */}
+            {atividadesSecundariasAPI.length > 0 && !editingCliente && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <p className="font-semibold mb-2">🔍 Atividades Encontradas (via CNPJ)</p>
+                  <ul className="space-y-1 ml-2">
+                    {atividadesSecundariasAPI.map((atividade, idx) => (
+                      <li key={idx} className="text-sm">
+                        <span className="font-medium">{atividade.code}</span> - {atividade.text}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-xs mt-2 italic">Estas atividades serão salvas automaticamente ao criar o cliente</p>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-4">
               {/* Seleção da Atividade Principal (CNAE) */}
               <div className="space-y-4">
