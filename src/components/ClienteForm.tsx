@@ -26,7 +26,6 @@ import { AlertCircle, Trash2, Plus, Download, Search, Loader } from 'lucide-reac
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
-import { useCidades } from '@/hooks/useCidades';
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -191,21 +190,22 @@ export function ClienteForm({
       if (cnpjData) {
         const novosDados = convertCNPJDataToFormData(cnpjData);
         
-        console.log('[handleBuscarCNPJ] Dados do CNPJ:', {
-          uf: novosDados.uf,
-          municipio: novosDados.municipio,
-          razaoSocial: novosDados.razaoSocial
-        });
+        console.log('[handleBuscarCNPJ] Dados brutos do CNPJ:', cnpjData);
+        console.log('[handleBuscarCNPJ] Dados convertidos:', novosDados);
         
         // Formatando CNPJ para exibição
         const cnpjFormatado = `${cnpjLimpo.substring(0, 2)}.${cnpjLimpo.substring(2, 5)}.${cnpjLimpo.substring(5, 8)}/${cnpjLimpo.substring(8, 12)}-${cnpjLimpo.substring(12)}`;
         
         // Fazer um único update com todos os dados
-        setFormData(prev => ({ 
-          ...prev, 
-          ...novosDados,
-          cnpj: cnpjFormatado
-        }));
+        setFormData(prev => { 
+          const novoFormData = {
+            ...prev, 
+            ...novosDados,
+            cnpj: cnpjFormatado
+          };
+          console.log('[handleBuscarCNPJ] FormData depois do update:', novoFormData);
+          return novoFormData;
+        });
         
         // Armazenar atividades secundárias da API
         if (cnpjData.atividades_secundarias && cnpjData.atividades_secundarias.length > 0) {
@@ -526,7 +526,7 @@ export function ClienteForm({
                   <Select
                     value={formData.uf}
                     onValueChange={(value) => {
-                      setFormData({ ...formData, uf: value, municipio: '' });
+                      setFormData({ ...formData, uf: value });
                     }}
                   >
                     <SelectTrigger className="text-sm">
