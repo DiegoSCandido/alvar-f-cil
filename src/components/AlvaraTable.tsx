@@ -19,10 +19,9 @@ interface AlvaraTableProps {
   onDelete: (id: string) => void;
   onEdit: (alvara: Alvara) => void;
   onFinalize?: (alvara: Alvara) => void;
-  showIssueDate?: boolean; // Para mostrar data de emissão em alvarás em funcionamento
 }
 
-export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, showIssueDate = false }: AlvaraTableProps) {
+export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTableProps) {
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
@@ -55,7 +54,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, showIssueDa
               <TableHead className="font-semibold text-xs sm:text-sm">CNPJ</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Solicitação</TableHead>
-              {showIssueDate && <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Emissão</TableHead>}
               <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Vencimento</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Prazo</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Status</TableHead>
@@ -81,11 +79,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, showIssueDa
                 <TableCell className="hidden lg:table-cell whitespace-nowrap">
                   {formatDate(alvara.requestDate)}
                 </TableCell>
-                {showIssueDate && (
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                    {formatDate(alvara.issueDate)}
-                  </TableCell>
-                )}
                 <TableCell className="hidden md:table-cell whitespace-nowrap">
                   {formatDate(alvara.expirationDate)}
                 </TableCell>

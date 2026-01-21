@@ -332,7 +332,6 @@ const AlvarasPage = () => {
               onDelete={handleDelete}
               onEdit={handleEdit}
               onFinalize={handleFinalize}
-              showIssueDate={false}
             />
           </TabsContent>
 
@@ -414,7 +413,6 @@ const AlvarasPage = () => {
               alvaras={filteredAlvaras}
               onDelete={handleDelete}
               onEdit={handleEdit}
-              showIssueDate={true}
             />
           </TabsContent>
         </Tabs>
