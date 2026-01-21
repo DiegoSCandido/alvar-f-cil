@@ -22,6 +22,11 @@ const ClientesPage = () => {
 
   const filteredClientes = useMemo(() => {
     return clientes.filter((cliente) => {
+      // Validar que cliente e suas propriedades existem
+      if (!cliente || !cliente.razaoSocial || !cliente.nomeFantasia || !cliente.municipio) {
+        return false;
+      }
+
       const searchLower = searchTerm.toLowerCase();
       return (
         cliente.razaoSocial.toLowerCase().includes(searchLower) ||
