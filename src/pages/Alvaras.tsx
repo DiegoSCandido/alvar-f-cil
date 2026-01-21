@@ -189,9 +189,8 @@ const AlvarasPage = () => {
   const handleConfirmFinalize = async () => {
     if (!finalizandoAlvara || !finalizacaoDate) return;
     try {
-      const issueDate = new Date(finalizacaoDate);
-      const expirationDate = new Date(issueDate);
-      expirationDate.setFullYear(issueDate.getFullYear() + 1);
+      const expirationDate = new Date(finalizacaoDate);
+      const issueDate = new Date();
       await updateAlvara(finalizandoAlvara.id, {
         ...finalizandoAlvara,
         issueDate,
@@ -436,7 +435,7 @@ const AlvarasPage = () => {
             <DialogTitle>Finalizar Alvará</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Informe a data de emissão para finalizar o alvará:</p>
+            <p>Informe a data de vencimento para finalizar o alvará:</p>
             <input
               type="date"
               className="border rounded px-3 py-2 w-full"
