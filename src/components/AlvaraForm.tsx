@@ -224,7 +224,6 @@ export function AlvaraForm({
                 O cliente não pode ser alterado em processo de renovação.
               </p>
             )}
-            )}
             {clientes.length === 0 && !isAlvaraEmAbertura && (
               <p className="text-xs text-muted-foreground">
                 <Link to="/clientes" className="text-primary underline">
