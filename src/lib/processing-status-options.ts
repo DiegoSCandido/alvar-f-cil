@@ -1,5 +1,5 @@
 import { AlvaraProcessingStatus } from '@/types/alvara';
-import { CheckCircle, Clock, Building2 } from 'lucide-react';
+import { CheckCircle, Clock, Building2, RotateCw } from 'lucide-react';
 
 export const PROCESSING_STATUS_OPTIONS = [
   {
@@ -19,5 +19,11 @@ export const PROCESSING_STATUS_OPTIONS = [
     label: 'Aguardando Órgão',
     description: 'Aguardando resposta do órgão',
     icon: Building2,
+  },
+  {
+    value: 'renovacao' as AlvaraProcessingStatus,
+    label: 'Renovação',
+    description: 'Em processo de renovação',
+    icon: RotateCw,
   },
 ] as const;

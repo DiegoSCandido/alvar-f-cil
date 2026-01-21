@@ -186,6 +186,12 @@ const AlvarasPage = () => {
     setFinalizacaoDate('');
   };
 
+  const handleRenew = (alvara: Alvara) => {
+    // Abre o formulário de edição para renovar
+    setEditingAlvara(alvara);
+    setIsFormOpen(true);
+  };
+
   const handleConfirmFinalize = async () => {
     if (!finalizandoAlvara || !finalizacaoDate) return;
     try {
@@ -413,6 +419,7 @@ const AlvarasPage = () => {
               alvaras={filteredAlvaras}
               onDelete={handleDelete}
               onEdit={handleEdit}
+              onRenew={handleRenew}
             />
           </TabsContent>
         </Tabs>

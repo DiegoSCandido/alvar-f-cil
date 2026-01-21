@@ -1,5 +1,5 @@
 export type AlvaraStatus = 'pending' | 'valid' | 'expiring' | 'expired';
-export type AlvaraProcessingStatus = 'lançado' | 'aguardando_cliente' | 'aguardando_orgao';
+export type AlvaraProcessingStatus = 'lançado' | 'aguardando_cliente' | 'aguardando_orgao' | 'renovacao';
 
 export const ALVARA_TYPES = [
   'Alvará de Funcionamento',

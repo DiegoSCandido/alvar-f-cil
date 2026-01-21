@@ -3,7 +3,7 @@ import { StatusBadge } from './StatusBadge';
 import { getDaysUntilExpiration, formatCnpj } from '@/lib/alvara-utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Trash2, Edit, CheckCircle } from 'lucide-react';
+import { Trash2, Edit, CheckCircle, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -19,9 +19,10 @@ interface AlvaraTableProps {
   onDelete: (id: string) => void;
   onEdit: (alvara: Alvara) => void;
   onFinalize?: (alvara: Alvara) => void;
+  onRenew?: (alvara: Alvara) => void;
 }
 
-export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTableProps) {
+export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: AlvaraTableProps) {
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
@@ -53,7 +54,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTab
               <TableHead className="font-semibold text-xs sm:text-sm">Cliente</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">CNPJ</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Solicitação</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Vencimento</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Prazo</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Status</TableHead>
@@ -64,7 +64,11 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTab
             {alvaras.map((alvara, index) => (
               <TableRow
                 key={alvara.id}
-                className="animate-fade-in text-xs sm:text-sm"
+                className={`animate-fade-in text-xs sm:text-sm ${
+                  alvara.status === 'expiring' || alvara.status === 'expired'
+                    ? 'bg-amber-50'
+                    : ''
+                }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <TableCell className="font-medium max-w-[120px] truncate">
@@ -75,9 +79,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTab
                 </TableCell>
                 <TableCell className="hidden md:table-cell max-w-[100px] truncate">
                   {alvara.type}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell whitespace-nowrap">
-                  {formatDate(alvara.requestDate)}
                 </TableCell>
                 <TableCell className="hidden md:table-cell whitespace-nowrap">
                   {formatDate(alvara.expirationDate)}
@@ -107,6 +108,17 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize }: AlvaraTab
                         title="Finalizar Alvará"
                       >
                         <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    )}
+                    {onRenew && (alvara.status === 'expiring' || alvara.status === 'expired') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onRenew(alvara)}
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600 hover:text-amber-700"
+                        title="Renovar Alvará"
+                      >
+                        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     )}
                     <Button
