@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { validatePassword } from '@/lib/password-validator';
 
+// ⚠️ MODO DESENVOLVIMENTO - Mude para false antes de fazer deploy
+const USE_MOCK_AUTH = false;
+
+const MOCK_USER = {
+  id: 1,
+  email: 'dev@test.com',
+  fullName: 'Dev User'
+};
+
+const MOCK_TOKEN = 'mock-jwt-token-for-development';
+
 interface User {
   id: number;
   email: string;
@@ -27,6 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Restaura usuário do localStorage ao carregar
   useEffect(() => {
+    // Se estiver em modo desenvolvimento, usar mock auth
+    if (USE_MOCK_AUTH) {
+      setUser(MOCK_USER);
+      setAuthToken(MOCK_TOKEN);
+      setIsInitializing(false);
+      return;
+    }
+
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('authToken');
     if (storedUser && storedToken) {
@@ -91,6 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Se estiver em modo desenvolvimento, manter mock auth
+    if (USE_MOCK_AUTH) {
+      return;
+    }
+    
     setUser(null);
     setAuthToken(null);
     localStorage.removeItem('authToken');
