@@ -22,18 +22,18 @@ const ClientesPage = () => {
 
   const filteredClientes = useMemo(() => {
     return clientes.filter((cliente) => {
-      // Validar que cliente e suas propriedades existem
-      if (!cliente || !cliente.razaoSocial || !cliente.nomeFantasia || !cliente.municipio) {
+      // Validar que cliente existe e tem propriedades essenciais
+      if (!cliente || !cliente.razaoSocial) {
         return false;
       }
 
       const searchLower = searchTerm.toLowerCase();
-      return (
-        cliente.razaoSocial.toLowerCase().includes(searchLower) ||
-        cliente.nomeFantasia.toLowerCase().includes(searchLower) ||
-        cliente.cnpj.includes(searchTerm) ||
-        cliente.municipio.toLowerCase().includes(searchLower)
-      );
+      const razaoSocialMatch = cliente.razaoSocial ? cliente.razaoSocial.toLowerCase().includes(searchLower) : false;
+      const nomeFantasiaMatch = cliente.nomeFantasia ? cliente.nomeFantasia.toLowerCase().includes(searchLower) : false;
+      const cnpjMatch = cliente.cnpj ? cliente.cnpj.includes(searchTerm) : false;
+      const municipioMatch = cliente.municipio ? cliente.municipio.toLowerCase().includes(searchLower) : false;
+
+      return razaoSocialMatch || nomeFantasiaMatch || cnpjMatch || municipioMatch;
     });
   }, [clientes, searchTerm]);
 
