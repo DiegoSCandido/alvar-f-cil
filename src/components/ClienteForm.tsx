@@ -26,6 +26,7 @@ import { AlertCircle, Trash2, Plus, Download, Search, Loader } from 'lucide-reac
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
+import { useCidades } from '@/hooks/useCidades';
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -68,6 +69,9 @@ export function ClienteForm({
     atividadePrincipalDescricao: editingCliente?.atividadePrincipalDescricao || '',
     alvaras: editingCliente?.alvaras || [],
   }));
+
+  // Hook para buscar cidades baseado no UF
+  const { cidades, isLoading: cidadesLoading } = useCidades(formData.uf);
 
   // Estados para atividades secundárias
   const [novaAtividadeCodigo, setNovaAtividadeCodigo] = useState('');
@@ -499,9 +503,9 @@ export function ClienteForm({
                   <Label htmlFor="uf" className="text-xs sm:text-sm">UF</Label>
                   <Select
                     value={formData.uf}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, uf: value })
-                    }
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, uf: value, municipio: '' });
+                    }}
                   >
                     <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Selecione um estado" />
@@ -517,14 +521,30 @@ export function ClienteForm({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="municipio" className="text-xs sm:text-sm">Município</Label>
-                  <Input
-                    id="municipio"
+                  <Select
                     value={formData.municipio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, municipio: e.target.value })
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, municipio: value })
                     }
-                    className="text-sm"
-                  />
+                    disabled={!formData.uf || cidadesLoading}
+                  >
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder={cidadesLoading ? "Carregando..." : "Selecione um município"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cidades.length > 0 ? (
+                        cidades.map((cidade) => (
+                          <SelectItem key={cidade.id} value={cidade.nome}>
+                            {cidade.nome}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-xs text-muted-foreground">
+                          {!formData.uf ? 'Selecione um estado primeiro' : 'Nenhum município encontrado'}
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
