@@ -228,7 +228,7 @@ export function AlvaraForm({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`w-[95vw] sm:w-full p-4 sm:p-6 ${isRenewing ? 'sm:max-w-[600px]' : 'sm:max-w-[500px]'} max-h-[90vh] overflow-y-auto`}>
+      <DialogContent className={`w-[95vw] sm:w-full p-4 sm:p-6 ${isRenewing ? 'sm:max-w-[600px]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
         <DialogHeader>
           <DialogTitle>
             {editingAlvara ? (isRenewing ? 'Renovar Alvará' : 'Editar Alvará') : 'Novo Alvará'}
@@ -241,7 +241,7 @@ export function AlvaraForm({
               : 'Preencha os dados para cadastrar um novo alvará'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className={`${isRenewing ? 'space-y-3' : 'space-y-4'}`}>
+        <form onSubmit={handleSubmit} className={`${isRenewing ? 'space-y-3' : 'space-y-4'} flex flex-col flex-1 min-h-0 overflow-y-auto`}>
           {isRenewing && editingAlvara?.expirationDate && (
             <Alert className="bg-amber-50 border-amber-200">
               <RotateCw className="h-4 w-4 text-amber-600" />
@@ -369,7 +369,7 @@ export function AlvaraForm({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-2 flex flex-col">
             <Label htmlFor="notes" className="text-xs sm:text-sm">Adicionar Observação</Label>
             <div className="flex gap-2">
               <Textarea
@@ -391,14 +391,14 @@ export function AlvaraForm({
               </Button>
             </div>
             {formData.notes && (
-              <div className="mt-2 pt-2 border-t space-y-2">
+              <div className="mt-2 pt-2 border-t space-y-2 flex flex-col min-h-0 flex-1">
                 <div className="text-xs font-semibold text-muted-foreground">Histórico</div>
-                <div className="bg-gray-50 rounded p-2 text-xs space-y-2 max-h-32 overflow-y-auto">
+                <div className="bg-gray-50 rounded p-3 text-xs space-y-2 overflow-y-auto flex-1 border border-gray-200">
                   {formData.notes.split('\n\n').map((note, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs">
-                      <span className="text-muted-foreground shrink-0 mt-0.5">•</span>
+                    <div key={idx} className="flex items-start gap-2 text-xs pb-2 border-b border-gray-200 last:border-b-0">
+                      <span className="text-amber-600 shrink-0 mt-0.5 font-bold">•</span>
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-muted-foreground whitespace-pre-wrap break-words text-xs">
+                        <div className="font-mono text-gray-700 whitespace-pre-wrap break-words text-xs">
                           {note}
                         </div>
                       </div>
