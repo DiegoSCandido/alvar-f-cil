@@ -217,6 +217,18 @@ export function ClienteForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    
+    // Validar campos obrigatórios
+    if (!formData.cnpj || formData.cnpj.trim() === '') {
+      setError('CNPJ é obrigatório');
+      return;
+    }
+    
+    if (!formData.razaoSocial || formData.razaoSocial.trim() === '') {
+      setError('Razão Social é obrigatória');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -418,7 +430,7 @@ export function ClienteForm({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* CNPJ */}
               <div className="space-y-2">
-                <Label htmlFor="cnpj" className="text-xs sm:text-sm">CNPJ</Label>
+                <Label htmlFor="cnpj" className="text-xs sm:text-sm">CNPJ <span className="text-red-500">*</span></Label>
                 <Input
                   id="cnpj"
                   value={formData.cnpj}
@@ -446,7 +458,7 @@ export function ClienteForm({
 
               {/* Razão Social */}
               <div className="space-y-2">
-                <Label htmlFor="razaoSocial" className="text-xs sm:text-sm">Razão Social</Label>
+                <Label htmlFor="razaoSocial" className="text-xs sm:text-sm">Razão Social <span className="text-red-500">*</span></Label>
                 <Input
                   id="razaoSocial"
                   value={formData.razaoSocial}
