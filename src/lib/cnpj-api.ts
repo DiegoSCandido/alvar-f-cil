@@ -85,11 +85,13 @@ export async function fetchCNPJData(cnpj: string): Promise<CNPJData | null> {
  * Converte dados da API ReceitaWS para o formato do formulário
  */
 export function convertCNPJDataToFormData(cnpjData: CNPJData) {
+  const uf = (cnpjData.uf || '').trim().toUpperCase();
+  
   return {
     cnpj: cnpjData.cnpj,
     razaoSocial: cnpjData.nome || '',
     nomeFantasia: cnpjData.fantasia || '',
-    uf: cnpjData.uf || '',
+    uf: uf,
     municipio: cnpjData.municipio || '',
     atividadePrincipalCodigo: cnpjData.atividade_principal?.[0]?.code || '',
     atividadePrincipalDescricao: cnpjData.atividade_principal?.[0]?.text || '',
