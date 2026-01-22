@@ -20,6 +20,7 @@ async function apiCall<T>(
 
   // Adiciona token ao header se existir
   const token = localStorage.getItem('authToken');
+  console.log(`[apiCall] Endpoint: ${endpoint}, Token disponível: ${!!token}`);
   const authHeaders: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
     : {};
