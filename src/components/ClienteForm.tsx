@@ -546,9 +546,7 @@ export function ClienteForm({
                   <Input
                     id="municipio"
                     value={formData.municipio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, municipio: e.target.value })
-                    }
+                    disabled
                     placeholder="Preenchido automaticamente pelo CNPJ"
                     className="text-sm"
                   />
