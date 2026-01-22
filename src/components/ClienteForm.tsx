@@ -26,6 +26,7 @@ import { AlertCircle, Trash2, Plus, Download, Search, Loader } from 'lucide-reac
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
+import { atividadeSecundariaAPI, documentoClienteAPI } from '@/lib/api-client';
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -142,15 +143,9 @@ export function ClienteForm({
     try {
       setAtividadesLoading(true);
       console.log('[loadAtividades] Carregando para cliente:', clienteId);
-      const response = await fetch(`${API_BASE_URL}/atividades-secundarias/cliente/${clienteId}`);
-      console.log('[loadAtividades] Status da resposta:', response.status);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('[loadAtividades] Atividades carregadas:', data);
-        setAtividades(data);
-      } else {
-        console.error('[loadAtividades] Erro na resposta:', response.status, response.statusText);
-      }
+      const data = await atividadeSecundariaAPI.listByCliente(clienteId);
+      console.log('[loadAtividades] Atividades carregadas:', data);
+      setAtividades(data);
     } catch (err) {
       console.error('[loadAtividades] Erro ao carregar atividades:', err);
     } finally {
@@ -161,13 +156,10 @@ export function ClienteForm({
   const loadDocumentos = async (clienteId: string) => {
     try {
       setDocumentosLoading(true);
-      const response = await fetch(`${API_BASE_URL}/documentos-cliente/cliente/${clienteId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setDocumentos(data);
-      }
+      const data = await documentoClienteAPI.listByCliente(clienteId);
+      setDocumentos(data);
     } catch (err) {
-      console.error('Erro ao carregar documentos:', err);
+      console.error('[loadDocumentos] Erro ao carregar documentos:', err);
     } finally {
       setDocumentosLoading(false);
     }
@@ -264,21 +256,10 @@ export function ClienteForm({
           if (clienteId) {
             for (const atividade of atividadesSecundariasAPI) {
               try {
-                const response = await fetch(
-                  `${API_BASE_URL}/atividades-secundarias/${clienteId}`,
-                  {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      codigo: atividade.code,
-                      descricao: atividade.text,
-                    }),
-                  }
-                );
-                
-                if (!response.ok) {
-                  console.warn(`Erro ao salvar atividade: ${atividade.code}`);
-                }
+                await atividadeSecundariaAPI.create(clienteId, {
+                  codigo: atividade.code,
+                  descricao: atividade.text,
+                });
               } catch (err) {
                 console.warn('Erro ao salvar atividade:', err);
               }
@@ -308,18 +289,10 @@ export function ClienteForm({
 
     try {
       setError(null);
-      const response = await fetch(
-        `${API_BASE_URL}/atividades-secundarias/${editingCliente.id}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            codigo: novaAtividadeCodigo,
-            descricao: novaAtividadeDescricao,
-          }),
-        }
-      );
-      if (!response.ok) throw new Error('Erro ao adicionar atividade');
+      await atividadeSecundariaAPI.create(editingCliente.id, {
+        codigo: novaAtividadeCodigo,
+        descricao: novaAtividadeDescricao,
+      });
 
       setNovaAtividadeCodigo('');
       setNovaAtividadeDescricao('');
@@ -345,10 +318,12 @@ export function ClienteForm({
       }
       formDataDoc.append('file', arquivoSelecionado);
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${API_BASE_URL}/documentos-cliente/upload/${editingCliente.id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documentos-cliente/upload/${editingCliente.id}`,
         {
           method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formDataDoc,
         }
       );
@@ -369,10 +344,7 @@ export function ClienteForm({
     if (!editingCliente) return;
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/atividades-secundarias/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Erro ao deletar');
+      await atividadeSecundariaAPI.delete(id);
       loadAtividades(editingCliente.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar atividade';
@@ -384,10 +356,7 @@ export function ClienteForm({
     if (!editingCliente) return;
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/documentos-cliente/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Erro ao deletar');
+      await documentoClienteAPI.delete(id);
       loadDocumentos(editingCliente.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar documento';
@@ -396,7 +365,7 @@ export function ClienteForm({
   };
 
   const downloadDocumento = (id: string) => {
-    window.location.href = `${API_BASE_URL}/documentos-cliente/download/${id}`;
+    window.location.href = documentoClienteAPI.download(id);
   };
 
   return (

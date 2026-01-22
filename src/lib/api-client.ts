@@ -101,3 +101,18 @@ export const documentAPI = {
     return response.json();
   },
 };
+// Atividades Secundárias
+export const atividadeSecundariaAPI = {
+  listByCliente: (clienteId: string) => apiCall(`/atividades-secundarias/cliente/${clienteId}`),
+  create: (clienteId: string, data: any) => apiCall(`/atividades-secundarias/${clienteId}`, { method: 'POST', body: data }),
+  update: (id: string, data: any) => apiCall(`/atividades-secundarias/${id}`, { method: 'PUT', body: data }),
+  delete: (id: string) => apiCall(`/atividades-secundarias/${id}`, { method: 'DELETE' }),
+};
+
+// Documentos do Cliente
+export const documentoClienteAPI = {
+  listByCliente: (clienteId: string) => apiCall(`/documentos-cliente/cliente/${clienteId}`),
+  create: (clienteId: string, data: any) => apiCall(`/documentos-cliente/${clienteId}`, { method: 'POST', body: data }),
+  delete: (id: string) => apiCall(`/documentos-cliente/${id}`, { method: 'DELETE' }),
+  download: (id: string) => `${API_BASE_URL}/documentos-cliente/download/${id}`,
+};
