@@ -11,8 +11,8 @@ const Dashboard = () => {
   const { alvaras, isLoading: isLoadingAlvaras } = useAlvaras();
 
   return (
-    <div className="min-h-screen w-full bg-background px-4">
-      <div className="mx-auto max-w-5xl py-8 md:py-12">
+    <div className="min-h-screen w-full bg-background px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl py-10 md:py-16">
         {/* Top spacing for mobile */}
         <div className="mt-20 lg:mt-0" />
 
