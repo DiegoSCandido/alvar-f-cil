@@ -7,7 +7,8 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ClientesPage from "./pages/Clientes";
 import AlvarasPage from "./pages/Alvaras";
-import CertificadosPage from "./pages/Certificados";
+// Certificados page temporarily removed from imports to avoid production build errors
+// import CertificadosPage from "./pages/Certificados";
 import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -49,7 +50,7 @@ const AppContent = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/alvaras" element={<AlvarasPage />} />
-          <Route path="/certificados" element={<CertificadosPage />} />
+          {/* /certificados route removed temporarily until page is ready */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

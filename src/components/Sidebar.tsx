@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Users, FileText, Menu, X, LogOut } from 'lucide-react';
+import { Home, Users, FileText, Menu, X, LogOut, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,11 +21,12 @@ const Sidebar = () => {
       path: '/clientes',
       icon: Users,
     },
-    {
-      label: 'Alvarás',
-      path: '/alvaras',
-      icon: FileText,
-    },
+      {
+        label: 'Alvarás',
+        path: '/alvaras',
+        icon: FileText,
+      },
+      // 'Certificados' removed from nav until page is implemented
   ];
 
   const handleLogout = () => {
