@@ -22,7 +22,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Trash2, Plus, Download, Search, Loader } from 'lucide-react';
+import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
+// Presets de documentos
+const DOCUMENT_PRESETS = [
+  'Auto Declaração Sanitária',
+  'Procuração Bombeiros',
+  'Laudo Acústico',
+  'Licença Ambiental',
+  'Outros',
+];
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
@@ -349,8 +368,37 @@ export function ClienteForm({
     }
   };
 
-  const downloadDocumento = (id: string) => {
-    window.location.href = documentoClienteAPI.download(id);
+  const downloadDocumento = async (doc) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(documentoClienteAPI.download(doc.id), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Erro ao obter link de download');
+      const data = await response.json();
+      if (data.url) {
+        // Monta o nome do arquivo no padrão desejado
+        const nomeCliente = (editingCliente?.razaoSocial || 'CLIENTE').replace(/[^a-zA-Z0-9]/g, '_');
+        const nomeDocumento = (doc.nomeDocumento || 'DOCUMENTO').replace(/[^a-zA-Z0-9]/g, '_');
+        const nomeFinal = `${nomeCliente}-${nomeDocumento}.pdf`;
+
+        // Faz o download com o nome customizado
+        const fileResponse = await fetch(data.url);
+        const blob = await fileResponse.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeFinal;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        throw new Error('URL de download não encontrada');
+      }
+    } catch (err) {
+      alert('Erro ao baixar documento.');
+    }
   };
 
   return (
@@ -632,34 +680,50 @@ export function ClienteForm({
           {/* Aba Documentos */}
           <TabsContent value="documentos" className="space-y-4">
             <div className="space-y-4">
+
               <div className="space-y-2">
                 <Label htmlFor="nomeDoc">Nome do Documento</Label>
-                <Input
-                  id="nomeDoc"
-                  value={nomeDocumento}
-                  onChange={(e) => setNomeDocumento(e.target.value)}
-                  placeholder="Ex: RG, CPF, Contrato..."
-                />
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <select
+                      className="border rounded-md px-2 py-2 text-sm w-full bg-background"
+                      value={DOCUMENT_PRESETS.includes(nomeDocumento) ? nomeDocumento : ''}
+                      onChange={e => {
+                        setNomeDocumento(e.target.value);
+                      }}
+                    >
+                      <option value="">Selecione um modelo...</option>
+                      {DOCUMENT_PRESETS.map((preset) => (
+                        <option key={preset} value={preset}>{preset}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1 relative">
+                    <Input
+                      id="nomeDoc"
+                      value={nomeDocumento}
+                      onChange={(e) => setNomeDocumento(e.target.value)}
+                      placeholder="Ex: RG, CPF, Contrato..."
+                      className="pr-10"
+                    />
+                    <label htmlFor="arquivo" className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                      <Paperclip className="w-5 h-5 text-gray-500 hover:text-primary" />
+                    </label>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tipoDoc">Tipo de Documento (opcional)</Label>
-                <Input
-                  id="tipoDoc"
-                  value={tipoDocumento}
-                  onChange={(e) => setTipoDocumento(e.target.value)}
-                  placeholder="Ex: Pessoal, Empresa..."
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="arquivo">Selecionar Arquivo</Label>
-                <Input
-                  id="arquivo"
-                  type="file"
-                  onChange={(e) => setArquivoSelecionado(e.target.files?.[0] || null)}
-                />
-              </div>
+
+              <input
+                id="arquivo"
+                type="file"
+                style={{ display: 'none' }}
+                onChange={(e) => setArquivoSelecionado(e.target.files?.[0] || null)}
+              />
+              {arquivoSelecionado && (
+                <div className="text-xs text-green-700 mt-1">Arquivo selecionado: {arquivoSelecionado.name}</div>
+              )}
 
               <Button
                 onClick={handleAddDocumento}
@@ -691,17 +755,32 @@ export function ClienteForm({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => downloadDocumento(doc.id)}
+                          onClick={() => downloadDocumento(doc)}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteDocumento(doc.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteDocumento(doc.id)} autoFocus>Excluir</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </li>
                   ))}
