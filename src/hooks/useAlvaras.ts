@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Alvara, AlvaraFormData, AlvaraStatus } from '@/types/alvara';
 import { calculateAlvaraStatus } from '@/lib/alvara-utils';
-import { alvaraAPI } from '@/lib/api-client';
+import { alvaraAPI } from '@/lib/api-client'; // Mantém pois já está padronizado
 
 export function useAlvaras() {
   const [alvaras, setAlvaras] = useState<Alvara[]>([]);

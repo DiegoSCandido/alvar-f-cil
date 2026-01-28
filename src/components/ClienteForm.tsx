@@ -45,7 +45,7 @@ const DOCUMENT_PRESETS = [
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
-import { atividadeSecundariaAPI, documentoClienteAPI } from '@/lib/api-client';
+import { atividadesSecundariasAPI, documentosClientesAPI } from '@/lib/api-client';
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -162,7 +162,7 @@ export function ClienteForm({
     try {
       setAtividadesLoading(true);
       console.log('[loadAtividades] Carregando para cliente:', clienteId);
-      const data = await atividadeSecundariaAPI.listByCliente(clienteId);
+      const data = await atividadesSecundariasAPI.listByCliente(clienteId);
       console.log('[loadAtividades] Atividades carregadas:', data);
       setAtividades(data);
     } catch (err) {
@@ -175,7 +175,7 @@ export function ClienteForm({
   const loadDocumentos = async (clienteId: string) => {
     try {
       setDocumentosLoading(true);
-      const data = await documentoClienteAPI.listByCliente(clienteId);
+      const data = await documentosClientesAPI.listByCliente(clienteId);
       setDocumentos(data);
     } catch (err) {
       console.error('[loadDocumentos] Erro ao carregar documentos:', err);
@@ -293,7 +293,7 @@ export function ClienteForm({
 
     try {
       setError(null);
-      await atividadeSecundariaAPI.create(editingCliente.id, {
+      await atividadesSecundariasAPI.create(editingCliente.id, {
         codigo: novaAtividadeCodigo,
         descricao: novaAtividadeDescricao,
       });
@@ -324,7 +324,7 @@ export function ClienteForm({
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documentos-cliente/upload/${editingCliente.id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documentos-clientes/upload/${editingCliente.id}`,
         {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -348,7 +348,7 @@ export function ClienteForm({
     if (!editingCliente) return;
     try {
       setError(null);
-      await atividadeSecundariaAPI.delete(id);
+      await atividadesSecundariasAPI.delete(id);
       loadAtividades(editingCliente.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar atividade';
@@ -360,7 +360,7 @@ export function ClienteForm({
     if (!editingCliente) return;
     try {
       setError(null);
-      await documentoClienteAPI.delete(id);
+      await documentosClientesAPI.delete(id);
       loadDocumentos(editingCliente.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar documento';
@@ -371,7 +371,7 @@ export function ClienteForm({
   const downloadDocumento = async (doc) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(documentoClienteAPI.download(doc.id), {
+      const response = await fetch(documentosClientesAPI.download(doc.id), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Erro ao baixar documento');
