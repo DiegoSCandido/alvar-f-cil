@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { FinalizeAlvaraModal } from '@/components/FinalizeAlvaraModal';
+import { useAlvaraUpload } from '@/hooks/useAlvaraUpload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAlvaras } from '@/hooks/useAlvaras';
 import { useClientes } from '@/hooks/useClientes';
@@ -48,6 +50,12 @@ const AlvarasPage = () => {
   const [finalizandoAlvara, setFinalizandoAlvara] = useState<Alvara | null>(null);
   const [finalizacaoDate, setFinalizacaoDate] = useState('');
   const [alvaraParaExcluir, setAlvaraParaExcluir] = useState<Alvara | null>(null);
+
+  // Upload PDF para finalização
+  const [finalizeFile, setFinalizeFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const finalizeFileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadAlvaraDocument } = useAlvaraUpload();
 
   // Separar alvarás em duas categorias
   const { novosAlvaras, alvarasEmFuncionamento } = useMemo(() => {
@@ -200,6 +208,14 @@ const AlvarasPage = () => {
 
   const handleConfirmFinalize = async () => {
     if (!finalizandoAlvara || !finalizacaoDate) return;
+    if (!finalizeFile) {
+      toast({
+        title: 'Documento obrigatório',
+        description: 'Anexe o PDF do alvará para finalizar.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       const expirationDate = new Date(finalizacaoDate);
       const issueDate = new Date();
@@ -208,8 +224,23 @@ const AlvarasPage = () => {
         issueDate,
         expirationDate,
       });
+      // Upload obrigatório
+      setUploading(true);
+      try {
+        await uploadAlvaraDocument(finalizandoAlvara.id, finalizeFile);
+      } catch (uploadErr) {
+        toast({
+          title: 'Erro no upload',
+          description: 'Erro ao enviar o PDF do alvará.',
+          variant: 'destructive',
+        });
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
       setFinalizandoAlvara(null);
       setFinalizacaoDate('');
+      setFinalizeFile(null);
       setActiveTab('funcionamento');
       toast({
         title: 'Alvará finalizado',
@@ -447,26 +478,48 @@ const AlvarasPage = () => {
         isRenewing={isRenewing}
       />
       {/* Dialog de Finalização */}
-      <Dialog open={!!finalizandoAlvara} onOpenChange={(open) => { if (!open) setFinalizandoAlvara(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Finalizar Alvará</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>Informe a data de vencimento para finalizar o alvará:</p>
-            <input
-              type="date"
-              className="border rounded px-3 py-2 w-full"
-              value={finalizacaoDate}
-              onChange={e => setFinalizacaoDate(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFinalizandoAlvara(null)}>Cancelar</Button>
-            <Button onClick={handleConfirmFinalize} disabled={!finalizacaoDate}>Finalizar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FinalizeAlvaraModal
+        open={!!finalizandoAlvara}
+        onOpenChange={(open) => {
+          if (!open) setFinalizandoAlvara(null);
+        }}
+        onFinalize={async ({ expirationDate, file }) => {
+          if (!finalizandoAlvara || !expirationDate || !file) return;
+          try {
+            const issueDate = new Date();
+            await updateAlvara(finalizandoAlvara.id, {
+              ...finalizandoAlvara,
+              issueDate,
+              expirationDate,
+            });
+            setUploading(true);
+            try {
+              await uploadAlvaraDocument(finalizandoAlvara.id, file);
+            } catch (uploadErr) {
+              toast({
+                title: 'Erro no upload',
+                description: 'Erro ao enviar o PDF do alvará.',
+                variant: 'destructive',
+              });
+              setUploading(false);
+              return;
+            }
+            setUploading(false);
+            setFinalizandoAlvara(null);
+            setActiveTab('funcionamento');
+            toast({
+              title: 'Alvará finalizado',
+              description: 'O alvará foi movido para Em Funcionamento.',
+            });
+          } catch (error) {
+            toast({
+              title: 'Erro',
+              description: error instanceof Error ? error.message : 'Erro ao finalizar alvará',
+              variant: 'destructive',
+            });
+          }
+        }}
+      />
 
       {/* Dialog de Confirmação de Exclusão de Alvará */}
       <Dialog open={!!alvaraParaExcluir} onOpenChange={(open) => { if (!open) setAlvaraParaExcluir(null); }}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Alvara, AlvaraFormData, ALVARA_TYPES, AlvaraType, AlvaraProcessingStatus } from '@/types/alvara';
 import { Cliente } from '@/types/cliente';
 import { AlvaraProcessingStatusSelect } from './AlvaraProcessingStatusSelect';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAlvaraUpload } from '@/hooks/useAlvaraUpload';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,12 @@ export function AlvaraForm({
   const [tempNote, setTempNote] = useState(''); // Campo temporário para nova observação
   // Verificar se é um alvará em abertura (sem data de emissão)
   const isAlvaraEmAbertura = editingAlvara && !editingAlvara.issueDate;
+
+  // Upload para finalização
+  const [finalizeFile, setFinalizeFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const finalizeFileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadAlvaraDocument } = useAlvaraUpload();
 
   const [formData, setFormData] = useState<AlvaraFormData>(() => ({
     clienteId: editingAlvara?.clienteId || '',
@@ -123,7 +130,6 @@ export function AlvaraForm({
         ...formData,
       };
       await onSubmit(dataToSubmit);
-      // Limpar o campo de notas após salvar (histórico é preservado no BD)
       setFormData(prev => ({ ...prev, notes: '' }));
       setTempNote('');
       onOpenChange(false);
@@ -145,23 +151,37 @@ export function AlvaraForm({
     try {
       setIsLoading(true);
       setError(null);
-      
       if (!renewalExpirationDate) {
         setError('Data de vencimento é obrigatória');
         return;
       }
-
+      if (!finalizeFile) {
+        setError('É obrigatório anexar o PDF do alvará.');
+        return;
+      }
       const dataToSubmit = {
         ...formData,
         type: editingAlvara?.type || formData.type,
         expirationDate: renewalExpirationDate,
         processingStatus: 'lançado' as AlvaraProcessingStatus,
       };
-      
       await onSubmit(dataToSubmit);
+      // Upload documento obrigatório
+      if (dataToSubmit && (dataToSubmit as any).id) {
+        setUploading(true);
+        try {
+          await uploadAlvaraDocument((dataToSubmit as any).id, finalizeFile);
+        } catch (uploadErr) {
+          setError('Erro ao fazer upload do documento PDF.');
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
       setFormData(prev => ({ ...prev, notes: '' }));
       setTempNote('');
       setRenewalExpirationDate('');
+      setFinalizeFile(null);
       setIsConfirmingRenewal(false);
       onOpenChange(false);
     } catch (err) {
@@ -242,6 +262,7 @@ export function AlvaraForm({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className={`${isRenewing ? 'space-y-3' : 'space-y-4'}`}>
+
           {isRenewing && editingAlvara?.expirationDate && (
             <Alert className="bg-amber-50 border-amber-200">
               <RotateCw className="h-4 w-4 text-amber-600" />
@@ -477,6 +498,27 @@ export function AlvaraForm({
             }}
             disabled={isLoading}
           />
+        </div>
+        <div className="grid w-full items-center gap-2 mt-2">
+          <Label htmlFor="finalize-alvara-pdf">Documento do Alvará (PDF) *</Label>
+          <Input
+            id="finalize-alvara-pdf"
+            type="file"
+            accept="application/pdf"
+            ref={finalizeFileInputRef}
+            onChange={e => {
+              if (e.target.files && e.target.files[0]) {
+                setFinalizeFile(e.target.files[0]);
+              } else {
+                setFinalizeFile(null);
+              }
+              setError(null);
+            }}
+            disabled={isLoading || uploading}
+            className="text-sm"
+          />
+          {finalizeFile && <span className="text-xs text-green-700">{finalizeFile.name}</span>}
+          {uploading && <span className="text-xs text-blue-700">Enviando documento...</span>}
         </div>
 
         <DialogFooter className="mt-6">

@@ -3,7 +3,8 @@ import { StatusBadge } from './StatusBadge';
 import { getDaysUntilExpiration, formatCnpj } from '@/lib/alvara-utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Trash2, Edit, CheckCircle, RotateCw } from 'lucide-react';
+import { Trash2, Edit, CheckCircle, RotateCw, Download } from 'lucide-react';
+import { useDocumentosAlvaraDownload } from '@/hooks/useDocumentosAlvaraDownload';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -23,6 +24,17 @@ interface AlvaraTableProps {
 }
 
 export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: AlvaraTableProps) {
+  const { getDownloadUrl, isLoading: isDownloading } = useDocumentosAlvaraDownload();
+    // Handler para download do PDF do alvará
+    const handleDownload = async (alvaraId: string) => {
+      try {
+        const { signedUrl } = await getDownloadUrl(alvaraId);
+        // Abre o PDF em uma nova aba
+        window.open(signedUrl, '_blank', 'noopener');
+      } catch (err) {
+        alert('Erro ao abrir documento do alvará.');
+      }
+    };
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
@@ -108,6 +120,18 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                         title="Finalizar Alvará"
                       >
                         <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    )}
+                    {alvara.issueDate && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(alvara.id)}
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+                        title="Baixar PDF do Alvará"
+                        disabled={isDownloading}
+                      >
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     )}
                     {onRenew && (alvara.status === 'expiring' || alvara.status === 'expired') && (
