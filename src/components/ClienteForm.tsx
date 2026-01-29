@@ -22,7 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Trash2, Plus, Download, Search, Loader } from 'lucide-react';
+import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
@@ -82,6 +93,7 @@ export function ClienteForm({
 
   // Estados para documentos
   const [nomeDocumento, setNomeDocumento] = useState('');
+  const [presetDocumento, setPresetDocumento] = useState('');
   const [tipoDocumento, setTipoDocumento] = useState('');
   const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
   const [documentos, setDocumentos] = useState<any[]>([]);
@@ -337,20 +349,41 @@ export function ClienteForm({
     }
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const deleteDocumento = async (id: string) => {
     if (!editingCliente) return;
     try {
       setError(null);
       await documentoClienteAPI.delete(id);
       loadDocumentos(editingCliente.id);
+      setConfirmDeleteId(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar documento';
       setError(message);
+      setConfirmDeleteId(null);
     }
   };
 
-  const downloadDocumento = (id: string) => {
-    window.location.href = documentoClienteAPI.download(id);
+  const downloadDocumento = async (id: string) => {
+    try {
+      // Faz a requisição para obter a signed URL
+      const response = await fetch(documentoClienteAPI.download(id), {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao obter link de download');
+      }
+      const data = await response.json();
+      if (data && data.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      } else {
+        throw new Error('Link de download não encontrado');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao baixar documento');
+    }
   };
 
   return (
@@ -630,50 +663,90 @@ export function ClienteForm({
           </TabsContent>
 
           {/* Aba Documentos */}
+
           <TabsContent value="documentos" className="space-y-4">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nomeDoc">Nome do Documento</Label>
-                <Input
-                  id="nomeDoc"
-                  value={nomeDocumento}
-                  onChange={(e) => setNomeDocumento(e.target.value)}
-                  placeholder="Ex: RG, CPF, Contrato..."
-                />
+
+              {/* Linha com select e nome do documento */}
+              <div className="rounded-xl border bg-muted/50 p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Plus className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-primary">Adicionar Documento</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Select
+                    onValueChange={(value) => {
+                      setPresetDocumento(value);
+                      if (value === 'Outro') {
+                        setNomeDocumento('');
+                      } else {
+                        setNomeDocumento(value);
+                      }
+                    }}
+                    value={presetDocumento}
+                  >
+                    <SelectTrigger id="presetDoc" className="sm:w-56 w-full">
+                      <SelectValue placeholder="Tipo de documento..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Auto Declaração Sanitaria">Auto Declaração Sanitaria</SelectItem>
+                      <SelectItem value="Procuração Bombeiros">Procuração Bombeiros</SelectItem>
+                      <SelectItem value="Laudo Acustico">Laudo Acustico</SelectItem>
+                      <SelectItem value="Licença Ambiental">Licença Ambiental</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="nomeDoc"
+                    value={nomeDocumento}
+                    onChange={(e) => setNomeDocumento(e.target.value)}
+                    placeholder="Nome do documento"
+                    className="flex-1 min-w-0"
+                    disabled={presetDocumento !== 'Outro' && presetDocumento !== ''}
+                  />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    id="arquivo"
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => setArquivoSelecionado(e.target.files?.[0] || null)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('arquivo')?.click()}
+                    disabled={documentosLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    Anexar arquivo
+                  </Button>
+                  <Button
+                    onClick={handleAddDocumento}
+                    disabled={documentosLoading || !arquivoSelecionado || !nomeDocumento}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Salvar
+                  </Button>
+                  {arquivoSelecionado && (
+                    <span className="text-xs text-gray-600 truncate max-w-[120px]">{arquivoSelecionado.name}</span>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tipoDoc">Tipo de Documento (opcional)</Label>
-                <Input
-                  id="tipoDoc"
-                  value={tipoDocumento}
-                  onChange={(e) => setTipoDocumento(e.target.value)}
-                  placeholder="Ex: Pessoal, Empresa..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="arquivo">Selecionar Arquivo</Label>
-                <Input
-                  id="arquivo"
-                  type="file"
-                  onChange={(e) => setArquivoSelecionado(e.target.files?.[0] || null)}
-                />
-              </div>
-
-              <Button
-                onClick={handleAddDocumento}
-                disabled={documentosLoading}
-                className="w-full"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Upload Documento
-              </Button>
             </div>
 
             {/* Lista de Documentos */}
             <div className="space-y-2">
-              <h3 className="font-semibold">Documentos da Empresa</h3>
+              <div className="flex items-center mb-2">
+                <Paperclip className="w-4 h-4 text-primary mr-2" />
+                <h3 className="font-semibold text-primary">Documentos da Empresa</h3>
+                {documentos.length > 0 && (
+                  <span className="ml-2 bg-muted text-primary text-xs rounded-full px-2 py-0.5">{documentos.length}</span>
+                )}
+              </div>
               {documentosLoading ? (
                 <p className="text-sm text-gray-500">Carregando...</p>
               ) : documentos.length > 0 ? (
@@ -681,27 +754,53 @@ export function ClienteForm({
                   {documentos.map((doc) => (
                     <li
                       key={doc.id}
-                      className="flex items-center justify-between p-3 border rounded"
+                      className="flex items-center justify-between rounded-xl border bg-muted/50 px-4 py-3"
                     >
-                      <div>
-                        <p className="font-medium">{doc.nomeDocumento}</p>
-                        <p className="text-sm text-gray-600">{doc.nomeArquivo}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Paperclip className="w-6 h-6 text-primary/80" />
+                        <div className="min-w-0">
+                          <div className="font-medium truncate text-base text-primary">{doc.nomeDocumento}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="bg-primary/10 text-primary text-xs rounded px-2 py-0.5 font-medium">{doc.tipoDocumento || doc.tipo || doc.nomeArquivo || 'Documento'}</span>
+                            {doc.dataUpload && (
+                              <span className="text-xs text-gray-400 ml-2">{new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => downloadDocumento(doc.id)}
+                          title="Baixar"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteDocumento(doc.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog open={confirmDeleteId === doc.id} onOpenChange={(open) => setConfirmDeleteId(open ? doc.id : null)}>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setConfirmDeleteId(doc.id)}
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir este documento? Esta ação não poderá ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setConfirmDeleteId(null)}>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteDocumento(doc.id)} autoFocus>Excluir</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </li>
                   ))}
