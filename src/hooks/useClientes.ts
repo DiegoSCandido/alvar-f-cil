@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Cliente, ClienteFormData } from '@/types/cliente';
-import { clienteAPI } from '@/lib/api-client';
+import { clienteAPI } from '@/lib/api-client'; // Mantém pois já está padronizado
 
 export function useClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);

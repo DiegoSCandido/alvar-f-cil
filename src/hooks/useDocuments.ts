@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { documentAPI } from '@/lib/api-client';
+import { documentoAPI } from '@/lib/api-client';
 
 export interface Document {
   id: string;
@@ -22,7 +22,7 @@ export function useDocuments() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await documentAPI.list();
+      const data = await documentoAPI.list();
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar documentos';
@@ -38,7 +38,7 @@ export function useDocuments() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await documentAPI.listByAlvara(alvaraId);
+      const data = await documentoAPI.listByAlvara(alvaraId);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar documentos do alvará';
@@ -54,7 +54,7 @@ export function useDocuments() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await documentAPI.listByCliente(clienteId);
+      const data = await documentoAPI.listByCliente(clienteId);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar documentos do cliente';
@@ -70,7 +70,7 @@ export function useDocuments() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await documentAPI.upload(formData);
+      const data = await documentoAPI.upload(formData);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer upload do documento';
@@ -86,7 +86,7 @@ export function useDocuments() {
     try {
       setIsLoading(true);
       setError(null);
-      await documentAPI.delete(id);
+      await documentoAPI.delete(id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao deletar documento';
       setError(message);
@@ -98,7 +98,7 @@ export function useDocuments() {
   }, []);
 
   const getDownloadUrl = useCallback((id: string): string => {
-    return documentAPI.download(id);
+    return documentoAPI.download(id);
   }, []);
 
   return {

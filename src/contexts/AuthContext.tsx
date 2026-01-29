@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { validatePassword } from '@/lib/password-validator';
 
-// ⚠️ MODO DESENVOLVIMENTO - Mude para false antes de fazer deploy
-const USE_MOCK_AUTH = true;
+// ⚠️ MODO DESENVOLVIMENTO - Mude para true apenas para testes locais sem backend
+const USE_MOCK_AUTH = false;
 
 const MOCK_USER = {
   id: 1,

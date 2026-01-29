@@ -81,15 +81,15 @@ export const alvaraAPI = {
   listByCliente: (clienteId: string) => apiCall(`/alvaras/cliente/${clienteId}`),
 };
 
-// Documents
-export const documentAPI = {
-  list: () => apiCall('/documents'),
-  listByAlvara: (alvaraId: string) => apiCall(`/documents/alvara/${alvaraId}`),
-  listByCliente: (clienteId: string) => apiCall(`/documents/cliente/${clienteId}`),
-  delete: (id: string) => apiCall(`/documents/${id}`, { method: 'DELETE' }),
-  download: (id: string) => `${API_BASE_URL}/documents/${id}/download`,
+// Documentos
+export const documentoAPI = {
+  list: () => apiCall('/documentos'),
+  listByAlvara: (alvaraId: string) => apiCall(`/documentos/alvara/${alvaraId}`),
+  listByCliente: (clienteId: string) => apiCall(`/documentos/cliente/${clienteId}`),
+  delete: (id: string) => apiCall(`/documentos/${id}`, { method: 'DELETE' }),
+  download: (id: string) => `${API_BASE_URL}/documentos/${id}/download`,
   upload: async (formData: FormData) => {
-    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+    const response = await fetch(`${API_BASE_URL}/documentos/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -103,7 +103,7 @@ export const documentAPI = {
   },
 };
 // Atividades Secundárias
-export const atividadeSecundariaAPI = {
+export const atividadesSecundariasAPI = {
   listByCliente: (clienteId: string) => apiCall(`/atividades-secundarias/cliente/${clienteId}`),
   create: (clienteId: string, data: any) => apiCall(`/atividades-secundarias/${clienteId}`, { method: 'POST', body: data }),
   update: (id: string, data: any) => apiCall(`/atividades-secundarias/${id}`, { method: 'PUT', body: data }),
@@ -111,9 +111,9 @@ export const atividadeSecundariaAPI = {
 };
 
 // Documentos do Cliente
-export const documentoClienteAPI = {
-  listByCliente: (clienteId: string) => apiCall(`/documentos-cliente/cliente/${clienteId}`),
-  create: (clienteId: string, data: any) => apiCall(`/documentos-cliente/${clienteId}`, { method: 'POST', body: data }),
-  delete: (id: string) => apiCall(`/documentos-cliente/${id}`, { method: 'DELETE' }),
-  download: (id: string) => `${API_BASE_URL}/documentos-cliente/download/${id}`,
+export const documentosClientesAPI = {
+  listByCliente: (clienteId: string) => apiCall(`/documentos-clientes/cliente/${clienteId}`),
+  create: (clienteId: string, data: any) => apiCall(`/documentos-clientes/${clienteId}`, { method: 'POST', body: data }),
+  delete: (id: string) => apiCall(`/documentos-clientes/${id}`, { method: 'DELETE' }),
+  download: (id: string) => `${API_BASE_URL}/documentos-clientes/download/${id}`,
 };
