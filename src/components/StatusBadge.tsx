@@ -39,11 +39,10 @@ export function StatusBadge({ alvara, status, processingStatus, className }: Sta
     );
   }
 
-  // Se o alvará tem data de emissão (está em funcionamento), mostrar o status calculado
-  // Se não tiver data de emissão (está em abertura), mostrar o processingStatus
-  if (status === 'pending' && displayProcessingStatus) {
+  // Se o alvará está em abertura (sem issueDate), mostrar o processingStatus
+  if (alvara && !alvara.issueDate && displayProcessingStatus) {
     const processingStatusLabels: Record<AlvaraProcessingStatus, string> = {
-      lançado: 'Lançado',
+      lançado: 'Iniciado',
       aguardando_cliente: 'Aguardando Cliente',
       aguardando_orgao: 'Aguardando Órgão',
       renovacao: 'Em Renovação',

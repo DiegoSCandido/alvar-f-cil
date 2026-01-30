@@ -139,6 +139,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                         size="icon"
                         onClick={() => onEdit(cliente)}
                         className="h-7 w-7 sm:h-8 sm:w-8"
+                        title="Editar Cliente"
                       >
                         <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
@@ -147,6 +148,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                         size="icon"
                         onClick={() => onDelete(cliente.id)}
                         className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
+                        title="Excluir Cliente"
                       >
                         <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>

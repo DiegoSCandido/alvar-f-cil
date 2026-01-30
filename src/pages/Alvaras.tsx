@@ -69,11 +69,16 @@ const AlvarasPage = () => {
     return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento };
   }, [alvaras]);
 
-  // Estatísticas para novos alvarás
+  // Estatísticas para novos alvarás (por status de processamento)
   const statsNovos = useMemo(() => {
+    const iniciado = novosAlvaras.filter((a) => a.processingStatus === 'lançado').length;
+    const aguardandoCliente = novosAlvaras.filter((a) => a.processingStatus === 'aguardando_cliente').length;
+    const aguardandoOrgao = novosAlvaras.filter((a) => a.processingStatus === 'aguardando_orgao').length;
     return {
       total: novosAlvaras.length,
-      pending: novosAlvaras.filter((a) => a.status === 'pending').length,
+      iniciado,
+      aguardandoCliente,
+      aguardandoOrgao,
     };
   }, [novosAlvaras]);
 
@@ -87,25 +92,24 @@ const AlvarasPage = () => {
     };
   }, [alvarasEmFuncionamento]);
 
-  // Filtrar alvarás baseado na aba ativa
+  // Filtro de processamento para novos alvarás
+  const [processingFilter, setProcessingFilter] = useState<'all' | 'lançado' | 'aguardando_cliente' | 'aguardando_orgao'>('all');
+
+  // Filtrar alvarás baseado na aba ativa e filtros
   const filteredAlvaras = useMemo(() => {
     const alvarasToFilter = activeTab === 'novos' ? novosAlvaras : alvarasEmFuncionamento;
-    
     return alvarasToFilter.filter((alvara) => {
-      // Validar que alvara e suas propriedades existem
       if (!alvara || !alvara.clientName || !alvara.type) return false;
-
       const matchesSearch =
         alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alvara.clientCnpj.includes(searchTerm) ||
         alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === 'all' || alvara.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
+      // Filtro de processamento só para novos
+      const matchesProcessing =
+        activeTab !== 'novos' || processingFilter === 'all' || alvara.processingStatus === processingFilter;
+      return matchesSearch && matchesProcessing;
     });
-  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, statusFilter]);
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, processingFilter]);
 
   const handleAddAlvara = async (data: AlvaraFormData) => {
     try {
@@ -317,19 +321,39 @@ const AlvarasPage = () => {
 
           {/* Tab: Novos Alvarás */}
           <TabsContent value="novos" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
-            {/* Stats Grid para Novos Alvarás */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-4">
+            {/* Cards de filtro para Novos Alvarás */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-2">
               <StatCard
-                title="Total em Abertura"
+                title="Todos"
                 value={statsNovos.total}
                 icon={FileText}
-                variant="pending"
+                variant={processingFilter === 'all' ? 'valid' : 'default'}
+                onClick={() => setProcessingFilter('all')}
+                description={processingFilter === 'all' ? 'Exibindo todos' : undefined}
               />
               <StatCard
-                title="Pendentes"
-                value={statsNovos.pending}
+                title="Iniciado"
+                value={statsNovos.iniciado}
+                icon={CheckCircle}
+                variant={processingFilter === 'lançado' ? 'valid' : 'default'}
+                onClick={() => setProcessingFilter('lançado')}
+                description={processingFilter === 'lançado' ? 'Filtrando iniciados' : undefined}
+              />
+              <StatCard
+                title="Aguardando Cliente"
+                value={statsNovos.aguardandoCliente}
                 icon={Clock}
-                variant="pending"
+                variant={processingFilter === 'aguardando_cliente' ? 'expiring' : 'default'}
+                onClick={() => setProcessingFilter('aguardando_cliente')}
+                description={processingFilter === 'aguardando_cliente' ? 'Filtrando aguardando cliente' : undefined}
+              />
+              <StatCard
+                title="Aguardando Órgão"
+                value={statsNovos.aguardandoOrgao}
+                icon={Building2}
+                variant={processingFilter === 'aguardando_orgao' ? 'expired' : 'default'}
+                onClick={() => setProcessingFilter('aguardando_orgao')}
+                description={processingFilter === 'aguardando_orgao' ? 'Filtrando aguardando órgão' : undefined}
               />
             </div>
 
@@ -344,18 +368,6 @@ const AlvarasPage = () => {
                   className="pl-10 text-sm sm:text-base"
                 />
               </div>
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as AlvaraStatus | 'all')}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] text-sm sm:text-base">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Results info */}
@@ -433,20 +445,6 @@ const AlvarasPage = () => {
                   className="pl-10 text-sm sm:text-base"
                 />
               </div>
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as AlvaraStatus | 'all')}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] text-sm sm:text-base">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="valid">Válidos</SelectItem>
-                  <SelectItem value="expiring">Vencendo</SelectItem>
-                  <SelectItem value="expired">Vencidos</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Results info */}

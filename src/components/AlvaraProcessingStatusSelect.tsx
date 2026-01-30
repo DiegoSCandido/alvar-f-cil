@@ -8,17 +8,31 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+
 interface AlvaraProcessingStatusSelectProps {
   value?: AlvaraProcessingStatus;
   onValueChange: (status: AlvaraProcessingStatus) => void;
   disabled?: boolean;
+  onlyInitialOptions?: boolean; // se true, mostra só opções iniciais
 }
 
 export function AlvaraProcessingStatusSelect({
   value,
   onValueChange,
   disabled = false,
+  onlyInitialOptions = false,
 }: AlvaraProcessingStatusSelectProps) {
+  // Filtra opções se necessário
+  const options = onlyInitialOptions
+    ? PROCESSING_STATUS_OPTIONS.filter(
+        (opt) => opt.value === 'lançado' || opt.value === 'aguardando_cliente' || opt.value === 'aguardando_orgao'
+      ).map((opt) =>
+        opt.value === 'lançado'
+          ? { ...opt, label: 'Iniciado' } // renomeia label
+          : opt
+      )
+    : PROCESSING_STATUS_OPTIONS;
+
   return (
     <Select
       value={value || ''}
@@ -29,7 +43,7 @@ export function AlvaraProcessingStatusSelect({
         <SelectValue placeholder="Selecione o status" />
       </SelectTrigger>
       <SelectContent>
-        {PROCESSING_STATUS_OPTIONS.map((option) => {
+        {options.map((option) => {
           const Icon = option.icon;
           return (
             <SelectItem key={option.value} value={option.value}>

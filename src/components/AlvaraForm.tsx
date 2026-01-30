@@ -332,27 +332,40 @@ export function AlvaraForm({
 
           <div className="space-y-2">
             <Label htmlFor="type" className="text-xs sm:text-sm">Tipo de Alvará *</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value as AlvaraType })}
-              required
-              disabled={!formData.clienteId || tiposPermitidos.length === 0 || isRenewing}
-            >
-              <SelectTrigger id="type" className={`text-sm ${isRenewing ? 'bg-muted cursor-not-allowed' : ''}`}>
-                <SelectValue placeholder={formData.clienteId ? (tiposPermitidos.length > 0 ? "Selecione o tipo" : "Nenhum tipo disponível") : "Selecione um cliente"} />
-              </SelectTrigger>
-              <SelectContent>
-                {tiposPermitidos.length > 0 ? (
-                  tiposPermitidos.map((type) => (
+            {/* Se está em funcionamento ou em abertura (edição), mostra como somente leitura */}
+            {editingAlvara ? (
+              <Input
+                id="type"
+                value={formData.type}
+                readOnly
+                disabled
+                className="text-sm bg-muted cursor-not-allowed"
+              />
+            ) : (
+              <Select
+                value={formData.type}
+                onValueChange={(value) => setFormData({ ...formData, type: value as AlvaraType })}
+                required
+                disabled={!formData.clienteId || isRenewing}
+              >
+                <SelectTrigger id="type" className={`text-sm ${isRenewing ? 'bg-muted cursor-not-allowed' : ''}`}> 
+                  <SelectValue placeholder={formData.clienteId ? (tiposPermitidos.length > 0 ? "Selecione o tipo" : "Nenhum tipo disponível") : "Selecione um cliente"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Sempre mostra o tipo atual se não estiver em tiposPermitidos OU se tiposPermitidos está vazio */}
+                  {formData.type && (!tiposPermitidos.includes(formData.type) || tiposPermitidos.length === 0) && (
+                    <SelectItem key={formData.type} value={formData.type}>
+                      {formData.type} (atual)
+                    </SelectItem>
+                  )}
+                  {tiposPermitidos.length > 0 && tiposPermitidos.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
-                  ))
-                ) : (
-                  <div className="p-2 text-muted-foreground text-xs sm:text-sm">Nenhum tipo disponível</div>
-                )}
-              </SelectContent>
-            </Select>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {isRenewing && (
               <p className="text-xs text-muted-foreground">
                 O tipo de alvará não pode ser alterado em processo de renovação.
@@ -386,6 +399,7 @@ export function AlvaraForm({
                 onValueChange={(status) =>
                   setFormData({ ...formData, processingStatus: status })
                 }
+                onlyInitialOptions
               />
             </div>
           )}

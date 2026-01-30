@@ -108,6 +108,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                       size="icon"
                       onClick={() => onEdit(alvara)}
                       className="h-7 w-7 sm:h-8 sm:w-8"
+                      title="Editar Alvará"
                     >
                       <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
@@ -150,6 +151,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                       size="icon"
                       onClick={() => onDelete(alvara.id)}
                       className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
+                      title="Excluir Alvará"
                     >
                       <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
