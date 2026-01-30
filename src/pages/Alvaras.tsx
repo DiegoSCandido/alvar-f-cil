@@ -46,6 +46,11 @@ const AlvarasPage = () => {
   const [isRenewing, setIsRenewing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
+
+  // Para destacar o StatCard ativo
+  const handleStatCardClick = (status: AlvaraStatus | 'all') => {
+    setStatusFilter((prev) => (prev === status ? 'all' : status));
+  };
   const [activeTab, setActiveTab] = useState<'novos' | 'funcionamento'>('funcionamento');
   const [finalizandoAlvara, setFinalizandoAlvara] = useState<Alvara | null>(null);
   const [finalizacaoDate, setFinalizacaoDate] = useState('');
@@ -386,25 +391,34 @@ const AlvarasPage = () => {
                 title="Total"
                 value={statsFuncionamento.total}
                 icon={Building2}
-                variant="valid"
+                variant={statusFilter === 'all' ? 'valid' : 'default'}
+                onClick={() => handleStatCardClick('all')}
+                // Destaca se nenhum filtro está ativo
+                description={statusFilter === 'all' ? 'Exibindo todos' : undefined}
               />
               <StatCard
                 title="Válidos"
                 value={statsFuncionamento.valid}
                 icon={CheckCircle}
-                variant="valid"
+                variant={statusFilter === 'valid' ? 'valid' : 'default'}
+                onClick={() => handleStatCardClick('valid')}
+                description={statusFilter === 'valid' ? 'Filtrando válidos' : undefined}
               />
               <StatCard
                 title="Vencendo"
                 value={statsFuncionamento.expiring}
                 icon={AlertTriangle}
-                variant="expiring"
+                variant={statusFilter === 'expiring' ? 'expiring' : 'default'}
+                onClick={() => handleStatCardClick('expiring')}
+                description={statusFilter === 'expiring' ? 'Filtrando vencendo' : undefined}
               />
               <StatCard
                 title="Vencidos"
                 value={statsFuncionamento.expired}
                 icon={XCircle}
-                variant="expired"
+                variant={statusFilter === 'expired' ? 'expired' : 'default'}
+                onClick={() => handleStatCardClick('expired')}
+                description={statusFilter === 'expired' ? 'Filtrando vencidos' : undefined}
               />
             </div>
 

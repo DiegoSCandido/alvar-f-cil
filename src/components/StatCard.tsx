@@ -25,7 +25,9 @@ export function StatCard({
       onClick={onClick}
       className={cn(
         'bg-card rounded-lg border p-6 shadow-sm hover:shadow-md transition-all animate-fade-in',
-        onClick && 'hover:border-primary/50 cursor-pointer'
+        onClick && 'hover:border-primary/50 cursor-pointer',
+        // Destaca o card ativo
+        variant !== 'default' && 'border-primary ring-2 ring-primary/30'
       )}
     >
       <div className="flex items-center justify-between">
