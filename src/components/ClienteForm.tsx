@@ -419,12 +419,8 @@ export function ClienteForm({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4 text-xs sm:text-sm">
             <TabsTrigger value="dados">Dados</TabsTrigger>
-            <TabsTrigger value="atividades">
-              Ativid.
-            </TabsTrigger>
-            <TabsTrigger value="documentos" disabled={!editingCliente}>
-              Docs
-            </TabsTrigger>
+            <TabsTrigger value="atividades">Ativid.</TabsTrigger>
+            <TabsTrigger value="documentos" disabled={!editingCliente}>Docs</TabsTrigger>
           </TabsList>
 
           {/* Aba Dados Básicos */}

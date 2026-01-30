@@ -38,9 +38,7 @@ export function StatCard({
           ) : (
             <p className="text-3xl font-bold mt-1">{value}</p>
           )}
-          {description && (
-            <p className="text-xs text-muted-foreground mt-2">{description}</p>
-          )}
+          {/* descrição removida */}
         </div>
         {Icon && (
           <div

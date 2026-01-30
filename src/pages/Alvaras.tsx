@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { FinalizeAlvaraModal } from '@/components/FinalizeAlvaraModal';
 import { useAlvaraUpload } from '@/hooks/useAlvaraUpload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -47,7 +47,7 @@ const AlvarasPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
 
-  // Para destacar o StatCard ativo
+  // Para destacar o StatCard ativo em funcionamento
   const handleStatCardClick = (status: AlvaraStatus | 'all') => {
     setStatusFilter((prev) => (prev === status ? 'all' : status));
   };
@@ -95,21 +95,39 @@ const AlvarasPage = () => {
   // Filtro de processamento para novos alvarás
   const [processingFilter, setProcessingFilter] = useState<'all' | 'lançado' | 'aguardando_cliente' | 'aguardando_orgao'>('all');
 
+  // Garante que ao trocar de aba, o filtro correto é resetado
+  // (evita bug de filtro travado ao alternar abas)
+  useEffect(() => {
+    if (activeTab === 'novos') setStatusFilter('all');
+    if (activeTab === 'funcionamento') setProcessingFilter('all');
+  }, [activeTab]);
+
   // Filtrar alvarás baseado na aba ativa e filtros
   const filteredAlvaras = useMemo(() => {
-    const alvarasToFilter = activeTab === 'novos' ? novosAlvaras : alvarasEmFuncionamento;
-    return alvarasToFilter.filter((alvara) => {
-      if (!alvara || !alvara.clientName || !alvara.type) return false;
-      const matchesSearch =
-        alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alvara.clientCnpj.includes(searchTerm) ||
-        alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
-      // Filtro de processamento só para novos
-      const matchesProcessing =
-        activeTab !== 'novos' || processingFilter === 'all' || alvara.processingStatus === processingFilter;
-      return matchesSearch && matchesProcessing;
-    });
-  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, processingFilter]);
+    if (activeTab === 'novos') {
+      return novosAlvaras.filter((alvara) => {
+        if (!alvara || !alvara.clientName || !alvara.type) return false;
+        const matchesSearch =
+          alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          alvara.clientCnpj.includes(searchTerm) ||
+          alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesProcessing =
+          processingFilter === 'all' || alvara.processingStatus === processingFilter;
+        return matchesSearch && matchesProcessing;
+      });
+    } else {
+      return alvarasEmFuncionamento.filter((alvara) => {
+        if (!alvara || !alvara.clientName || !alvara.type) return false;
+        const matchesSearch =
+          alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          alvara.clientCnpj.includes(searchTerm) ||
+          alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus =
+          statusFilter === 'all' || alvara.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+    }
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, processingFilter, statusFilter]);
 
   const handleAddAlvara = async (data: AlvaraFormData) => {
     try {
@@ -329,7 +347,6 @@ const AlvarasPage = () => {
                 icon={FileText}
                 variant={processingFilter === 'all' ? 'valid' : 'default'}
                 onClick={() => setProcessingFilter('all')}
-                description={processingFilter === 'all' ? 'Exibindo todos' : undefined}
               />
               <StatCard
                 title="Iniciado"
@@ -337,7 +354,6 @@ const AlvarasPage = () => {
                 icon={CheckCircle}
                 variant={processingFilter === 'lançado' ? 'valid' : 'default'}
                 onClick={() => setProcessingFilter('lançado')}
-                description={processingFilter === 'lançado' ? 'Filtrando iniciados' : undefined}
               />
               <StatCard
                 title="Aguardando Cliente"
@@ -345,7 +361,6 @@ const AlvarasPage = () => {
                 icon={Clock}
                 variant={processingFilter === 'aguardando_cliente' ? 'expiring' : 'default'}
                 onClick={() => setProcessingFilter('aguardando_cliente')}
-                description={processingFilter === 'aguardando_cliente' ? 'Filtrando aguardando cliente' : undefined}
               />
               <StatCard
                 title="Aguardando Órgão"
@@ -353,7 +368,6 @@ const AlvarasPage = () => {
                 icon={Building2}
                 variant={processingFilter === 'aguardando_orgao' ? 'expired' : 'default'}
                 onClick={() => setProcessingFilter('aguardando_orgao')}
-                description={processingFilter === 'aguardando_orgao' ? 'Filtrando aguardando órgão' : undefined}
               />
             </div>
 
@@ -405,8 +419,6 @@ const AlvarasPage = () => {
                 icon={Building2}
                 variant={statusFilter === 'all' ? 'valid' : 'default'}
                 onClick={() => handleStatCardClick('all')}
-                // Destaca se nenhum filtro está ativo
-                description={statusFilter === 'all' ? 'Exibindo todos' : undefined}
               />
               <StatCard
                 title="Válidos"
@@ -414,7 +426,6 @@ const AlvarasPage = () => {
                 icon={CheckCircle}
                 variant={statusFilter === 'valid' ? 'valid' : 'default'}
                 onClick={() => handleStatCardClick('valid')}
-                description={statusFilter === 'valid' ? 'Filtrando válidos' : undefined}
               />
               <StatCard
                 title="Vencendo"
@@ -422,7 +433,6 @@ const AlvarasPage = () => {
                 icon={AlertTriangle}
                 variant={statusFilter === 'expiring' ? 'expiring' : 'default'}
                 onClick={() => handleStatCardClick('expiring')}
-                description={statusFilter === 'expiring' ? 'Filtrando vencendo' : undefined}
               />
               <StatCard
                 title="Vencidos"
@@ -430,7 +440,6 @@ const AlvarasPage = () => {
                 icon={XCircle}
                 variant={statusFilter === 'expired' ? 'expired' : 'default'}
                 onClick={() => handleStatCardClick('expired')}
-                description={statusFilter === 'expired' ? 'Filtrando vencidos' : undefined}
               />
             </div>
 
