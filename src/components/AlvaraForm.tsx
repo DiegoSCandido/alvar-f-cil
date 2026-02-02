@@ -216,8 +216,45 @@ export function AlvaraForm({
     );
   };
 
+  // Função utilitária para validar datas
+  function isValidDate(d: unknown): boolean {
+    if (typeof d === 'string') {
+      // Aceita apenas formato yyyy-mm-dd
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+      const date = new Date(d);
+      return !isNaN(date.getTime());
+    }
+    return d instanceof Date && !isNaN(d.getTime());
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validação de datas
+    if (!formData.requestDate || !isValidDate(formData.requestDate)) {
+      setError('Data de solicitação inválida.');
+      return;
+    }
+    if (formData.issueDate && !isValidDate(formData.issueDate)) {
+      setError('Data de emissão inválida.');
+      return;
+    }
+    if (formData.expirationDate && !isValidDate(formData.expirationDate)) {
+      setError('Data de vencimento inválida.');
+      return;
+    }
+    // Validação das datas das taxas
+    if (formData.taxasPorAno && Array.isArray(formData.taxasPorAno)) {
+      for (const taxa of formData.taxasPorAno) {
+        if (taxa.dataTaxaEnviada && !isValidDate(taxa.dataTaxaEnviada)) {
+          setError('Data de envio da taxa inválida.');
+          return;
+        }
+        if (taxa.dataTaxaPaga && !isValidDate(taxa.dataTaxaPaga)) {
+          setError('Data de pagamento da taxa inválida.');
+          return;
+        }
+      }
+    }
     try {
       setIsLoading(true);
       setError(null);
@@ -312,9 +349,15 @@ export function AlvaraForm({
     }
   };
 
-  const formatDateForInput = (date?: Date) => {
+  const formatDateForInput = (date?: Date | string) => {
     if (!date) return '';
-    const d = new Date(date);
+    let d: Date;
+    if (typeof date === 'string') {
+      d = new Date(date);
+    } else {
+      d = date;
+    }
+    if (isNaN(d.getTime())) return '';
     return d.toISOString().split('T')[0];
   };
 
@@ -366,7 +409,11 @@ export function AlvaraForm({
                 <div className="text-amber-900">
                   <div className="font-semibold">Modo Renovação</div>
                   <div className="text-sm mt-1">
-                    Vencimento anterior: <span className="font-mono">{format(new Date(editingAlvara.expirationDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                    Vencimento anterior: <span className="font-mono">{
+                      isValidDate(editingAlvara.expirationDate)
+                        ? format(new Date(editingAlvara.expirationDate), 'dd/MM/yyyy', { locale: ptBR })
+                        : '--/--/----'
+                    }</span>
                   </div>
                 </div>
               </AlertDescription>
@@ -486,6 +533,25 @@ export function AlvaraForm({
               disabled={isRenewing}
             />
           </div>
+          {/* Exibir campo de vencimento apenas ao editar alvará */}
+          {editingAlvara && (
+            <div className="space-y-2">
+              <Label htmlFor="expirationDate" className="text-xs sm:text-sm">Data de Vencimento</Label>
+              <Input
+                id="expirationDate"
+                type="date"
+                value={formatDateForInput(formData.expirationDate)}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    expirationDate: e.target.value ? new Date(e.target.value) : undefined,
+                  })
+                }
+                className="text-sm"
+                disabled={isRenewing}
+              />
+            </div>
+          )}
 
           {isAlvaraEmAbertura && (
             <div className="space-y-2">
