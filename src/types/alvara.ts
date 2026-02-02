@@ -11,6 +11,15 @@ export const ALVARA_TYPES = [
 
 export type AlvaraType = typeof ALVARA_TYPES[number];
 
+
+export interface TaxaAno {
+  ano: number;
+  taxaEnviada: boolean;
+  dataTaxaEnviada: Date | null;
+  taxaPaga: boolean;
+  dataTaxaPaga: Date | null;
+}
+
 export interface Alvara {
   id: string;
   clienteId: string; // ID do cliente cadastrado
@@ -23,6 +32,7 @@ export interface Alvara {
   status: AlvaraStatus;
   processingStatus?: AlvaraProcessingStatus; // Status de processamento do alvará
   notes?: string;
+  taxasPorAno?: TaxaAno[];
 }
 
 export interface AlvaraFormData {
@@ -33,4 +43,5 @@ export interface AlvaraFormData {
   expirationDate?: Date;
   processingStatus?: AlvaraProcessingStatus;
   notes?: string;
+  taxasPorAno?: TaxaAno[];
 }

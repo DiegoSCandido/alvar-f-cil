@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Alvara, AlvaraFormData, ALVARA_TYPES, AlvaraType, AlvaraProcessingStatus } from '@/types/alvara';
+import { Alvara, AlvaraFormData, ALVARA_TYPES, AlvaraType, AlvaraProcessingStatus, TaxaAno } from '@/types/alvara';
 import { Cliente } from '@/types/cliente';
 import { AlvaraProcessingStatusSelect } from './AlvaraProcessingStatusSelect';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,9 @@ export function AlvaraForm({
   const finalizeFileInputRef = useRef<HTMLInputElement>(null);
   const { uploadAlvaraDocument } = useAlvaraUpload();
 
+  // Estado para seleção de ano das taxas
+  const anoAtual = new Date().getFullYear();
+  const [anoSelecionado, setAnoSelecionado] = useState<number>(anoAtual);
   const [formData, setFormData] = useState<AlvaraFormData>(() => ({
     clienteId: editingAlvara?.clienteId || '',
     type: editingAlvara?.type || ('' as AlvaraType),
@@ -70,6 +73,7 @@ export function AlvaraForm({
     expirationDate: editingAlvara?.expirationDate,
     processingStatus: editingAlvara?.processingStatus,
     notes: editingAlvara?.notes || '',
+    taxasPorAno: editingAlvara?.taxasPorAno || [],
   }));
 
   // Filtrar tipos de alvará permitidos pelo cliente selecionado
@@ -91,7 +95,9 @@ export function AlvaraForm({
           expirationDate: editingAlvara.expirationDate,
           processingStatus: editingAlvara.processingStatus,
           notes: editingAlvara.notes || '',
+          taxasPorAno: editingAlvara.taxasPorAno || [],
         });
+        setAnoSelecionado(anoAtual);
       } else {
         setFormData({
           clienteId: '',
@@ -101,7 +107,9 @@ export function AlvaraForm({
           expirationDate: undefined,
           processingStatus: undefined,
           notes: '',
+          taxasPorAno: [],
         });
+        setAnoSelecionado(anoAtual);
       }
     } else {
       // Quando o Dialog fecha, resetar o formulário completamente
@@ -113,13 +121,100 @@ export function AlvaraForm({
         expirationDate: undefined,
         processingStatus: undefined,
         notes: '',
+        taxasPorAno: [],
       });
       setTempNote('');
       setRenewalExpirationDate('');
       setIsConfirmingRenewal(false);
       setError(null);
+      setAnoSelecionado(anoAtual);
     }
-  }, [editingAlvara, open]);
+  }, [editingAlvara, open, anoAtual]);
+  // Funções auxiliares para manipular taxasPorAno
+  const getTaxaAno = (ano: number): TaxaAno => {
+    return (
+      formData.taxasPorAno?.find((t) => t.ano === ano) || {
+        ano,
+        taxaEnviada: false,
+        dataTaxaEnviada: null,
+        taxaPaga: false,
+        dataTaxaPaga: null,
+      }
+    );
+  };
+
+  const setTaxaAno = (ano: number, newTaxa: Partial<TaxaAno>) => {
+    setFormData((prev) => {
+      const taxas = prev.taxasPorAno ? [...prev.taxasPorAno] : [];
+      const idx = taxas.findIndex((t) => t.ano === ano);
+      if (idx >= 0) {
+        taxas[idx] = { ...taxas[idx], ...newTaxa };
+      } else {
+        taxas.push({ ano, taxaEnviada: false, dataTaxaEnviada: null, taxaPaga: false, dataTaxaPaga: null, ...newTaxa });
+      }
+      return { ...prev, taxasPorAno: taxas };
+    });
+  };
+  // UI para seleção de ano e status de taxas (apenas para Alvará de Funcionamento)
+  const renderStatusTaxas = () => {
+    if (formData.type !== 'Alvará de Funcionamento') return null;
+    const taxaAno = getTaxaAno(anoSelecionado);
+    return (
+      <>
+        <div className="mb-1 text-sm text-black">Status das Taxas Alvará</div>
+        <div className="space-y-3 border rounded-md p-4 mt-0 bg-gray-50 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Label htmlFor="ano-taxas" className="text-sm font-medium">Ano:</Label>
+            <Input
+              id="ano-taxas"
+              type="number"
+              min={2000}
+              max={anoAtual + 2}
+              value={anoSelecionado}
+              onChange={e => setAnoSelecionado(Number(e.target.value))}
+              className="w-24 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <input
+                id="taxa-enviada"
+                type="checkbox"
+                checked={taxaAno.taxaEnviada}
+                onChange={e => setTaxaAno(anoSelecionado, { taxaEnviada: e.target.checked })}
+                className="accent-blue-600 h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <Label htmlFor="taxa-enviada" className="text-sm select-none cursor-pointer">Taxas Enviadas</Label>
+              <Input
+                type="date"
+                value={taxaAno.dataTaxaEnviada ? formatDateForInput(taxaAno.dataTaxaEnviada) : ''}
+                onChange={e => setTaxaAno(anoSelecionado, { dataTaxaEnviada: e.target.value ? new Date(e.target.value) : null })}
+                disabled={!taxaAno.taxaEnviada}
+                className="ml-2 w-36 text-xs"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                id="taxa-paga"
+                type="checkbox"
+                checked={taxaAno.taxaPaga}
+                onChange={e => setTaxaAno(anoSelecionado, { taxaPaga: e.target.checked })}
+                className="accent-blue-600 h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <Label htmlFor="taxa-paga" className="text-sm select-none cursor-pointer">Taxas Pagas</Label>
+              <Input
+                type="date"
+                value={taxaAno.dataTaxaPaga ? formatDateForInput(taxaAno.dataTaxaPaga) : ''}
+                onChange={e => setTaxaAno(anoSelecionado, { dataTaxaPaga: e.target.value ? new Date(e.target.value) : null })}
+                disabled={!taxaAno.taxaPaga}
+                className="ml-2 w-36 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,18 +254,19 @@ export function AlvaraForm({
         setError('É obrigatório anexar o PDF do alvará.');
         return;
       }
-      const dataToSubmit = {
+      const dataToSubmit: AlvaraFormData = {
         ...formData,
         type: editingAlvara?.type || formData.type,
-        expirationDate: renewalExpirationDate,
+        expirationDate: new Date(renewalExpirationDate),
         processingStatus: 'lançado' as AlvaraProcessingStatus,
       };
       await onSubmit(dataToSubmit);
       // Upload documento obrigatório
-      if (dataToSubmit && (dataToSubmit as any).id) {
+      // Se precisar do id do novo alvará após criar, ajuste o onSubmit/backend para retornar esse valor
+      if (editingAlvara?.id) {
         setUploading(true);
         try {
-          await uploadAlvaraDocument((dataToSubmit as any).id, finalizeFile);
+          await uploadAlvaraDocument(editingAlvara.id, finalizeFile);
         } catch (uploadErr) {
           setError('Erro ao fazer upload do documento PDF.');
           setUploading(false);
@@ -403,6 +499,9 @@ export function AlvaraForm({
               />
             </div>
           )}
+
+          {/* Status das Taxas (apenas para Alvará de Funcionamento) */}
+          {renderStatusTaxas()}
 
           <div className="space-y-2">
             <Label htmlFor="notes" className="text-xs sm:text-sm">Adicionar Observação</Label>
