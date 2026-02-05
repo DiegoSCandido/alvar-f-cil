@@ -19,7 +19,9 @@ export interface IntelligentUploadResponse {
     id: string;
     razaoSocial: string;
     cnpj: string;
+    alvaras?: string[];
   };
+  tipoHabilitadoAutomaticamente?: boolean;
   message: string;
 }
 
