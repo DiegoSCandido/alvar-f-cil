@@ -53,9 +53,38 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
       alert('Erro ao abrir documento do alvará.');
     }
   };
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return '-';
-    return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
+    
+    try {
+      // Se for string ISO, extrai apenas a parte da data para evitar problemas de timezone
+      let dateObj: Date;
+      if (typeof date === 'string') {
+        // Se for ISO string, extrai apenas YYYY-MM-DD
+        if (date.includes('T')) {
+          const datePart = date.split('T')[0]; // Pega apenas YYYY-MM-DD
+          const [year, month, day] = datePart.split('-').map(Number);
+          // Cria a data em UTC para evitar conversão de timezone
+          dateObj = new Date(Date.UTC(year, month - 1, day));
+        } else {
+          // Se já for formato YYYY-MM-DD, cria direto
+          const [year, month, day] = date.split('-').map(Number);
+          dateObj = new Date(Date.UTC(year, month - 1, day));
+        }
+      } else {
+        dateObj = date;
+      }
+      
+      // Usa métodos UTC para extrair dia, mês e ano sem conversão de timezone
+      const year = dateObj.getUTCFullYear();
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getUTCDate()).padStart(2, '0');
+      
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return '-';
+    }
   };
 
   const getDaysText = (alvara: Alvara) => {
