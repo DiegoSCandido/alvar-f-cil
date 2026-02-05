@@ -105,10 +105,12 @@ const AlvarasPage = () => {
     if (activeTab === 'funcionamento') setProcessingFilter('all');
   }, [activeTab]);
 
-  // Filtrar alvarás baseado na aba ativa e filtros
+  // Filtrar e ordenar alvarás baseado na aba ativa e filtros
   const filteredAlvaras = useMemo(() => {
+    let filtered: Alvara[] = [];
+    
     if (activeTab === 'novos') {
-      return novosAlvaras.filter((alvara) => {
+      filtered = novosAlvaras.filter((alvara) => {
         if (!alvara || !alvara.clientName || !alvara.type) return false;
         const matchesSearch =
           alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,7 +121,7 @@ const AlvarasPage = () => {
         return matchesSearch && matchesProcessing;
       });
     } else {
-      return alvarasEmFuncionamento.filter((alvara) => {
+      filtered = alvarasEmFuncionamento.filter((alvara) => {
         if (!alvara || !alvara.clientName || !alvara.type) return false;
         const matchesSearch =
           alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,7 +131,24 @@ const AlvarasPage = () => {
           statusFilter === 'all' || alvara.status === statusFilter;
         return matchesSearch && matchesStatus;
       });
+      
+      // Ordenar por data de vencimento: mais próxima primeiro
+      filtered.sort((a, b) => {
+        // Alvarás sem data de vencimento vão para o final
+        if (!a.expirationDate && !b.expirationDate) return 0;
+        if (!a.expirationDate) return 1; // a vai para o final
+        if (!b.expirationDate) return -1; // b vai para o final
+        
+        // Compara as datas de vencimento
+        const dateA = new Date(a.expirationDate).getTime();
+        const dateB = new Date(b.expirationDate).getTime();
+        
+        // Ordena do mais próximo (menor data) para o mais distante (maior data)
+        return dateA - dateB;
+      });
     }
+    
+    return filtered;
   }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, processingFilter, statusFilter]);
 
   const handleAddAlvara = async (data: AlvaraFormData) => {

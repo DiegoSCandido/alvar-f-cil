@@ -240,6 +240,61 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     }
   };
 
+  // Função auxiliar para converter ISO string ou Date para formato YYYY-MM-DD sem problemas de timezone
+  const formatDateForInput = (dateValue?: string | Date): string => {
+    if (!dateValue) return '';
+    
+    try {
+      let date: Date;
+      
+      if (typeof dateValue === 'string') {
+        // Se for ISO string, extrai apenas a parte da data (YYYY-MM-DD)
+        if (dateValue.includes('T')) {
+          // É ISO string, extrai apenas a parte da data
+          return dateValue.split('T')[0];
+        }
+        // Se já for formato YYYY-MM-DD, retorna direto
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          return dateValue;
+        }
+        // Tenta converter de string
+        date = new Date(dateValue);
+      } else {
+        date = dateValue;
+      }
+      
+      if (isNaN(date.getTime())) return '';
+      
+      // Usa métodos locais para evitar problemas de timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
+  // Função auxiliar para converter valor do input para ISO string
+  const parseDateFromInput = (value: string): string | undefined => {
+    if (!value) return undefined;
+    
+    try {
+      // O valor já vem no formato YYYY-MM-DD do input type="date"
+      // Cria a data em UTC para evitar problemas de timezone
+      const [year, month, day] = value.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      
+      if (isNaN(date.getTime())) return undefined;
+      
+      // Retorna como ISO string
+      return date.toISOString();
+    } catch {
+      return undefined;
+    }
+  };
+
   const getConfidenceColor = (confianca: number) => {
     if (confianca >= 70) return 'bg-green-100 text-green-800';
     if (confianca >= 50) return 'bg-yellow-100 text-yellow-800';
@@ -443,55 +498,13 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                         <Input
                           id="edit-data-emissao"
                           type="date"
-                          value={
-                            editedData.dataEmissao
-                              ? (() => {
-                                  try {
-                                    const date = typeof editedData.dataEmissao === 'string' 
-                                      ? new Date(editedData.dataEmissao) 
-                                      : editedData.dataEmissao;
-                                    if (isNaN(date.getTime())) return '';
-                                    return format(date, 'yyyy-MM-dd');
-                                  } catch {
-                                    return '';
-                                  }
-                                })()
-                              : extractedData?.dataEmissao
-                              ? (() => {
-                                  try {
-                                    const date = typeof extractedData.dataEmissao === 'string' 
-                                      ? new Date(extractedData.dataEmissao) 
-                                      : extractedData.dataEmissao;
-                                    if (isNaN(date.getTime())) return '';
-                                    return format(date, 'yyyy-MM-dd');
-                                  } catch {
-                                    return '';
-                                  }
-                                })()
-                              : ''
-                          }
+                          value={formatDateForInput(editedData.dataEmissao || extractedData?.dataEmissao)}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            if (!value) {
-                              setEditedData({
-                                ...editedData,
-                                dataEmissao: undefined,
-                              });
-                              return;
-                            }
-                            try {
-                              // Cria a data em UTC para evitar problemas de timezone
-                              const [year, month, day] = value.split('-').map(Number);
-                              const date = new Date(Date.UTC(year, month - 1, day));
-                              if (!isNaN(date.getTime())) {
-                                setEditedData({
-                                  ...editedData,
-                                  dataEmissao: date.toISOString(),
-                                });
-                              }
-                            } catch (err) {
-                              console.error('Erro ao processar data de emissão:', err);
-                            }
+                            const isoString = parseDateFromInput(e.target.value);
+                            setEditedData({
+                              ...editedData,
+                              dataEmissao: isoString,
+                            });
                           }}
                         />
                       </div>
@@ -501,55 +514,13 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                         <Input
                           id="edit-data-vencimento"
                           type="date"
-                          value={
-                            editedData.dataVencimento
-                              ? (() => {
-                                  try {
-                                    const date = typeof editedData.dataVencimento === 'string' 
-                                      ? new Date(editedData.dataVencimento) 
-                                      : editedData.dataVencimento;
-                                    if (isNaN(date.getTime())) return '';
-                                    return format(date, 'yyyy-MM-dd');
-                                  } catch {
-                                    return '';
-                                  }
-                                })()
-                              : extractedData?.dataVencimento
-                              ? (() => {
-                                  try {
-                                    const date = typeof extractedData.dataVencimento === 'string' 
-                                      ? new Date(extractedData.dataVencimento) 
-                                      : extractedData.dataVencimento;
-                                    if (isNaN(date.getTime())) return '';
-                                    return format(date, 'yyyy-MM-dd');
-                                  } catch {
-                                    return '';
-                                  }
-                                })()
-                              : ''
-                          }
+                          value={formatDateForInput(editedData.dataVencimento || extractedData?.dataVencimento)}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            if (!value) {
-                              setEditedData({
-                                ...editedData,
-                                dataVencimento: undefined,
-                              });
-                              return;
-                            }
-                            try {
-                              // Cria a data em UTC para evitar problemas de timezone
-                              const [year, month, day] = value.split('-').map(Number);
-                              const date = new Date(Date.UTC(year, month - 1, day));
-                              if (!isNaN(date.getTime())) {
-                                setEditedData({
-                                  ...editedData,
-                                  dataVencimento: date.toISOString(),
-                                });
-                              }
-                            } catch (err) {
-                              console.error('Erro ao processar data de vencimento:', err);
-                            }
+                            const isoString = parseDateFromInput(e.target.value);
+                            setEditedData({
+                              ...editedData,
+                              dataVencimento: isoString,
+                            });
                           }}
                         />
                       </div>
@@ -864,58 +835,14 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                                   <Label>Data de Emissão</Label>
                                   <Input
                                     type="date"
-                                    value={
-                                      fileData.editedData?.dataEmissao
-                                        ? (() => {
-                                            try {
-                                              const date = typeof fileData.editedData.dataEmissao === 'string' 
-                                                ? new Date(fileData.editedData.dataEmissao) 
-                                                : fileData.editedData.dataEmissao;
-                                              if (isNaN(date.getTime())) return '';
-                                              return format(date, 'yyyy-MM-dd');
-                                            } catch {
-                                              return '';
-                                            }
-                                          })()
-                                        : fileData.extractedData?.dataEmissao
-                                        ? (() => {
-                                            try {
-                                              const date = typeof fileData.extractedData.dataEmissao === 'string' 
-                                                ? new Date(fileData.extractedData.dataEmissao) 
-                                                : fileData.extractedData.dataEmissao;
-                                              if (isNaN(date.getTime())) return '';
-                                              return format(date, 'yyyy-MM-dd');
-                                            } catch {
-                                              return '';
-                                            }
-                                          })()
-                                        : ''
-                                    }
+                                    value={formatDateForInput(fileData.editedData?.dataEmissao || fileData.extractedData?.dataEmissao)}
                                     onChange={(e) => {
-                                      const value = e.target.value;
+                                      const isoString = parseDateFromInput(e.target.value);
                                       const current = fileData.editedData || {};
-                                      
-                                      if (!value) {
-                                        updateFileData(index, {
-                                          ...current,
-                                          dataEmissao: undefined,
-                                        });
-                                        return;
-                                      }
-                                      
-                                      try {
-                                        // Cria a data em UTC para evitar problemas de timezone
-                                        const [year, month, day] = value.split('-').map(Number);
-                                        const date = new Date(Date.UTC(year, month - 1, day));
-                                        if (!isNaN(date.getTime())) {
-                                          updateFileData(index, {
-                                            ...current,
-                                            dataEmissao: date.toISOString(),
-                                          });
-                                        }
-                                      } catch (err) {
-                                        console.error('Erro ao processar data de emissão:', err);
-                                      }
+                                      updateFileData(index, {
+                                        ...current,
+                                        dataEmissao: isoString,
+                                      });
                                     }}
                                   />
                                 </div>
@@ -924,58 +851,14 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                                   <Label>Data de Vencimento</Label>
                                   <Input
                                     type="date"
-                                    value={
-                                      fileData.editedData?.dataVencimento
-                                        ? (() => {
-                                            try {
-                                              const date = typeof fileData.editedData.dataVencimento === 'string' 
-                                                ? new Date(fileData.editedData.dataVencimento) 
-                                                : fileData.editedData.dataVencimento;
-                                              if (isNaN(date.getTime())) return '';
-                                              return format(date, 'yyyy-MM-dd');
-                                            } catch {
-                                              return '';
-                                            }
-                                          })()
-                                        : fileData.extractedData?.dataVencimento
-                                        ? (() => {
-                                            try {
-                                              const date = typeof fileData.extractedData.dataVencimento === 'string' 
-                                                ? new Date(fileData.extractedData.dataVencimento) 
-                                                : fileData.extractedData.dataVencimento;
-                                              if (isNaN(date.getTime())) return '';
-                                              return format(date, 'yyyy-MM-dd');
-                                            } catch {
-                                              return '';
-                                            }
-                                          })()
-                                        : ''
-                                    }
+                                    value={formatDateForInput(fileData.editedData?.dataVencimento || fileData.extractedData?.dataVencimento)}
                                     onChange={(e) => {
-                                      const value = e.target.value;
+                                      const isoString = parseDateFromInput(e.target.value);
                                       const current = fileData.editedData || {};
-                                      
-                                      if (!value) {
-                                        updateFileData(index, {
-                                          ...current,
-                                          dataVencimento: undefined,
-                                        });
-                                        return;
-                                      }
-                                      
-                                      try {
-                                        // Cria a data em UTC para evitar problemas de timezone
-                                        const [year, month, day] = value.split('-').map(Number);
-                                        const date = new Date(Date.UTC(year, month - 1, day));
-                                        if (!isNaN(date.getTime())) {
-                                          updateFileData(index, {
-                                            ...current,
-                                            dataVencimento: date.toISOString(),
-                                          });
-                                        }
-                                      } catch (err) {
-                                        console.error('Erro ao processar data de vencimento:', err);
-                                      }
+                                      updateFileData(index, {
+                                        ...current,
+                                        dataVencimento: isoString,
+                                      });
                                     }}
                                   />
                                 </div>
