@@ -21,12 +21,17 @@ const Sidebar = () => {
       path: '/clientes',
       icon: Users,
     },
-      {
-        label: 'Alvarás',
-        path: '/alvaras',
-        icon: FileText,
-      },
-      // 'Certificados' removed from nav until page is implemented
+    {
+      label: 'Alvarás',
+      path: '/alvaras',
+      icon: FileText,
+    },
+    {
+      label: 'Taxas de Funcionamento',
+      path: '/taxas',
+      icon: Shield,
+    },
+    // 'Certificados' removed from nav until page is implemented
   ];
 
   const handleLogout = () => {

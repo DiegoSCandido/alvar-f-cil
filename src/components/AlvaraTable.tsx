@@ -63,9 +63,9 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold text-xs sm:text-sm">Cliente</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm min-w-[250px]">Cliente</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">CNPJ</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell min-w-[200px]">Tipo</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Vencimento</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Prazo</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm">Status</TableHead>
@@ -83,14 +83,18 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                 }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <TableCell className="font-medium max-w-[120px] truncate">
-                  {alvara.clientName}
+                <TableCell className="font-medium min-w-[250px] max-w-[400px]">
+                  <div className="truncate" title={alvara.clientName}>
+                    {alvara.clientName}
+                  </div>
                 </TableCell>
                 <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
                   {formatCnpj(alvara.clientCnpj)}
                 </TableCell>
-                <TableCell className="hidden md:table-cell max-w-[100px] truncate">
-                  {alvara.type}
+                <TableCell className="hidden md:table-cell min-w-[200px] max-w-[300px]">
+                  <div className="truncate" title={alvara.type}>
+                    {alvara.type}
+                  </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell whitespace-nowrap">
                   {formatDate(alvara.expirationDate)}
@@ -135,7 +139,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                         <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     )}
-                    {onRenew && (alvara.status === 'expiring' || alvara.status === 'expired') && (
+                    {onRenew && (
                       <Button
                         variant="ghost"
                         size="icon"

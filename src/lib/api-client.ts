@@ -51,6 +51,11 @@ async function apiCall<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    // Se for erro de validação do Zod, mostrar detalhes
+    if (error.details && Array.isArray(error.details)) {
+      const details = error.details.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ');
+      throw new Error(`Erro de validação: ${details}`);
+    }
     throw new Error(error.error || `API error: ${response.statusText}`);
   }
 
@@ -116,4 +121,13 @@ export const documentoClienteAPI = {
   create: (clienteId: string, data: any) => apiCall(`/documentos-cliente/${clienteId}`, { method: 'POST', body: data }),
   delete: (id: string) => apiCall(`/documentos-cliente/${id}`, { method: 'DELETE' }),
   download: (id: string) => `${API_BASE_URL}/documentos-cliente/download/${id}`,
+};
+
+// Taxas de Funcionamento
+export const taxaAPI = {
+  list: (ano?: number) => apiCall(`/taxas${ano ? `?ano=${ano}` : ''}`),
+  get: (id: string) => apiCall(`/taxas/${id}`),
+  create: (data: any) => apiCall('/taxas', { method: 'POST', body: data }),
+  update: (id: string, data: any) => apiCall(`/taxas/${id}`, { method: 'PUT', body: data }),
+  delete: (id: string) => apiCall(`/taxas/${id}`, { method: 'DELETE' }),
 };

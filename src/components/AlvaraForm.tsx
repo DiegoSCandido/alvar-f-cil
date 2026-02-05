@@ -447,7 +447,7 @@ export function AlvaraForm({
                 ) : (
                   clientes.map((cliente) => (
                     <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nomeFantasia} - {formatCnpj(cliente.cnpj)}
+                      {cliente.razaoSocial}
                     </SelectItem>
                   ))
                 )}

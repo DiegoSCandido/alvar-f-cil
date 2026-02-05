@@ -168,14 +168,21 @@ const AlvarasPage = () => {
           });
         }
       } else {
-        await addAlvara(data);
+        // Criar novo alvará
+        const novoAlvara = await addAlvara(data);
+        setIsFormOpen(false);
+        setEditingAlvara(null);
+        
+        // Abrir modal de finalização automaticamente
+        setFinalizandoAlvara(novoAlvara);
+        setFinalizacaoDate('');
+        setFinalizeFile(null);
+        
         toast({
           title: 'Alvará cadastrado',
-          description: 'O novo alvará foi adicionado ao sistema.',
+          description: 'Complete a finalização para mover o alvará para Em Funcionamento.',
         });
       }
-      setIsFormOpen(false);
-      setEditingAlvara(null);
     } catch (error) {
       toast({
         title: 'Erro',
@@ -502,7 +509,13 @@ const AlvarasPage = () => {
       <FinalizeAlvaraModal
         open={!!finalizandoAlvara}
         onOpenChange={(open) => {
-          if (!open) setFinalizandoAlvara(null);
+          if (!open) {
+            // Se fechar sem finalizar, garantir que está na aba "Novos Alvarás"
+            if (finalizandoAlvara && !finalizandoAlvara.issueDate) {
+              setActiveTab('novos');
+            }
+            setFinalizandoAlvara(null);
+          }
         }}
         onFinalize={async ({ expirationDate, file }) => {
           if (!finalizandoAlvara || !expirationDate || !file) return;

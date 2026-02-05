@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ClientesPage from "./pages/Clientes";
 import AlvarasPage from "./pages/Alvaras";
+import TaxasPage from "./pages/Taxas";
 // Certificados page temporarily removed from imports to avoid production build errors
 // import CertificadosPage from "./pages/Certificados";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const AppContent = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/alvaras" element={<AlvarasPage />} />
+          <Route path="/taxas" element={<TaxasPage />} />
           {/* /certificados route removed temporarily until page is ready */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

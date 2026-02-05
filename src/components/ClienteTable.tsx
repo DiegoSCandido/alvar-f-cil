@@ -76,7 +76,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="font-semibold text-xs sm:text-sm">CNPJ</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm">Razão Social</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm min-w-[250px]">Razão Social</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">UF</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Município</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Alvará Func.</TableHead>
@@ -112,8 +112,10 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                   <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
                     {formatCnpj(cliente.cnpj)}
                   </TableCell>
-                  <TableCell className="font-medium max-w-[150px] truncate">
-                    {cliente.razaoSocial}
+                  <TableCell className="font-medium min-w-[250px] max-w-[400px]">
+                    <div className="truncate" title={cliente.razaoSocial}>
+                      {cliente.razaoSocial}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">{cliente.uf}</TableCell>
                   <TableCell className="hidden lg:table-cell max-w-[100px] truncate">
