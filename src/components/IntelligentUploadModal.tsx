@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Scan, X, Files } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Scan, X, Files, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,11 +10,15 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIntelligentUpload, ExtractedData } from '@/hooks/useIntelligentUpload';
 import { useIntelligentUploadMultiple } from '@/hooks/useIntelligentUploadMultiple';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ALVARA_TYPES } from '@/types/alvara';
 
 interface IntelligentUploadModalProps {
   open: boolean;
@@ -29,8 +33,20 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
   const [files, setFiles] = useState<File[]>([]);
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [mode, setMode] = useState<'single' | 'multiple'>('single');
+  const [isConfirmed, setIsConfirmed] = useState(false); // Estado para controlar confirmação
+  const [isEditing, setIsEditing] = useState(false); // Estado para controlar edição
+  const [editedData, setEditedData] = useState<Partial<ExtractedData>>({}); // Dados editados
   const fileInputRef = useRef<HTMLInputElement>(null);
   const filesInputRef = useRef<HTMLInputElement>(null);
+
+  // Reseta confirmação e edição quando novos dados são extraídos
+  useEffect(() => {
+    if (extractedData) {
+      setIsConfirmed(false);
+      setIsEditing(false);
+      setEditedData({});
+    }
+  }, [extractedData]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -38,6 +54,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
       setFile(selectedFile);
       reset();
       setUploadResult(null);
+      setIsConfirmed(false); // Reseta confirmação ao selecionar novo arquivo
     } else {
       alert('Por favor, selecione um arquivo PDF');
     }
@@ -84,15 +101,25 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     if (!file) return;
 
     try {
+      setIsConfirmed(false); // Reseta confirmação ao extrair novamente
+      setUploadResult(null); // Limpa resultado anterior
       await extractPDF(file);
     } catch (err) {
       // Erro já está sendo tratado pelo hook
+      setIsConfirmed(false); // Garante reset mesmo em caso de erro
     }
   };
 
+  const handleConfirmData = () => {
+    // Marca os dados como confirmados
+    setIsConfirmed(true);
+  };
+
   const handleUpload = async () => {
+    // Esta função só é chamada quando isConfirmed é true
+    // Cria o alvará no banco de dados com dados editados (se houver)
     try {
-      const result = await uploadPDF();
+      const result = await uploadPDF(Object.keys(editedData).length > 0 ? editedData : undefined);
       setUploadResult(result);
       if (onSuccess) {
         setTimeout(() => {
@@ -105,6 +132,28 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     }
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+    // Inicializa editedData com os dados extraídos
+    setEditedData({
+      tipo: extractedData?.tipo,
+      cnpj: extractedData?.cnpj,
+      razaoSocial: extractedData?.razaoSocial,
+      dataVencimento: extractedData?.dataVencimento,
+      dataEmissao: extractedData?.dataEmissao,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    setIsEditing(false);
+    setIsConfirmed(false); // Reseta confirmação para permitir revisão
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedData({});
+  };
+
   const handleClose = () => {
     setFile(null);
     setFiles([]);
@@ -112,6 +161,9 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     resetMultiple();
     setUploadResult(null);
     setMode('single');
+    setIsConfirmed(false); // Reseta confirmação ao fechar
+    setIsEditing(false);
+    setEditedData({});
     onOpenChange(false);
   };
 
@@ -246,41 +298,197 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
             <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold">Dados Extraídos do PDF</h4>
-                <Badge className={getConfidenceColor(extractedData.confianca)}>
-                  {extractedData.confianca}% confiança
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={getConfidenceColor(extractedData.confianca)}>
+                    {extractedData.confianca}% confiança
+                  </Badge>
+                  {!isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="h-7"
+                    >
+                      <Edit2 className="h-3 w-3 mr-1" />
+                      Editar
+                    </Button>
+                  )}
+                </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Tipo de Alvará</p>
-                  <p className="font-medium">{extractedData.tipo || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">CNPJ</p>
-                  <p className="font-medium">{extractedData.cnpj || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Razão Social</p>
-                  <p className="font-medium">{extractedData.razaoSocial || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Data de Vencimento</p>
-                  <p className="font-medium">{formatDate(extractedData.dataVencimento)}</p>
-                </div>
-                {extractedData.numeroAlvara && (
-                  <div>
-                    <p className="text-muted-foreground">Número do Alvará</p>
-                    <p className="font-medium">{extractedData.numeroAlvara}</p>
-                  </div>
-                )}
-              </div>
+              {isEditing ? (
+                // Formulário de edição
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-tipo">Tipo de Alvará *</Label>
+                      <Select
+                        value={editedData.tipo || extractedData.tipo || ''}
+                        onValueChange={(value) => setEditedData({ ...editedData, tipo: value })}
+                      >
+                        <SelectTrigger id="edit-tipo">
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALVARA_TYPES.map((tipo) => (
+                            <SelectItem key={tipo} value={tipo}>
+                              {tipo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {!error && (
-                <Button onClick={handleUpload} className="w-full" disabled={isUploading}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirmar e Criar Alvará
-                </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-cnpj">CNPJ *</Label>
+                      <Input
+                        id="edit-cnpj"
+                        value={editedData.cnpj || extractedData.cnpj || ''}
+                        onChange={(e) => setEditedData({ ...editedData, cnpj: e.target.value })}
+                        placeholder="00.000.000/0000-00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-razao-social">Razão Social</Label>
+                      <Input
+                        id="edit-razao-social"
+                        value={editedData.razaoSocial || extractedData.razaoSocial || ''}
+                        onChange={(e) => setEditedData({ ...editedData, razaoSocial: e.target.value })}
+                        placeholder="Nome da empresa"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-data-emissao">Data de Emissão</Label>
+                        <Input
+                          id="edit-data-emissao"
+                          type="date"
+                          value={
+                            editedData.dataEmissao
+                              ? format(new Date(editedData.dataEmissao), 'yyyy-MM-dd')
+                              : extractedData.dataEmissao
+                              ? format(new Date(extractedData.dataEmissao), 'yyyy-MM-dd')
+                              : ''
+                          }
+                          onChange={(e) =>
+                            setEditedData({
+                              ...editedData,
+                              dataEmissao: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-data-vencimento">Data de Vencimento</Label>
+                        <Input
+                          id="edit-data-vencimento"
+                          type="date"
+                          value={
+                            editedData.dataVencimento
+                              ? format(new Date(editedData.dataVencimento), 'yyyy-MM-dd')
+                              : extractedData.dataVencimento
+                              ? format(new Date(extractedData.dataVencimento), 'yyyy-MM-dd')
+                              : ''
+                          }
+                          onChange={(e) =>
+                            setEditedData({
+                              ...editedData,
+                              dataVencimento: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {extractedData.numeroAlvara && (
+                      <div className="space-y-2">
+                        <Label>Número do Alvará</Label>
+                        <p className="text-sm text-muted-foreground">{extractedData.numeroAlvara}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveEdit} className="flex-1" variant="default">
+                      Salvar Alterações
+                    </Button>
+                    <Button onClick={handleCancelEdit} className="flex-1" variant="outline">
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // Visualização dos dados
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Tipo de Alvará</p>
+                    <p className="font-medium">{editedData.tipo || extractedData.tipo || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">CNPJ</p>
+                    <p className="font-medium">{editedData.cnpj || extractedData.cnpj || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Razão Social</p>
+                    <p className="font-medium">{editedData.razaoSocial || extractedData.razaoSocial || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Data de Vencimento</p>
+                    <p className="font-medium">
+                      {formatDate(editedData.dataVencimento || extractedData.dataVencimento)}
+                    </p>
+                  </div>
+                  {extractedData.numeroAlvara && (
+                    <div>
+                      <p className="text-muted-foreground">Número do Alvará</p>
+                      <p className="font-medium">{extractedData.numeroAlvara}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!error && !isEditing && (
+                <div className="space-y-2">
+                  {!isConfirmed ? (
+                    <Button onClick={handleConfirmData} className="w-full" variant="default">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirmar Dados e Prosseguir
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <Alert className="bg-blue-50 border-blue-200">
+                        <AlertDescription className="text-blue-800 text-sm">
+                          Dados confirmados. Clique no botão abaixo para criar o alvará.
+                        </AlertDescription>
+                      </Alert>
+                      <Button onClick={handleUpload} className="w-full" disabled={isUploading} variant="default">
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Criando Alvará...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Criar Alvará
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        onClick={() => setIsConfirmed(false)} 
+                        className="w-full" 
+                        variant="outline"
+                        disabled={isUploading}
+                      >
+                        Voltar e Revisar
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}

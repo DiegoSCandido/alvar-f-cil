@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { Alvara } from '@/types/alvara';
 import { StatusBadge } from './StatusBadge';
 import { getDaysUntilExpiration, formatCnpj } from '@/lib/alvara-utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Trash2, Edit, CheckCircle, RotateCw, Download } from 'lucide-react';
+import { Trash2, Edit, CheckCircle, RotateCw, Download, Eye } from 'lucide-react';
 import { useDocumentosAlvaraDownload } from '@/hooks/useDocumentosAlvaraDownload';
 import { Button } from '@/components/ui/button';
+import { DocumentPreviewModal } from './DocumentPreviewModal';
 import {
   Table,
   TableBody,
@@ -25,16 +27,32 @@ interface AlvaraTableProps {
 
 export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: AlvaraTableProps) {
   const { getDownloadUrl, isLoading: isDownloading } = useDocumentosAlvaraDownload();
-    // Handler para download do PDF do alvará
-    const handleDownload = async (alvaraId: string) => {
-      try {
-        const { signedUrl } = await getDownloadUrl(alvaraId);
-        // Abre o PDF em uma nova aba
-        window.open(signedUrl, '_blank', 'noopener');
-      } catch (err) {
-        alert('Erro ao abrir documento do alvará.');
-      }
-    };
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Handler para visualizar o PDF do alvará
+  const handlePreview = async (alvaraId: string) => {
+    try {
+      const { signedUrl, originalName } = await getDownloadUrl(alvaraId);
+      setPreviewUrl(signedUrl);
+      setPreviewName(originalName || 'Documento do Alvará');
+      setIsPreviewOpen(true);
+    } catch (err) {
+      alert('Erro ao carregar documento do alvará.');
+    }
+  };
+
+  // Handler para download do PDF do alvará
+  const handleDownload = async (alvaraId: string) => {
+    try {
+      const { signedUrl } = await getDownloadUrl(alvaraId);
+      // Abre o PDF em uma nova aba
+      window.open(signedUrl, '_blank', 'noopener');
+    } catch (err) {
+      alert('Erro ao abrir documento do alvará.');
+    }
+  };
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
@@ -128,16 +146,28 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                       </Button>
                     )}
                     {alvara.issueDate && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDownload(alvara.id)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
-                        title="Baixar PDF do Alvará"
-                        disabled={isDownloading}
-                      >
-                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handlePreview(alvara.id)}
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+                          title="Visualizar PDF do Alvará"
+                          disabled={isDownloading}
+                        >
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownload(alvara.id)}
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+                          title="Baixar PDF do Alvará"
+                          disabled={isDownloading}
+                        >
+                          <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </>
                     )}
                     {onRenew && (
                       <Button
@@ -166,6 +196,14 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
           </TableBody>
         </Table>
       </div>
+
+      {/* Modal de pré-visualização */}
+      <DocumentPreviewModal
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        documentUrl={previewUrl}
+        documentName={previewName}
+      />
     </div>
   );
 }

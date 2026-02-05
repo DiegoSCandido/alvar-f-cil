@@ -66,7 +66,7 @@ export function useIntelligentUpload() {
     }
   };
 
-  const uploadPDF = async (): Promise<IntelligentUploadResponse> => {
+  const uploadPDF = async (editedData?: Partial<ExtractedData>): Promise<IntelligentUploadResponse> => {
     if (!currentFile) throw new Error('Nenhum arquivo selecionado');
     
     setIsUploading(true);
@@ -75,6 +75,15 @@ export function useIntelligentUpload() {
     try {
       const formData = new FormData();
       formData.append('file', currentFile);
+
+      // Se houver dados editados, adiciona ao FormData
+      if (editedData) {
+        if (editedData.tipo) formData.append('tipo', editedData.tipo);
+        if (editedData.cnpj) formData.append('cnpj', editedData.cnpj);
+        if (editedData.razaoSocial) formData.append('razaoSocial', editedData.razaoSocial);
+        if (editedData.dataVencimento) formData.append('dataVencimento', editedData.dataVencimento);
+        if (editedData.dataEmissao) formData.append('dataEmissao', editedData.dataEmissao);
+      }
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/alvaras/intelligent-upload`, {
