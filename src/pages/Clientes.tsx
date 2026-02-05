@@ -29,11 +29,11 @@ const ClientesPage = () => {
 
       const searchLower = searchTerm.toLowerCase();
       const razaoSocialMatch = cliente.razaoSocial ? cliente.razaoSocial.toLowerCase().includes(searchLower) : false;
-      const nomeFantasiaMatch = cliente.nomeFantasia ? cliente.nomeFantasia.toLowerCase().includes(searchLower) : false;
+      // Removido nomeFantasiaMatch
       const cnpjMatch = cliente.cnpj ? cliente.cnpj.includes(searchTerm) : false;
       const municipioMatch = cliente.municipio ? cliente.municipio.toLowerCase().includes(searchLower) : false;
 
-      return razaoSocialMatch || nomeFantasiaMatch || cnpjMatch || municipioMatch;
+      return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
   }, [clientes, searchTerm]);
 
