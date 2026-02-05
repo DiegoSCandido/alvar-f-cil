@@ -37,19 +37,102 @@ export interface MultipleUploadResponse {
   message: string;
 }
 
+export interface FileWithExtractedData {
+  file: File;
+  extractedData?: ExtractedData;
+  editedData?: Partial<ExtractedData>;
+  isEditing?: boolean;
+}
+
 export function useIntelligentUploadMultiple() {
   const [isUploading, setIsUploading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [uploadResults, setUploadResults] = useState<MultipleUploadResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filesWithData, setFilesWithData] = useState<FileWithExtractedData[]>([]);
 
-  const uploadPDFs = async (files: File[]): Promise<MultipleUploadResponse> => {
+  const extractAllPDFs = async (files: File[]): Promise<FileWithExtractedData[]> => {
+    setIsExtracting(true);
+    setError(null);
+    
+    try {
+      const filesWithExtractedData: FileWithExtractedData[] = [];
+      
+      for (const file of files) {
+        if (file.type !== 'application/pdf') {
+          filesWithExtractedData.push({ file });
+          continue;
+        }
+
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${API_BASE_URL}/alvaras/extract-pdf`, {
+            method: 'POST',
+            body: formData,
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.extractedData) {
+            filesWithExtractedData.push({
+              file,
+              extractedData: data.extractedData,
+            });
+          } else {
+            filesWithExtractedData.push({
+              file,
+              extractedData: data.extractedData || undefined,
+            });
+          }
+        } catch (err) {
+          filesWithExtractedData.push({ file });
+        }
+      }
+
+      setFilesWithData(filesWithExtractedData);
+      return filesWithExtractedData;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao extrair dados';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const updateFileData = (index: number, editedData: Partial<ExtractedData>) => {
+    const updated = [...filesWithData];
+    updated[index] = {
+      ...updated[index],
+      editedData: { ...updated[index].editedData, ...editedData },
+    };
+    setFilesWithData(updated);
+  };
+
+  const uploadPDFs = async (filesWithExtracted: FileWithExtractedData[]): Promise<MultipleUploadResponse> => {
     setIsUploading(true);
     setError(null);
     
     try {
       const formData = new FormData();
-      files.forEach(file => {
-        formData.append('files', file);
+      
+      // Adiciona os arquivos
+      filesWithExtracted.forEach((item, index) => {
+        formData.append('files', item.file);
+        
+        // Adiciona dados editados se houver
+        const dataToUse = item.editedData || item.extractedData;
+        if (dataToUse) {
+          if (dataToUse.tipo) formData.append(`editedData[${index}][tipo]`, dataToUse.tipo);
+          if (dataToUse.cnpj) formData.append(`editedData[${index}][cnpj]`, dataToUse.cnpj);
+          if (dataToUse.razaoSocial) formData.append(`editedData[${index}][razaoSocial]`, dataToUse.razaoSocial);
+          if (dataToUse.dataVencimento) formData.append(`editedData[${index}][dataVencimento]`, dataToUse.dataVencimento);
+          if (dataToUse.dataEmissao) formData.append(`editedData[${index}][dataEmissao]`, dataToUse.dataEmissao);
+        }
       });
 
       const token = localStorage.getItem('authToken');
@@ -79,7 +162,18 @@ export function useIntelligentUploadMultiple() {
   const reset = () => {
     setUploadResults(null);
     setError(null);
+    setFilesWithData([]);
   };
 
-  return { uploadPDFs, isUploading, uploadResults, error, reset };
+  return { 
+    extractAllPDFs, 
+    uploadPDFs, 
+    isUploading, 
+    isExtracting,
+    uploadResults, 
+    error, 
+    filesWithData,
+    updateFileData,
+    reset 
+  };
 }

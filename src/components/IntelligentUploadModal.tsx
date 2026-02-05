@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Scan, X, Files, Edit2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Scan, X, Files, Edit2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ALVARA_TYPES } from '@/types/alvara';
+import { DocumentPreviewModal } from './DocumentPreviewModal';
 
 interface IntelligentUploadModalProps {
   open: boolean;
@@ -28,7 +29,17 @@ interface IntelligentUploadModalProps {
 
 export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: IntelligentUploadModalProps) {
   const { extractPDF, uploadPDF, isUploading, isExtracting, extractedData, error, reset } = useIntelligentUpload();
-  const { uploadPDFs, isUploading: isUploadingMultiple, uploadResults, error: errorMultiple, reset: resetMultiple } = useIntelligentUploadMultiple();
+  const { 
+    extractAllPDFs, 
+    uploadPDFs, 
+    isUploading: isUploadingMultiple, 
+    isExtracting: isExtractingMultiple,
+    uploadResults, 
+    error: errorMultiple, 
+    filesWithData,
+    updateFileData,
+    reset: resetMultiple 
+  } = useIntelligentUploadMultiple();
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [uploadResult, setUploadResult] = useState<any>(null);
@@ -36,6 +47,9 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
   const [isConfirmed, setIsConfirmed] = useState(false); // Estado para controlar confirmação
   const [isEditing, setIsEditing] = useState(false); // Estado para controlar edição
   const [editedData, setEditedData] = useState<Partial<ExtractedData>>({}); // Dados editados
+  const [editingFileIndex, setEditingFileIndex] = useState<number | null>(null); // Índice do arquivo sendo editado
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // URL do PDF para pré-visualização
+  const [previewFileName, setPreviewFileName] = useState<string>(''); // Nome do arquivo sendo visualizado
   const fileInputRef = useRef<HTMLInputElement>(null);
   const filesInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,11 +95,42 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  const handleUploadMultiple = async () => {
+  const handleExtractMultiple = async () => {
     if (files.length === 0) return;
 
     try {
-      const result = await uploadPDFs(files);
+      await extractAllPDFs(files);
+    } catch (err) {
+      // Erro já está sendo tratado pelo hook
+    }
+  };
+
+  const handleEditFile = (index: number) => {
+    setEditingFileIndex(index);
+  };
+
+  const handleSaveFileEdit = (index: number) => {
+    const fileData = filesWithData[index];
+    if (fileData && fileData.editedData) {
+      updateFileData(index, fileData.editedData);
+    }
+    setEditingFileIndex(null);
+  };
+
+  const handleCancelFileEdit = (index: number) => {
+    const updated = [...filesWithData];
+    updated[index] = {
+      ...updated[index],
+      editedData: undefined,
+    };
+    setEditingFileIndex(null);
+  };
+
+  const handleUploadMultiple = async () => {
+    if (filesWithData.length === 0) return;
+
+    try {
+      const result = await uploadPDFs(filesWithData);
       if (onSuccess) {
         setTimeout(() => {
           onSuccess();
@@ -154,7 +199,25 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     setEditedData({});
   };
 
+  const handlePreview = (fileToPreview: File) => {
+    // Cria uma URL de objeto (blob URL) para o arquivo
+    const url = URL.createObjectURL(fileToPreview);
+    setPreviewUrl(url);
+    setPreviewFileName(fileToPreview.name);
+  };
+
+  const handleClosePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl); // Libera a memória
+    }
+    setPreviewUrl(null);
+    setPreviewFileName('');
+  };
+
   const handleClose = () => {
+    // Limpa a pré-visualização se estiver aberta
+    handleClosePreview();
+    
     setFile(null);
     setFiles([]);
     reset();
@@ -164,6 +227,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     setIsConfirmed(false); // Reseta confirmação ao fechar
     setIsEditing(false);
     setEditedData({});
+    setEditingFileIndex(null);
     onOpenChange(false);
   };
 
@@ -302,17 +366,30 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                   <Badge className={getConfidenceColor(extractedData.confianca)}>
                     {extractedData.confianca}% confiança
                   </Badge>
-                  {!isEditing && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEdit}
-                      className="h-7"
-                    >
-                      <Edit2 className="h-3 w-3 mr-1" />
-                      Editar
-                    </Button>
+                  {!isEditing && file && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePreview(file)}
+                        className="h-7"
+                        title="Pré-visualizar PDF"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Ver PDF
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEdit}
+                        className="h-7"
+                      >
+                        <Edit2 className="h-3 w-3 mr-1" />
+                        Editar
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
@@ -368,17 +445,54 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                           type="date"
                           value={
                             editedData.dataEmissao
-                              ? format(new Date(editedData.dataEmissao), 'yyyy-MM-dd')
-                              : extractedData.dataEmissao
-                              ? format(new Date(extractedData.dataEmissao), 'yyyy-MM-dd')
+                              ? (() => {
+                                  try {
+                                    const date = typeof editedData.dataEmissao === 'string' 
+                                      ? new Date(editedData.dataEmissao) 
+                                      : editedData.dataEmissao;
+                                    if (isNaN(date.getTime())) return '';
+                                    return format(date, 'yyyy-MM-dd');
+                                  } catch {
+                                    return '';
+                                  }
+                                })()
+                              : extractedData?.dataEmissao
+                              ? (() => {
+                                  try {
+                                    const date = typeof extractedData.dataEmissao === 'string' 
+                                      ? new Date(extractedData.dataEmissao) 
+                                      : extractedData.dataEmissao;
+                                    if (isNaN(date.getTime())) return '';
+                                    return format(date, 'yyyy-MM-dd');
+                                  } catch {
+                                    return '';
+                                  }
+                                })()
                               : ''
                           }
-                          onChange={(e) =>
-                            setEditedData({
-                              ...editedData,
-                              dataEmissao: e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                            })
-                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (!value) {
+                              setEditedData({
+                                ...editedData,
+                                dataEmissao: undefined,
+                              });
+                              return;
+                            }
+                            try {
+                              // Cria a data em UTC para evitar problemas de timezone
+                              const [year, month, day] = value.split('-').map(Number);
+                              const date = new Date(Date.UTC(year, month - 1, day));
+                              if (!isNaN(date.getTime())) {
+                                setEditedData({
+                                  ...editedData,
+                                  dataEmissao: date.toISOString(),
+                                });
+                              }
+                            } catch (err) {
+                              console.error('Erro ao processar data de emissão:', err);
+                            }
+                          }}
                         />
                       </div>
 
@@ -389,17 +503,54 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                           type="date"
                           value={
                             editedData.dataVencimento
-                              ? format(new Date(editedData.dataVencimento), 'yyyy-MM-dd')
-                              : extractedData.dataVencimento
-                              ? format(new Date(extractedData.dataVencimento), 'yyyy-MM-dd')
+                              ? (() => {
+                                  try {
+                                    const date = typeof editedData.dataVencimento === 'string' 
+                                      ? new Date(editedData.dataVencimento) 
+                                      : editedData.dataVencimento;
+                                    if (isNaN(date.getTime())) return '';
+                                    return format(date, 'yyyy-MM-dd');
+                                  } catch {
+                                    return '';
+                                  }
+                                })()
+                              : extractedData?.dataVencimento
+                              ? (() => {
+                                  try {
+                                    const date = typeof extractedData.dataVencimento === 'string' 
+                                      ? new Date(extractedData.dataVencimento) 
+                                      : extractedData.dataVencimento;
+                                    if (isNaN(date.getTime())) return '';
+                                    return format(date, 'yyyy-MM-dd');
+                                  } catch {
+                                    return '';
+                                  }
+                                })()
                               : ''
                           }
-                          onChange={(e) =>
-                            setEditedData({
-                              ...editedData,
-                              dataVencimento: e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                            })
-                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (!value) {
+                              setEditedData({
+                                ...editedData,
+                                dataVencimento: undefined,
+                              });
+                              return;
+                            }
+                            try {
+                              // Cria a data em UTC para evitar problemas de timezone
+                              const [year, month, day] = value.split('-').map(Number);
+                              const date = new Date(Date.UTC(year, month - 1, day));
+                              if (!isNaN(date.getTime())) {
+                                setEditedData({
+                                  ...editedData,
+                                  dataVencimento: date.toISOString(),
+                                });
+                              }
+                            } catch (err) {
+                              console.error('Erro ao processar data de vencimento:', err);
+                            }
+                          }}
                         />
                       </div>
                     </div>
@@ -519,7 +670,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
           {/* Modo Múltiplos Arquivos */}
           <TabsContent value="multiple" className="space-y-4 mt-4">
             {/* Seleção de múltiplos arquivos */}
-            {!uploadResults && (
+            {!uploadResults && filesWithData.length === 0 && (
               <div className="space-y-3">
                 <label htmlFor="pdf-upload-multiple" className="block">
                   <div className="flex items-center gap-3 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
@@ -582,15 +733,303 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                   </div>
                 )}
 
-                {/* Botão para processar múltiplos arquivos */}
-                {files.length > 0 && !isUploadingMultiple && (
+                {/* Botão para extrair dados de todos os arquivos */}
+                {files.length > 0 && !isExtractingMultiple && (
+                  <Button 
+                    onClick={handleExtractMultiple} 
+                    className="w-full"
+                    disabled={files.length === 0 || isExtractingMultiple}
+                  >
+                    <Scan className="h-4 w-4 mr-2" />
+                    Extrair Dados de {files.length} Arquivo(s)
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Loading - Extração múltipla */}
+            {isExtractingMultiple && (
+              <div className="flex items-center justify-center gap-2 p-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-muted-foreground">
+                  Extraindo dados de {files.length} arquivo(s)...
+                </p>
+              </div>
+            )}
+
+            {/* Lista de arquivos com dados extraídos */}
+            {filesWithData.length > 0 && !uploadResults && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold">Arquivos e Dados Extraídos</h4>
+                  <Badge>{filesWithData.length} arquivo(s)</Badge>
+                </div>
+                
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {filesWithData.map((fileData, index) => {
+                    const dataToShow = fileData.editedData || fileData.extractedData;
+                    const isEditingThis = editingFileIndex === index;
+                    
+                    return (
+                      <div key={index} className="p-3 border rounded-lg bg-muted/30">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{fileData.file.name}</p>
+                            {dataToShow && (
+                              <Badge className={getConfidenceColor(dataToShow.confianca || 0)}>
+                                {dataToShow.confianca || 0}% confiança
+                              </Badge>
+                            )}
+                          </div>
+                          {!isEditingThis && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreview(fileData.file)}
+                                className="h-7"
+                                title="Pré-visualizar PDF"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              {dataToShow && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditFile(index)}
+                                  className="h-7"
+                                >
+                                  <Edit2 className="h-3 w-3 mr-1" />
+                                  Editar
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {isEditingThis ? (
+                          // Formulário de edição para este arquivo
+                          <div className="space-y-3 mt-3">
+                            <div className="grid grid-cols-1 gap-3">
+                              <div className="space-y-2">
+                                <Label>Tipo de Alvará *</Label>
+                                <Select
+                                  value={fileData.editedData?.tipo || fileData.extractedData?.tipo || ''}
+                                  onValueChange={(value) => {
+                                    const current = fileData.editedData || {};
+                                    updateFileData(index, { ...current, tipo: value });
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o tipo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {ALVARA_TYPES.map((tipo) => (
+                                      <SelectItem key={tipo} value={tipo}>
+                                        {tipo}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>CNPJ *</Label>
+                                <Input
+                                  value={fileData.editedData?.cnpj || fileData.extractedData?.cnpj || ''}
+                                  onChange={(e) => {
+                                    const current = fileData.editedData || {};
+                                    updateFileData(index, { ...current, cnpj: e.target.value });
+                                  }}
+                                  placeholder="00.000.000/0000-00"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>Razão Social</Label>
+                                <Input
+                                  value={fileData.editedData?.razaoSocial || fileData.extractedData?.razaoSocial || ''}
+                                  onChange={(e) => {
+                                    const current = fileData.editedData || {};
+                                    updateFileData(index, { ...current, razaoSocial: e.target.value });
+                                  }}
+                                  placeholder="Nome da empresa"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                  <Label>Data de Emissão</Label>
+                                  <Input
+                                    type="date"
+                                    value={
+                                      fileData.editedData?.dataEmissao
+                                        ? (() => {
+                                            try {
+                                              const date = typeof fileData.editedData.dataEmissao === 'string' 
+                                                ? new Date(fileData.editedData.dataEmissao) 
+                                                : fileData.editedData.dataEmissao;
+                                              if (isNaN(date.getTime())) return '';
+                                              return format(date, 'yyyy-MM-dd');
+                                            } catch {
+                                              return '';
+                                            }
+                                          })()
+                                        : fileData.extractedData?.dataEmissao
+                                        ? (() => {
+                                            try {
+                                              const date = typeof fileData.extractedData.dataEmissao === 'string' 
+                                                ? new Date(fileData.extractedData.dataEmissao) 
+                                                : fileData.extractedData.dataEmissao;
+                                              if (isNaN(date.getTime())) return '';
+                                              return format(date, 'yyyy-MM-dd');
+                                            } catch {
+                                              return '';
+                                            }
+                                          })()
+                                        : ''
+                                    }
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      const current = fileData.editedData || {};
+                                      
+                                      if (!value) {
+                                        updateFileData(index, {
+                                          ...current,
+                                          dataEmissao: undefined,
+                                        });
+                                        return;
+                                      }
+                                      
+                                      try {
+                                        // Cria a data em UTC para evitar problemas de timezone
+                                        const [year, month, day] = value.split('-').map(Number);
+                                        const date = new Date(Date.UTC(year, month - 1, day));
+                                        if (!isNaN(date.getTime())) {
+                                          updateFileData(index, {
+                                            ...current,
+                                            dataEmissao: date.toISOString(),
+                                          });
+                                        }
+                                      } catch (err) {
+                                        console.error('Erro ao processar data de emissão:', err);
+                                      }
+                                    }}
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label>Data de Vencimento</Label>
+                                  <Input
+                                    type="date"
+                                    value={
+                                      fileData.editedData?.dataVencimento
+                                        ? (() => {
+                                            try {
+                                              const date = typeof fileData.editedData.dataVencimento === 'string' 
+                                                ? new Date(fileData.editedData.dataVencimento) 
+                                                : fileData.editedData.dataVencimento;
+                                              if (isNaN(date.getTime())) return '';
+                                              return format(date, 'yyyy-MM-dd');
+                                            } catch {
+                                              return '';
+                                            }
+                                          })()
+                                        : fileData.extractedData?.dataVencimento
+                                        ? (() => {
+                                            try {
+                                              const date = typeof fileData.extractedData.dataVencimento === 'string' 
+                                                ? new Date(fileData.extractedData.dataVencimento) 
+                                                : fileData.extractedData.dataVencimento;
+                                              if (isNaN(date.getTime())) return '';
+                                              return format(date, 'yyyy-MM-dd');
+                                            } catch {
+                                              return '';
+                                            }
+                                          })()
+                                        : ''
+                                    }
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      const current = fileData.editedData || {};
+                                      
+                                      if (!value) {
+                                        updateFileData(index, {
+                                          ...current,
+                                          dataVencimento: undefined,
+                                        });
+                                        return;
+                                      }
+                                      
+                                      try {
+                                        // Cria a data em UTC para evitar problemas de timezone
+                                        const [year, month, day] = value.split('-').map(Number);
+                                        const date = new Date(Date.UTC(year, month - 1, day));
+                                        if (!isNaN(date.getTime())) {
+                                          updateFileData(index, {
+                                            ...current,
+                                            dataVencimento: date.toISOString(),
+                                          });
+                                        }
+                                      } catch (err) {
+                                        console.error('Erro ao processar data de vencimento:', err);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button onClick={() => handleSaveFileEdit(index)} className="flex-1" variant="default" size="sm">
+                                Salvar
+                              </Button>
+                              <Button onClick={() => handleCancelFileEdit(index)} className="flex-1" variant="outline" size="sm">
+                                Cancelar
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          // Visualização dos dados
+                          dataToShow ? (
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div>
+                                <p className="text-muted-foreground">Tipo</p>
+                                <p className="font-medium">{dataToShow.tipo || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">CNPJ</p>
+                                <p className="font-medium">{dataToShow.cnpj || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Razão Social</p>
+                                <p className="font-medium">{dataToShow.razaoSocial || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Vencimento</p>
+                                <p className="font-medium">{formatDate(dataToShow.dataVencimento)}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Dados não extraídos</p>
+                          )
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Botão para processar todos os arquivos */}
+                {!isUploadingMultiple && (
                   <Button 
                     onClick={handleUploadMultiple} 
                     className="w-full"
-                    disabled={files.length === 0 || isUploadingMultiple}
+                    disabled={isUploadingMultiple || editingFileIndex !== null}
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Processar {files.length} Arquivo(s) e Criar Alvarás
+                    Processar {filesWithData.length} Arquivo(s) e Criar Alvarás
                   </Button>
                 )}
               </div>
@@ -681,6 +1120,18 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
           </Button>
         </div>
       </DialogContent>
+
+      {/* Modal de Pré-visualização do PDF */}
+      <DocumentPreviewModal
+        open={!!previewUrl}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleClosePreview();
+          }
+        }}
+        documentUrl={previewUrl}
+        documentName={previewFileName}
+      />
     </Dialog>
   );
 }
