@@ -54,7 +54,7 @@ export function FinalizeAlvaraModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-[480px] lg:max-w-[550px] xl:max-w-[600px] p-0 gap-0 overflow-hidden rounded-2xl">
         <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b">
           <DialogTitle className="text-xl font-semibold flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

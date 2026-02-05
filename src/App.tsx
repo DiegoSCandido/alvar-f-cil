@@ -45,7 +45,7 @@ const AppContent = () => {
       {/* Sidebar - mobile: top, desktop: left - hidden on login page */}
       {!isPublicPage && <Sidebar />}
       {/* Main content - aplica margin-left no desktop somente quando não for página pública (login) */}
-      <div className={`flex-1 w-full ${!isPublicPage ? "lg:ml-64" : ""}`}>
+      <div className={`flex-1 w-full ${!isPublicPage ? "xl:ml-64" : ""}`}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />

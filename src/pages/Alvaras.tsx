@@ -335,47 +335,47 @@ const AlvarasPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b sticky top-0 lg:top-0 z-10 lg:mt-0 mt-16">
-        <div className="container px-4 py-3 sm:py-4 lg:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1">
+      <header className="bg-card border-b sticky top-0 xl:top-0 z-10 xl:mt-0 mt-14 sm:mt-16">
+        <div className="container px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-5 xl:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 lg:gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
               <img 
                 src={o2conLogo}
                 alt="O2con Soluções Contábeis" 
-                className="h-8 sm:h-10 object-contain"
+                className="h-7 sm:h-8 lg:h-9 xl:h-10 object-contain flex-shrink-0"
               />
-              <div className="hidden sm:block h-8 w-px bg-border" />
-              <div>
-                <h1 className="text-base sm:text-lg font-bold text-foreground">Gestão de Alvarás</h1>
-                <p className="text-xs text-muted-foreground">
+              <div className="hidden sm:block h-6 sm:h-8 w-px bg-border flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-foreground truncate">Gestão de Alvarás</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                   Controle de documentos e vencimentos
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button onClick={handleOpenForm} className="gap-2 flex-1 sm:flex-none">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Novo Alvará</span>
-                <span className="sm:hidden">Novo</span>
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+              <Button onClick={handleOpenForm} className="gap-2 flex-1 sm:flex-none text-xs sm:text-sm lg:text-base px-3 sm:px-4">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline">Novo Alvará</span>
+                <span className="md:hidden">Novo</span>
               </Button>
               <Button 
                 onClick={() => setIsIntelligentUploadOpen(true)} 
                 variant="outline"
-                className="gap-2 flex-1 sm:flex-none"
+                className="gap-2 flex-1 sm:flex-none text-xs sm:text-sm lg:text-base px-3 sm:px-4"
               >
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Upload Inteligente</span>
-                <span className="sm:hidden">IA</span>
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline">Upload Inteligente</span>
+                <span className="md:hidden">IA</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 w-full">
+      <main className="container px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-5 lg:py-6 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-6 w-full">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'novos' | 'funcionamento')}>
-          <TabsList className="grid w-full max-w-md grid-cols-2 text-xs sm:text-base">
+          <TabsList className="grid w-full max-w-md sm:max-w-lg lg:max-w-xl grid-cols-2 text-xs sm:text-sm lg:text-base">
             <TabsTrigger value="funcionamento" className="gap-1 sm:gap-2">
               <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Em Funcionamento</span>
@@ -401,7 +401,7 @@ const AlvarasPage = () => {
           {/* Tab: Novos Alvarás */}
           <TabsContent value="novos" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
             {/* Cards de filtro para Novos Alvarás */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-2">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-2">
               <StatCard
                 title="Todos"
                 value={statsNovos.total}
@@ -473,7 +473,7 @@ const AlvarasPage = () => {
           {/* Tab: Alvarás em Funcionamento */}
           <TabsContent value="funcionamento" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
             {/* Stats Grid para Alvarás em Funcionamento */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
               <StatCard
                 title="Total"
                 value={statsFuncionamento.total}

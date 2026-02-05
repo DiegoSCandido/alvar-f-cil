@@ -386,7 +386,7 @@ export function AlvaraForm({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`w-[95vw] sm:w-full p-4 sm:p-6 ${isRenewing ? 'sm:max-w-[600px]' : 'sm:max-w-[500px]'} max-h-[90vh] overflow-y-auto`}>
+      <DialogContent className={`w-[95vw] sm:w-full p-3 sm:p-4 lg:p-6 ${isRenewing ? 'sm:max-w-[600px] lg:max-w-[700px] xl:max-w-[800px]' : 'sm:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]'} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle>
             {editingAlvara ? (isRenewing ? 'Renovar Alvará' : 'Editar Alvará') : 'Novo Alvará'}

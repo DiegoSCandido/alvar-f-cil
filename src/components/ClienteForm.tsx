@@ -388,7 +388,7 @@ export function ClienteForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-[900px] lg:max-w-[1000px] xl:max-w-[1100px] max-h-[90vh] overflow-y-auto p-3 sm:p-4 lg:p-6">
         <DialogHeader>
           <DialogTitle>
             {editingCliente ? 'Editar Cliente' : 'Novo Cliente'}

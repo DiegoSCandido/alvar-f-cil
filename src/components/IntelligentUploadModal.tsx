@@ -297,13 +297,13 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
+      <DialogContent className="w-[95vw] sm:max-w-[600px] lg:max-w-[700px] xl:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-sm sm:text-base lg:text-lg">
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
             Upload Inteligente de Alvará
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Faça upload de PDF(s) de alvará e o sistema extrairá automaticamente as informações
           </DialogDescription>
         </DialogHeader>

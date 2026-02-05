@@ -101,40 +101,40 @@ const ClientesPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b sticky top-0 lg:top-0 z-10 lg:mt-0 mt-16">
-        <div className="container px-4 py-3 sm:py-4 lg:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1">
+      <header className="bg-card border-b sticky top-0 xl:top-0 z-10 xl:mt-0 mt-14 sm:mt-16">
+        <div className="container px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-5 xl:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 lg:gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
               <img
                 src={o2conLogo}
                 alt="O2con Soluções Contábeis"
-                className="h-8 sm:h-10 object-contain"
+                className="h-7 sm:h-8 lg:h-9 xl:h-10 object-contain flex-shrink-0"
               />
-              <div className="hidden sm:block h-8 w-px bg-border" />
-              <div>
-                <h1 className="text-base sm:text-lg font-bold text-foreground">Cadastro de Clientes</h1>
-                <p className="text-xs text-muted-foreground">
+              <div className="hidden sm:block h-6 sm:h-8 w-px bg-border flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-foreground truncate">Cadastro de Clientes</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                   Gerencie os clientes cadastrados
                 </p>
               </div>
             </div>
-            <Button onClick={handleOpenForm} className="gap-2 w-full sm:w-auto">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Novo Cliente</span>
-              <span className="sm:hidden">Novo</span>
+            <Button onClick={handleOpenForm} className="gap-2 w-full sm:w-auto text-xs sm:text-sm lg:text-base px-3 sm:px-4">
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden md:inline">Novo Cliente</span>
+              <span className="md:hidden">Novo</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 w-full">
+      <main className="container px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-5 lg:py-6 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-6 w-full">
         {/* Stats */}
-        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-2">
-          <div className="bg-card rounded-lg border p-3 sm:p-4 flex items-center gap-3 flex-shrink-0 min-w-[200px] sm:min-w-0 sm:flex-1">
-            <Users className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+        <div className="flex overflow-x-auto gap-3 sm:gap-4 lg:gap-5 pb-2">
+          <div className="bg-card rounded-lg border p-3 sm:p-4 lg:p-5 flex items-center gap-3 flex-shrink-0 min-w-[200px] sm:min-w-0 sm:flex-1">
+            <Users className="h-5 w-5 lg:h-6 lg:w-6 text-muted-foreground flex-shrink-0" />
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
-              <p className="text-xl sm:text-2xl font-bold">{clientes.length}</p>
+              <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">Total de Clientes</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{clientes.length}</p>
             </div>
           </div>
         </div>

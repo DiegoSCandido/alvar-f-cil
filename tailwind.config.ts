@@ -16,11 +16,15 @@ export default {
         "2xl": "2rem",
       },
       screens: {
-        sm: "640px",
-        md: "768px",
-        lg: "1024px",
-        xl: "1280px",
-        "2xl": "1400px",
+        // Celular: até 640px (já é o padrão mobile-first)
+        sm: "640px",   // Celular grande / pequeno tablet em paisagem
+        // Tablet: 641px - 1023px
+        md: "768px",   // Tablet em retrato
+        lg: "1024px",  // Tablet em paisagem / Monitor 13" pequeno
+        // Monitor 13": 1024px - 1279px
+        xl: "1280px",  // Monitor 13" padrão
+        // Monitor 15"+: 1280px+
+        "2xl": "1536px", // Monitor 15"+ / Telas grandes
       },
     },
     extend: {

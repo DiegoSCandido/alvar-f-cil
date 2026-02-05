@@ -74,14 +74,14 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold text-xs sm:text-sm">CNPJ</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm min-w-[250px]">Razão Social</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">UF</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Município</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Alvará Func.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Alvará San.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm hidden 2xl:table-cell">Alvará Bomb.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm text-right">Ações</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base">CNPJ</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]">Razão Social</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">UF</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">Município</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Func.</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará San.</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden 2xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,16 +109,18 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
-                    {formatCnpj(cliente.cnpj)}
+                    <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(cliente.cnpj)}</span>
                   </TableCell>
-                  <TableCell className="font-medium min-w-[250px] max-w-[400px]">
+                  <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
                     <div className="truncate" title={cliente.razaoSocial}>
-                      {cliente.razaoSocial}
+                      <span className="text-xs sm:text-sm lg:text-base">{cliente.razaoSocial}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell">{cliente.uf}</TableCell>
-                  <TableCell className="hidden lg:table-cell max-w-[100px] truncate">
-                    {cliente.municipio}
+                  <TableCell className="hidden lg:table-cell">
+                    <span className="text-xs sm:text-sm lg:text-base">{cliente.uf}</span>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell max-w-[120px] xl:max-w-[150px] truncate">
+                    <span className="text-xs sm:text-sm lg:text-base">{cliente.municipio}</span>
                   </TableCell>
                   <TableCell className="hidden xl:table-cell">
                     <AlvaraCell alvara={alvaraFuncionamento} />
@@ -130,7 +132,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     <AlvaraCell alvara={alvaraBombeiros} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
