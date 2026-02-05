@@ -120,6 +120,21 @@ const AlvarasPage = () => {
           processingFilter === 'all' || alvara.processingStatus === processingFilter;
         return matchesSearch && matchesProcessing;
       });
+      
+      // Ordenar novos alvarás por data de criação (mais recentes primeiro)
+      // Se algum tiver data de vencimento (caso raro), ordena por ela
+      filtered.sort((a, b) => {
+        // Se ambos têm data de vencimento, ordena por ela
+        if (a.expirationDate && b.expirationDate) {
+          const dateA = new Date(a.expirationDate).getTime();
+          const dateB = new Date(b.expirationDate).getTime();
+          return dateA - dateB;
+        }
+        // Caso contrário, ordena por data de criação (mais recentes primeiro)
+        const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return createdB - createdA; // Mais recentes primeiro
+      });
     } else {
       filtered = alvarasEmFuncionamento.filter((alvara) => {
         if (!alvara || !alvara.clientName || !alvara.type) return false;
@@ -133,7 +148,11 @@ const AlvarasPage = () => {
       });
       
       // Ordenar por data de vencimento: mais próxima primeiro
+      // Alvarás vencidos aparecem primeiro (mais vencidos primeiro)
+      // Alvarás sem data de vencimento vão para o final
       filtered.sort((a, b) => {
+        const now = Date.now();
+        
         // Alvarás sem data de vencimento vão para o final
         if (!a.expirationDate && !b.expirationDate) return 0;
         if (!a.expirationDate) return 1; // a vai para o final
@@ -144,6 +163,8 @@ const AlvarasPage = () => {
         const dateB = new Date(b.expirationDate).getTime();
         
         // Ordena do mais próximo (menor data) para o mais distante (maior data)
+        // Isso significa que vencidos (datas passadas) aparecem primeiro
+        // e os que vencem mais cedo aparecem antes dos que vencem mais tarde
         return dateA - dateB;
       });
     }
