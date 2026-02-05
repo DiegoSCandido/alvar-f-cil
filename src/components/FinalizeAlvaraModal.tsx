@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDateSafe } from "@/lib/alvara-utils";
 import { CalendarIcon, FileText, Upload, CheckCircle } from "lucide-react";
 import {
   Dialog,
@@ -87,7 +86,7 @@ export function FinalizeAlvaraModal({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {expirationDate ? (
-                    format(expirationDate, "dd/MM/yyyy", { locale: ptBR })
+                    formatDateSafe(expirationDate)
                   ) : (
                     <span>dd/mm/aaaa</span>
                   )}

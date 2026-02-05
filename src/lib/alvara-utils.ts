@@ -56,3 +56,75 @@ export function formatCnpj(cnpj: string): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
+
+/**
+ * Formata uma data para exibição (dd/MM/yyyy) sem problemas de timezone
+ * Extrai apenas a parte da data (dia, mês, ano) sem considerar hora/timezone
+ */
+export function formatDateSafe(date?: Date | string | null): string {
+  if (!date) return '-';
+  
+  try {
+    let year: number;
+    let month: number;
+    let day: number;
+    
+    if (typeof date === 'string') {
+      // Se for ISO string ou formato YYYY-MM-DD, extrai diretamente
+      if (date.includes('T')) {
+        // ISO string: "2026-03-31T00:00:00.000Z" -> extrai "2026-03-31"
+        const datePart = date.split('T')[0];
+        const parts = datePart.split('-').map(Number);
+        if (parts.length === 3) {
+          year = parts[0];
+          month = parts[1];
+          day = parts[2];
+        } else {
+          return '-';
+        }
+      } else if (date.includes('-') && date.match(/^\d{4}-\d{2}-\d{2}/)) {
+        // Formato YYYY-MM-DD
+        const parts = date.split('-').map(Number);
+        if (parts.length === 3) {
+          year = parts[0];
+          month = parts[1];
+          day = parts[2];
+        } else {
+          return '-';
+        }
+      } else {
+        // Tenta criar como Date e extrair
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) {
+          return '-';
+        }
+        // Extrai da ISO string para evitar timezone
+        const isoString = dateObj.toISOString();
+        const datePart = isoString.split('T')[0];
+        const parts = datePart.split('-').map(Number);
+        year = parts[0];
+        month = parts[1];
+        day = parts[2];
+      }
+    } else {
+      // É um objeto Date
+      // Extrai da ISO string para evitar problemas de timezone
+      const isoString = date.toISOString();
+      const datePart = isoString.split('T')[0];
+      const parts = datePart.split('-').map(Number);
+      year = parts[0];
+      month = parts[1];
+      day = parts[2];
+    }
+    
+    // Valida os valores
+    if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+      return '-';
+    }
+    
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+  } catch (error) {
+    console.error('Erro ao formatar data:', error, date);
+    return '-';
+  }
+}

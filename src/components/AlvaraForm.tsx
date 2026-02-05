@@ -26,8 +26,7 @@ import {
 import { formatCnpj } from '@/lib/alvara-utils';
 import { Link } from 'react-router-dom';
 import { AlertCircle, RotateCw } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatDateSafe } from '@/lib/alvara-utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AlvaraFormProps {
@@ -411,7 +410,7 @@ export function AlvaraForm({
                   <div className="text-sm mt-1">
                     Vencimento anterior: <span className="font-mono">{
                       isValidDate(editingAlvara.expirationDate)
-                        ? format(new Date(editingAlvara.expirationDate), 'dd/MM/yyyy', { locale: ptBR })
+                        ? formatDateSafe(editingAlvara.expirationDate)
                         : '--/--/----'
                     }</span>
                   </div>

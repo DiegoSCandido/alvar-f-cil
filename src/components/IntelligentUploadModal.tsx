@@ -15,8 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIntelligentUpload, ExtractedData } from '@/hooks/useIntelligentUpload';
 import { useIntelligentUploadMultiple } from '@/hooks/useIntelligentUploadMultiple';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatDateSafe } from '@/lib/alvara-utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ALVARA_TYPES } from '@/types/alvara';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
@@ -231,13 +230,8 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
     onOpenChange(false);
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-    } catch {
-      return dateString;
-    }
+  const formatDate = (dateString?: string | Date) => {
+    return formatDateSafe(dateString);
   };
 
   // Função auxiliar para converter ISO string ou Date para formato YYYY-MM-DD sem problemas de timezone

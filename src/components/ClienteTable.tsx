@@ -1,8 +1,7 @@
 import { Cliente } from '@/types/cliente';
 import { Alvara, AlvaraStatus } from '@/types/alvara';
 import { formatCnpj } from '@/lib/alvara-utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatDateSafe } from '@/lib/alvara-utils';
 import { Trash2, Edit, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +35,7 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
   }
 
   const formatDate = (date: Date) => {
-    return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
+    return formatDateSafe(date);
   };
 
   const getStatusIcon = (status: AlvaraStatus) => {
