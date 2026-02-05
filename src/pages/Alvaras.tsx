@@ -6,6 +6,7 @@ import { useAlvaras } from '@/hooks/useAlvaras';
 import { useClientes } from '@/hooks/useClientes';
 import { AlvaraTable } from '@/components/AlvaraTable';
 import { AlvaraForm } from '@/components/AlvaraForm';
+import { IntelligentUploadModal } from '@/components/IntelligentUploadModal';
 import { StatCard } from '@/components/StatCard';
 import { Alvara, AlvaraFormData, AlvaraStatus } from '@/types/alvara';
 import { Button } from '@/components/ui/button';
@@ -32,16 +33,18 @@ import {
   XCircle,
   FileText,
   Building2,
+  Sparkles,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/o2contole-logo.png';
 
 
 const AlvarasPage = () => {
-  const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara } = useAlvaras();
+  const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara, refetch } = useAlvaras();
   const { clientes, getClienteById } = useClientes();
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isIntelligentUploadOpen, setIsIntelligentUploadOpen] = useState(false);
   const [editingAlvara, setEditingAlvara] = useState<Alvara | null>(null);
   const [isRenewing, setIsRenewing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -309,11 +312,22 @@ const AlvarasPage = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={handleOpenForm} className="gap-2 w-full sm:w-auto">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Novo Alvará</span>
-              <span className="sm:hidden">Novo</span>
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button onClick={handleOpenForm} className="gap-2 flex-1 sm:flex-none">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novo Alvará</span>
+                <span className="sm:hidden">Novo</span>
+              </Button>
+              <Button 
+                onClick={() => setIsIntelligentUploadOpen(true)} 
+                variant="outline"
+                className="gap-2 flex-1 sm:flex-none"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Upload Inteligente</span>
+                <span className="sm:hidden">IA</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -570,6 +584,19 @@ const AlvarasPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Upload Inteligente */}
+      <IntelligentUploadModal
+        open={isIntelligentUploadOpen}
+        onOpenChange={setIsIntelligentUploadOpen}
+        onSuccess={() => {
+          refetch();
+          toast({
+            title: 'Alvará criado com sucesso!',
+            description: 'O alvará foi criado automaticamente a partir do PDF.',
+          });
+        }}
+      />
     </div>
   );
 };
