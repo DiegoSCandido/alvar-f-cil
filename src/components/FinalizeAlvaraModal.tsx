@@ -54,8 +54,8 @@ export function FinalizeAlvaraModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-[480px] lg:max-w-[550px] xl:max-w-[600px] p-0 gap-0 overflow-hidden rounded-2xl">
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+      <DialogContent className="w-[95vw] sm:max-w-[480px] lg:max-w-[550px] xl:max-w-[600px] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col rounded-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b flex-shrink-0">
           <DialogTitle className="text-xl font-semibold flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-primary" />
@@ -69,7 +69,7 @@ export function FinalizeAlvaraModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
           {/* Data de Vencimento */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
@@ -146,7 +146,7 @@ export function FinalizeAlvaraModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-muted/30 border-t flex justify-end gap-3">
+        <div className="px-6 py-4 bg-muted/30 border-t flex justify-end gap-3 flex-shrink-0">
           <Button variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>

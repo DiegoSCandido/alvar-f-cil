@@ -80,7 +80,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
               <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">Município</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Func.</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará San.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden 2xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
+              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
               <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -128,7 +128,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                   <TableCell className="hidden xl:table-cell">
                     <AlvaraCell alvara={alvaraSanitario} />
                   </TableCell>
-                  <TableCell className="hidden 2xl:table-cell">
+                  <TableCell className="hidden xl:table-cell">
                     <AlvaraCell alvara={alvaraBombeiros} />
                   </TableCell>
                   <TableCell className="text-right">

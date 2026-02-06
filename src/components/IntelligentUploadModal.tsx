@@ -308,14 +308,14 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={mode} onValueChange={(value) => setMode(value as 'single' | 'multiple')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={mode} onValueChange={(value) => setMode(value as 'single' | 'multiple')} className="w-full flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
             <TabsTrigger value="single">Arquivo Único</TabsTrigger>
             <TabsTrigger value="multiple">Múltiplos Arquivos</TabsTrigger>
           </TabsList>
 
           {/* Modo Arquivo Único */}
-          <TabsContent value="single" className="space-y-4 mt-4">
+          <TabsContent value="single" className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
           {/* Seleção de arquivo */}
           {!uploadResult && (
             <div className="space-y-3">
@@ -633,7 +633,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
           </TabsContent>
 
           {/* Modo Múltiplos Arquivos */}
-          <TabsContent value="multiple" className="space-y-4 mt-4">
+          <TabsContent value="multiple" className="space-y-4 mt-4 overflow-y-auto flex-1 min-h-0">
             {/* Seleção de múltiplos arquivos */}
             {!uploadResults && filesWithData.length === 0 && (
               <div className="space-y-3">

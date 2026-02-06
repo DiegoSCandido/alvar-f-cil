@@ -177,7 +177,7 @@ const ClientesPage = () => {
       />
       {/* Dialog de Confirmação de Exclusão de Cliente */}
       <Dialog open={!!clienteParaExcluir} onOpenChange={(open) => { if (!open) setClienteParaExcluir(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
           </DialogHeader>

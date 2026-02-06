@@ -649,7 +649,7 @@ export function AlvaraForm({
 
     {/* Dialog para data de vencimento da renovação */}
     <Dialog open={isConfirmingRenewal} onOpenChange={setIsConfirmingRenewal}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Finalizar Renovação</DialogTitle>
           <DialogDescription>

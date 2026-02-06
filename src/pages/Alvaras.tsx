@@ -718,7 +718,7 @@ const AlvarasPage = () => {
 
       {/* Dialog de Confirmação de Exclusão de Alvará */}
       <Dialog open={!!alvaraParaExcluir} onOpenChange={(open) => { if (!open) setAlvaraParaExcluir(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
           </DialogHeader>

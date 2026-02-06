@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ClientesPage from "./pages/Clientes";
@@ -14,6 +15,8 @@ import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 const queryClient = new QueryClient();
 
@@ -40,12 +43,59 @@ const AppContent = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Sincroniza o estado inicial da sidebar colapsada
+  useEffect(() => {
+    if (!isPublicPage) {
+      const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+      const mainContent = document.querySelector('[data-main-content]');
+      if (mainContent) {
+        // Remove ambas as classes primeiro
+        mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
+        // Adiciona a classe correta
+        if (isCollapsed) {
+          mainContent.classList.add('lg:ml-16');
+        } else {
+          mainContent.classList.add('lg:ml-56');
+        }
+      }
+    }
+  }, [isPublicPage]);
+
+  // Listener para mudanças no localStorage (quando sidebar é colapsada/expandida)
+  useEffect(() => {
+    if (!isPublicPage) {
+      const handleStorageChange = () => {
+        const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+        const mainContent = document.querySelector('[data-main-content]');
+        if (mainContent) {
+          mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
+          if (isCollapsed) {
+            mainContent.classList.add('lg:ml-16');
+          } else {
+            mainContent.classList.add('lg:ml-56');
+          }
+        }
+      };
+
+      // Escuta mudanças no localStorage (de outras abas)
+      window.addEventListener('storage', handleStorageChange);
+      
+      // Escuta eventos customizados (da mesma aba)
+      window.addEventListener('sidebar-toggle', handleStorageChange);
+
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('sidebar-toggle', handleStorageChange);
+      };
+    }
+  }, [isPublicPage]);
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Sidebar - mobile: top, desktop: left - hidden on login page */}
       {!isPublicPage && <Sidebar />}
-      {/* Main content - aplica margin-left no desktop somente quando não for página pública (login) */}
-      <div className={`flex-1 w-full ${!isPublicPage ? "xl:ml-64" : ""}`}>
+      {/* Main content - aplica margin-left no desktop/tablet somente quando não for página pública (login) */}
+      <div className={`flex-1 w-full ${!isPublicPage ? "lg:ml-56" : ""}`} data-main-content>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
