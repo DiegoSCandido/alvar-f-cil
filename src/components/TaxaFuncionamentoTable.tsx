@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { clienteAPI, taxaAPI } from '@/lib/api-client';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,8 +26,10 @@ const ANO_ATUAL = new Date().getFullYear();
 export default function TaxaFuncionamentoTable() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [taxas, setTaxas] = useState<Record<string, TaxaCliente>>({});
+  const [protocoloValues, setProtocoloValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
     async function fetchData() {
@@ -36,10 +38,15 @@ export default function TaxaFuncionamentoTable() {
       setClientes(clientesRes);
       const taxasRes = await taxaAPI.list(ANO_ATUAL);
       const taxasMap: Record<string, TaxaCliente> = {};
+      const protocoloMap: Record<string, string> = {};
       if (Array.isArray(taxasRes)) {
-        taxasRes.forEach(t => { taxasMap[t.clienteId] = t; });
+        taxasRes.forEach(t => { 
+          taxasMap[t.clienteId] = t;
+          protocoloMap[t.clienteId] = t.protocolo || '';
+        });
       }
       setTaxas(taxasMap);
+      setProtocoloValues(protocoloMap);
       setLoading(false);
     }
     fetchData();
@@ -54,7 +61,8 @@ export default function TaxaFuncionamentoTable() {
       paga: false,
       protocolo: ''
     };
-    const novaTaxa = { ...taxa, [campo]: checked };
+    const protocoloAtual = protocoloValues[clienteId] ?? taxa.protocolo ?? '';
+    const novaTaxa = { ...taxa, [campo]: checked, protocolo: protocoloAtual };
     try {
       if (taxa.id) {
         await taxaAPI.update(taxa.id, novaTaxa);
@@ -63,6 +71,10 @@ export default function TaxaFuncionamentoTable() {
         novaTaxa.id = res.id;
       }
       setTaxas({ ...taxas, [clienteId]: novaTaxa });
+      // Garante que o protocoloValues está sincronizado
+      if (!protocoloValues[clienteId] && protocoloAtual) {
+        setProtocoloValues({ ...protocoloValues, [clienteId]: protocoloAtual });
+      }
       toast({ title: 'Salvo com sucesso!', description: `Alteração salva para ${campo}.` });
     } catch (error) {
       console.error('Erro ao salvar taxa:', error);
@@ -75,7 +87,32 @@ export default function TaxaFuncionamentoTable() {
     }
   };
 
-  const handleProtocoloChange = async (clienteId: string, protocolo: string) => {
+  const handleProtocoloInputChange = (clienteId: string, protocolo: string) => {
+    // Atualiza o estado local imediatamente para uma resposta visual rápida
+    setProtocoloValues({ ...protocoloValues, [clienteId]: protocolo });
+
+    // Limpa o timer anterior se existir
+    if (debounceTimers.current[clienteId]) {
+      clearTimeout(debounceTimers.current[clienteId]);
+    }
+
+    // Cria um novo timer para salvar após 1 segundo de inatividade
+    debounceTimers.current[clienteId] = setTimeout(() => {
+      handleProtocoloSave(clienteId, protocolo);
+    }, 1000);
+  };
+
+  const handleProtocoloBlur = (clienteId: string) => {
+    // Salva imediatamente quando o usuário sai do campo
+    const protocolo = protocoloValues[clienteId] || '';
+    if (debounceTimers.current[clienteId]) {
+      clearTimeout(debounceTimers.current[clienteId]);
+      delete debounceTimers.current[clienteId];
+    }
+    handleProtocoloSave(clienteId, protocolo);
+  };
+
+  const handleProtocoloSave = async (clienteId: string, protocolo: string) => {
     const taxa = taxas[clienteId] || {
       clienteId,
       ano: ANO_ATUAL,
@@ -102,6 +139,8 @@ export default function TaxaFuncionamentoTable() {
         description: errorMessage, 
         variant: 'destructive' 
       });
+      // Reverte o valor em caso de erro
+      setProtocoloValues({ ...protocoloValues, [clienteId]: taxa.protocolo || '' });
     }
   };
 
@@ -123,6 +162,9 @@ export default function TaxaFuncionamentoTable() {
         <TableBody>
           {clientes.map(cliente => {
             const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
+            const protocoloValue = protocoloValues[cliente.id] !== undefined 
+              ? protocoloValues[cliente.id] 
+              : (taxa.protocolo || '');
             return (
               <TableRow key={cliente.id}>
                 <TableCell>{cliente.razaoSocial}</TableCell>
@@ -137,7 +179,12 @@ export default function TaxaFuncionamentoTable() {
                   <Checkbox checked={!!taxa.paga} onCheckedChange={checked => handleCheckbox(cliente.id, 'paga', !!checked)} />
                 </TableCell>
                 <TableCell>
-                  <Input value={taxa.protocolo || ''} onChange={e => handleProtocoloChange(cliente.id, e.target.value)} />
+                  <Input 
+                    value={protocoloValue} 
+                    onChange={e => handleProtocoloInputChange(cliente.id, e.target.value)}
+                    onBlur={() => handleProtocoloBlur(cliente.id)}
+                    placeholder="Digite o protocolo"
+                  />
                 </TableCell>
               </TableRow>
             );
