@@ -34,6 +34,7 @@ import {
   FileText,
   Building2,
   Sparkles,
+  RotateCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/o2contole-logo.png';
@@ -54,7 +55,7 @@ const AlvarasPage = () => {
   const handleStatCardClick = (status: AlvaraStatus | 'all') => {
     setStatusFilter((prev) => (prev === status ? 'all' : status));
   };
-  const [activeTab, setActiveTab] = useState<'novos' | 'funcionamento'>('funcionamento');
+  const [activeTab, setActiveTab] = useState<'novos' | 'funcionamento' | 'renovacao'>('funcionamento');
   const [finalizandoAlvara, setFinalizandoAlvara] = useState<Alvara | null>(null);
   const [finalizacaoDate, setFinalizacaoDate] = useState('');
   const [alvaraParaExcluir, setAlvaraParaExcluir] = useState<Alvara | null>(null);
@@ -65,11 +66,12 @@ const AlvarasPage = () => {
   const finalizeFileInputRef = useRef<HTMLInputElement>(null);
   const { uploadAlvaraDocument } = useAlvaraUpload();
 
-  // Separar alvarás em duas categorias
-  const { novosAlvaras, alvarasEmFuncionamento } = useMemo(() => {
-    const novos = alvaras.filter((a) => !a.issueDate);
-    const emFuncionamento = alvaras.filter((a) => a.issueDate);
-    return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento };
+  // Separar alvarás em categorias
+  const { novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao } = useMemo(() => {
+    const novos = alvaras.filter((a) => !a.issueDate && a.processingStatus !== 'renovacao');
+    const emFuncionamento = alvaras.filter((a) => a.issueDate && a.processingStatus !== 'renovacao');
+    const renovacao = alvaras.filter((a) => a.processingStatus === 'renovacao');
+    return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento, alvarasRenovacao: renovacao };
   }, [alvaras]);
 
   // Estatísticas para novos alvarás (por status de processamento)
@@ -95,6 +97,13 @@ const AlvarasPage = () => {
     };
   }, [alvarasEmFuncionamento]);
 
+  // Estatísticas para alvarás em renovação
+  const statsRenovacao = useMemo(() => {
+    return {
+      total: alvarasRenovacao.length,
+    };
+  }, [alvarasRenovacao]);
+
   // Filtro de processamento para novos alvarás
   const [processingFilter, setProcessingFilter] = useState<'all' | 'lançado' | 'aguardando_cliente' | 'aguardando_orgao'>('all');
 
@@ -103,6 +112,10 @@ const AlvarasPage = () => {
   useEffect(() => {
     if (activeTab === 'novos') setStatusFilter('all');
     if (activeTab === 'funcionamento') setProcessingFilter('all');
+    if (activeTab === 'renovacao') {
+      setStatusFilter('all');
+      setProcessingFilter('all');
+    }
   }, [activeTab]);
 
   // Filtrar e ordenar alvarás baseado na aba ativa e filtros
@@ -134,6 +147,27 @@ const AlvarasPage = () => {
         const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return createdB - createdA; // Mais recentes primeiro
+      });
+    } else if (activeTab === 'renovacao') {
+      filtered = alvarasRenovacao.filter((alvara) => {
+        if (!alvara || !alvara.clientName || !alvara.type) return false;
+        const matchesSearch =
+          alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          alvara.clientCnpj.includes(searchTerm) ||
+          alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
+      
+      // Ordenar alvarás em renovação por data de vencimento (mais próximo primeiro)
+      filtered.sort((a, b) => {
+        // Alvarás sem data de vencimento vão para o final
+        if (!a.expirationDate && !b.expirationDate) return 0;
+        if (!a.expirationDate) return 1;
+        if (!b.expirationDate) return -1;
+        
+        const dateA = new Date(a.expirationDate).getTime();
+        const dateB = new Date(b.expirationDate).getTime();
+        return dateA - dateB;
       });
     } else {
       filtered = alvarasEmFuncionamento.filter((alvara) => {
@@ -170,7 +204,7 @@ const AlvarasPage = () => {
     }
     
     return filtered;
-  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, searchTerm, processingFilter, statusFilter]);
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilter, statusFilter]);
 
   const handleAddAlvara = async (data: AlvaraFormData) => {
     try {
@@ -195,6 +229,8 @@ const AlvarasPage = () => {
       if (editingAlvara) {
         const wasEmAbertura = !editingAlvara.issueDate;
         const isNowConcluido = !!data.issueDate;
+        const isRenovacao = data.processingStatus === 'renovacao';
+        const wasRenovacao = editingAlvara.processingStatus === 'renovacao';
         
         await updateAlvara(editingAlvara.id, data);
         
@@ -203,6 +239,24 @@ const AlvarasPage = () => {
           toast({
             title: 'Alvará concluído!',
             description: 'O alvará foi movido para a aba de alvarás em funcionamento.',
+          });
+        } else if (isRenovacao && !wasRenovacao) {
+          // Se foi marcado para renovação, muda para a aba de renovação
+          setActiveTab('renovacao');
+          toast({
+            title: 'Alvará em renovação',
+            description: 'O alvará foi movido para a aba de renovação.',
+          });
+        } else if (!isRenovacao && wasRenovacao) {
+          // Se foi removido da renovação, volta para a aba apropriada
+          if (isNowConcluido) {
+            setActiveTab('funcionamento');
+          } else {
+            setActiveTab('novos');
+          }
+          toast({
+            title: 'Renovação finalizada',
+            description: 'O alvará foi removido da aba de renovação.',
           });
         } else {
           toast({
@@ -281,6 +335,8 @@ const AlvarasPage = () => {
     setEditingAlvara(alvara);
     setIsRenewing(true);
     setIsFormOpen(true);
+    // Muda para a aba de renovação se ainda não estiver nela
+    setActiveTab('renovacao');
   };
 
   const handleConfirmFinalize = async () => {
@@ -374,8 +430,8 @@ const AlvarasPage = () => {
 
       <main className="container px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-5 lg:py-6 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-6 w-full">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'novos' | 'funcionamento')}>
-          <TabsList className="grid w-full max-w-md sm:max-w-lg lg:max-w-xl grid-cols-2 text-xs sm:text-sm lg:text-base">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'novos' | 'funcionamento' | 'renovacao')}>
+          <TabsList className="grid w-full max-w-md sm:max-w-lg lg:max-w-2xl grid-cols-3 text-xs sm:text-sm lg:text-base">
             <TabsTrigger value="funcionamento" className="gap-1 sm:gap-2">
               <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Em Funcionamento</span>
@@ -393,6 +449,16 @@ const AlvarasPage = () => {
               {statsNovos.total > 0 && (
                 <span className="ml-0.5 sm:ml-1 rounded-full bg-primary/10 px-1.5 sm:px-2 py-0.5 text-xs">
                   {statsNovos.total}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="renovacao" className="gap-1 sm:gap-2">
+              <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Renovação</span>
+              <span className="sm:hidden">Renov.</span>
+              {statsRenovacao.total > 0 && (
+                <span className="ml-0.5 sm:ml-1 rounded-full bg-primary/10 px-1.5 sm:px-2 py-0.5 text-xs">
+                  {statsRenovacao.total}
                 </span>
               )}
             </TabsTrigger>
@@ -531,6 +597,47 @@ const AlvarasPage = () => {
                   Limpar filtro
                 </Button>
               )}
+            </div>
+
+            {/* Table */}
+            <AlvaraTable
+              alvaras={filteredAlvaras}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              onRenew={handleRenew}
+            />
+          </TabsContent>
+
+          {/* Tab: Renovação */}
+          <TabsContent value="renovacao" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+            {/* Stats Card para Renovação */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
+              <StatCard
+                title="Total em Renovação"
+                value={statsRenovacao.total}
+                icon={RotateCw}
+                variant="default"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col gap-2 sm:gap-4">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar alvará em renovação..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 text-sm sm:text-base"
+                />
+              </div>
+            </div>
+
+            {/* Results info */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
+              <p>
+                {filteredAlvaras.length} de {alvarasRenovacao.length} alvarás em renovação
+              </p>
             </div>
 
             {/* Table */}
