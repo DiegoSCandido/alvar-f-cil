@@ -408,9 +408,9 @@ export function ClienteForm({
         )}
 
         {atividadesSecundariasAPI.length > 0 && !editingCliente && (
-          <Alert className="mb-4 border-green-200 bg-green-50">
-            <AlertCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
+          <Alert className="mb-4 border-o2-purple/20 bg-o2-purple-light">
+            <AlertCircle className="h-4 w-4 text-o2-purple" />
+            <AlertDescription className="text-o2-purple-dark">
               ✨ {atividadesSecundariasAPI.length} atividade(s) secundária(s) encontrada(s) serão salvas automaticamente
             </AlertDescription>
           </Alert>
@@ -548,15 +548,16 @@ export function ClienteForm({
 
 
               {/* Botões */}
-              <DialogFooter className="mt-6">
+              <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                   {isLoading ? 'Salvando...' : 'Salvar'}
                 </Button>
               </DialogFooter>
@@ -567,49 +568,49 @@ export function ClienteForm({
           <TabsContent value="atividades" className="space-y-4">
             {/* Atividade Principal */}
             <div className="space-y-4">
-              <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
-                <h3 className="font-semibold text-blue-900 mb-3">📌 Atividade Principal (CNAE)</h3>
+              <div className="border-l-4 border-o2-blue bg-o2-blue-light p-3 sm:p-4 rounded">
+                <h3 className="font-semibold text-o2-blue mb-2 sm:mb-3 text-sm sm:text-base">📌 Atividade Principal (CNAE)</h3>
                 {formData.atividadePrincipalCodigo ? (
                   <div className="space-y-2">
-                    <div className="flex items-start gap-4">
-                      <div className="min-w-[120px]">
-                        <p className="text-sm text-gray-600">Código</p>
-                        <p className="font-semibold text-blue-900">{formData.atividadePrincipalCodigo}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                      <div className="sm:min-w-[120px]">
+                        <p className="text-xs sm:text-sm text-gray-600">Código</p>
+                        <p className="font-semibold text-o2-blue text-sm">{formData.atividadePrincipalCodigo}</p>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-600">Descrição</p>
-                        <p className="font-semibold text-blue-900">{formData.atividadePrincipalDescricao}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Descrição</p>
+                        <p className="font-semibold text-o2-blue text-sm">{formData.atividadePrincipalDescricao}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-600 italic">Nenhuma atividade principal selecionada</p>
+                  <p className="text-xs sm:text-sm text-gray-600 italic">Nenhuma atividade principal selecionada</p>
                 )}
               </div>
             </div>
 
             {/* Atividades Secundárias */}
             <div className="space-y-4">
-              <div className="border-l-4 border-green-500 bg-green-50 p-4 rounded">
-                <h3 className="font-semibold text-green-900 mb-3">
+              <div className="border-l-4 border-o2-purple bg-o2-purple-light p-3 sm:p-4 rounded">
+                <h3 className="font-semibold text-o2-purple-dark mb-2 sm:mb-3 text-sm sm:text-base">
                   📋 Atividades Secundárias 
-                  {atividadesSecundariasAPI.length > 0 && ` (${atividadesSecundariasAPI.length} encontradas)`}
-                  {editingCliente && atividades.length > 0 && ` (${atividades.length} cadastradas)`}
+                  {atividadesSecundariasAPI.length > 0 && ` (${atividadesSecundariasAPI.length})`}
+                  {editingCliente && atividades.length > 0 && ` (${atividades.length})`}
                 </h3>
 
                 {/* Se está criando novo cliente - mostra as encontradas */}
                 {!editingCliente && atividadesSecundariasAPI.length > 0 && (
                   <div className="space-y-2">
                     {atividadesSecundariasAPI.map((atividade, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-2 bg-white rounded border border-green-200">
+                      <div key={idx} className="flex items-start gap-3 p-2 bg-white rounded border border-o2-purple/20">
                         <div className="text-lg">✓</div>
                         <div className="flex-1">
-                          <p className="font-medium text-green-900">{atividade.code}</p>
+                          <p className="font-medium text-o2-purple-dark">{atividade.code}</p>
                           <p className="text-sm text-gray-700">{atividade.text}</p>
                         </div>
                       </div>
                     ))}
-                    <p className="text-xs text-green-700 mt-3 italic">
+                    <p className="text-xs text-o2-purple-dark mt-3 italic">
                       💾 Estas atividades serão salvas automaticamente quando você criar o cliente
                     </p>
                   </div>
@@ -625,10 +626,10 @@ export function ClienteForm({
                         {atividades.map((atividade) => (
                           <div
                             key={atividade.id}
-                            className="flex items-start justify-between p-2 bg-white rounded border border-green-200"
+                            className="flex items-start justify-between p-2 bg-white rounded border border-o2-purple/20"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-green-900">{atividade.codigo}</p>
+                              <p className="font-medium text-o2-purple-dark">{atividade.codigo}</p>
                               <p className="text-sm text-gray-700">{atividade.descricao}</p>
                             </div>
                             <Button
@@ -701,33 +702,35 @@ export function ClienteForm({
                     disabled={presetDocumento !== 'Outro' && presetDocumento !== ''}
                   />
                 </div>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2">
                   <input
                     id="arquivo"
                     type="file"
                     className="hidden"
                     onChange={(e) => setArquivoSelecionado(e.target.files?.[0] || null)}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('arquivo')?.click()}
-                    disabled={documentosLoading}
-                    className="flex items-center gap-2"
-                  >
-                    <Paperclip className="w-4 h-4" />
-                    Anexar arquivo
-                  </Button>
-                  <Button
-                    onClick={handleAddDocumento}
-                    disabled={documentosLoading || !arquivoSelecionado || !nomeDocumento}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Salvar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('arquivo')?.click()}
+                      disabled={documentosLoading}
+                      className="flex items-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                    >
+                      <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      Anexar
+                    </Button>
+                    <Button
+                      onClick={handleAddDocumento}
+                      disabled={documentosLoading || !arquivoSelecionado || !nomeDocumento}
+                      className="flex items-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                    >
+                      <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      Salvar
+                    </Button>
+                  </div>
                   {arquivoSelecionado && (
-                    <span className="text-xs text-gray-600 truncate max-w-[120px]">{arquivoSelecionado.name}</span>
+                    <span className="text-xs text-gray-600 truncate max-w-[200px] sm:max-w-[120px]">{arquivoSelecionado.name}</span>
                   )}
                 </div>
               </div>
@@ -750,21 +753,21 @@ export function ClienteForm({
                   {documentos.map((doc) => (
                     <li
                       key={doc.id}
-                      className="flex items-center justify-between rounded-xl border bg-muted/50 px-4 py-3"
+                      className="flex items-center justify-between rounded-xl border bg-muted/50 px-3 sm:px-4 py-2 sm:py-3 gap-2"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <Paperclip className="w-6 h-6 text-primary/80" />
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <Paperclip className="w-4 h-4 sm:w-6 sm:h-6 text-primary/80 flex-shrink-0" />
                         <div className="min-w-0">
-                          <div className="font-medium truncate text-base text-primary">{doc.nomeDocumento}</div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="bg-primary/10 text-primary text-xs rounded px-2 py-0.5 font-medium">{doc.tipoDocumento || doc.tipo || doc.nomeArquivo || 'Documento'}</span>
+                          <div className="font-medium truncate text-sm sm:text-base text-primary">{doc.nomeDocumento}</div>
+                          <div className="flex items-center gap-1 sm:gap-2 mt-0.5 flex-wrap">
+                            <span className="bg-primary/10 text-primary text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-0.5 font-medium truncate max-w-[120px] sm:max-w-none">{doc.tipoDocumento || doc.tipo || doc.nomeArquivo || 'Documento'}</span>
                             {doc.dataUpload && (
-                              <span className="text-xs text-gray-400 ml-2">{new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</span>
+                              <span className="text-[10px] sm:text-xs text-gray-400">{new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-1 sm:gap-2 items-center flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"

@@ -85,6 +85,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // O2con Brand Colors
+        o2: {
+          blue: "#2B3F8E",
+          "blue-mid": "#3B5BAE",
+          cyan: "#00B4D8",
+          purple: "#9B2FAA",
+          "purple-dark": "#7B1F8A",
+          "blue-light": "#E8EBF5",
+          "purple-light": "#F5E8F8",
+          "cyan-light": "#E0F7FA",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

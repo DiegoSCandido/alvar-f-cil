@@ -16,27 +16,27 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 15%;
 
-    /* Primary: O2con Blue #005ca9 */
-    --primary: 207 100% 33%;
+    /* Primary: O2con Blue #2B3F8E */
+    --primary: 228 54% 36%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: O2con Magenta #951b81 */
-    --secondary: 311 69% 34%;
+    /* Secondary: O2con Purple #9B2FAA */
+    --secondary: 293 57% 43%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 15% 95%;
     --muted-foreground: 220 10% 45%;
 
-    /* Accent uses the magenta */
-    --accent: 311 50% 95%;
-    --accent-foreground: 311 69% 34%;
+    /* Accent uses the purple */
+    --accent: 293 50% 95%;
+    --accent-foreground: 293 57% 43%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 210 20% 90%;
     --input: 210 20% 90%;
-    --ring: 207 100% 33%;
+    --ring: 228 54% 36%;
 
     --radius: 0.75rem;
 
@@ -47,17 +47,17 @@
     --status-expiring-bg: 40 90% 95%;
     --status-expired: 0 75% 55%;
     --status-expired-bg: 0 75% 95%;
-    --status-pending: 207 100% 45%;
-    --status-pending-bg: 207 80% 95%;
+    --status-pending: 228 54% 45%;
+    --status-pending-bg: 228 50% 95%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 207 100% 33%;
+    --sidebar-primary: 228 54% 36%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 311 50% 95%;
-    --sidebar-accent-foreground: 311 69% 34%;
+    --sidebar-accent: 293 50% 95%;
+    --sidebar-accent-foreground: 293 57% 43%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 207 100% 45%;
+    --sidebar-ring: 228 54% 45%;
   }
 
   .dark {
@@ -70,24 +70,24 @@
     --popover: 220 25% 12%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 207 90% 50%;
+    --primary: 228 49% 46%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 311 60% 45%;
+    --secondary: 293 50% 50%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 15% 18%;
     --muted-foreground: 210 10% 60%;
 
-    --accent: 311 40% 20%;
-    --accent-foreground: 311 60% 70%;
+    --accent: 293 40% 20%;
+    --accent-foreground: 293 50% 70%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 207 90% 50%;
+    --ring: 228 49% 46%;
 
     --status-valid: 145 60% 45%;
     --status-valid-bg: 145 40% 15%;
@@ -95,17 +95,17 @@
     --status-expiring-bg: 40 40% 15%;
     --status-expired: 0 65% 50%;
     --status-expired-bg: 0 40% 15%;
-    --status-pending: 207 80% 55%;
-    --status-pending-bg: 207 40% 15%;
+    --status-pending: 228 50% 55%;
+    --status-pending-bg: 228 40% 15%;
 
     --sidebar-background: 220 25% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 207 90% 50%;
+    --sidebar-primary: 228 49% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 311 40% 20%;
-    --sidebar-accent-foreground: 311 60% 70%;
+    --sidebar-accent: 293 40% 20%;
+    --sidebar-accent-foreground: 293 50% 70%;
     --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 207 90% 50%;
+    --sidebar-ring: 228 49% 46%;
   }
 }
 
@@ -138,7 +138,21 @@
   }
 
   .brand-gradient {
-    background: linear-gradient(135deg, hsl(207, 100%, 33%) 0%, hsl(311, 69%, 34%) 100%);
+    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+  }
+
+  /* Tab trigger active state with brand gradient */
+  .o2-tab-trigger[data-state="active"] {
+    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #3B5BAE 0%, #7B1F8A 100%);
+    box-shadow: 0 4px 14px rgba(43, 63, 142, 0.3);
   }
 
   .login-card {

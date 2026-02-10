@@ -37,7 +37,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import o2conLogo from '@/assets/o2contole-logo.png';
+import o2conLogo from '@/assets/logo-o2con.png';
 
 
 const AlvarasPage = () => {

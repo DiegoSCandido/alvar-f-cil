@@ -1,0 +1,417 @@
+/*
+ * ============================================
+ *  O2con Soluções Contábeis — Design Theme
+ * ============================================
+ *  
+ *  Como usar em outro projeto:
+ *  
+ *  1. Copie este arquivo para o novo projeto
+ *  2. Copie a logo (logo-o2con.png) para a mesma pasta
+ *  3. Importe no seu CSS/JS principal:
+ *     
+ *     @import './assets/o2con-theme.css';    (no CSS)
+ *     import './assets/o2con-theme.css';      (no React/JS)
+ *
+ *  4. Use as variáveis CSS no seu código:
+ *     
+ *     color: var(--o2-blue-dark);
+ *     background: var(--o2-gradient);
+ *     box-shadow: 0 2px 8px var(--o2-shadow);
+ *
+ *  5. Use as classes utilitárias prontas:
+ *
+ *     <button class="o2-btn-primary">Salvar</button>
+ *     <button class="o2-btn-outline">Cancelar</button>
+ *     <div class="o2-card">Conteúdo</div>
+ *     <header class="o2-header">...</header>
+ *
+ * ============================================
+ */
+
+/* ===== VARIÁVEIS (PALETA DE CORES) ===== */
+:root {
+  /* Cores principais */
+  --o2-blue-dark: #2B3F8E;
+  --o2-blue-mid: #3B5BAE;
+  --o2-cyan: #00B4D8;
+  --o2-purple: #9B2FAA;
+  --o2-purple-dark: #7B1F8A;
+
+  /* Gradientes */
+  --o2-gradient: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+  --o2-gradient-cyan: linear-gradient(135deg, #2B3F8E 0%, #00B4D8 100%);
+  --o2-gradient-soft: linear-gradient(135deg, #3B5BAE 0%, #9B2FAA 100%);
+
+  /* Sombras */
+  --o2-shadow: rgba(43, 63, 142, 0.15);
+  --o2-shadow-strong: rgba(43, 63, 142, 0.3);
+
+  /* Fundos */
+  --o2-light-bg: #f8f9fc;
+  --o2-lighter-bg: #fdfdff;
+  --o2-white: #ffffff;
+
+  /* Bordas */
+  --o2-border: #e8eaf2;
+  --o2-border-focus: #2B3F8E;
+
+  /* Texto */
+  --o2-text-dark: #333333;
+  --o2-text-mid: #555555;
+  --o2-text-light: #888888;
+  --o2-text-muted: #aaaaaa;
+
+  /* Status */
+  --o2-success: #16a34a;
+  --o2-error: #dc2626;
+  --o2-warning: #e65100;
+
+  /* Tipografia */
+  --o2-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --o2-font-mono: 'Courier New', monospace;
+
+  /* Arredondamento */
+  --o2-radius-sm: 6px;
+  --o2-radius-md: 8px;
+  --o2-radius-lg: 12px;
+  --o2-radius-xl: 16px;
+  --o2-radius-full: 9999px;
+}
+
+
+/* ===== CLASSES UTILITÁRIAS ===== */
+
+/* --- Botões --- */
+.o2-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: var(--o2-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--o2-radius-md);
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: var(--o2-font);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.o2-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--o2-shadow-strong);
+}
+
+.o2-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.o2-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: white;
+  color: var(--o2-blue-dark);
+  border: 1.5px solid var(--o2-blue-dark);
+  border-radius: var(--o2-radius-md);
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: var(--o2-font);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.o2-btn-outline:hover:not(:disabled) {
+  background: var(--o2-blue-dark);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--o2-shadow-strong);
+}
+
+.o2-btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.o2-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--o2-radius-md);
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: var(--o2-font);
+  cursor: pointer;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+
+.o2-btn-secondary:hover:not(:disabled) {
+  background: #eee;
+}
+
+/* --- Cards --- */
+.o2-card {
+  background: white;
+  border-radius: var(--o2-radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 1px 8px var(--o2-shadow);
+  border: 1px solid var(--o2-border);
+}
+
+.o2-card-elevated {
+  background: white;
+  border-radius: var(--o2-radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px var(--o2-shadow);
+  border: 1px solid var(--o2-border);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.o2-card-elevated:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px var(--o2-shadow-strong);
+}
+
+/* --- Header / Navbar --- */
+.o2-header {
+  background: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 12px var(--o2-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid transparent;
+  border-image: var(--o2-gradient) 1;
+}
+
+.o2-header-logo {
+  height: 50px;
+  width: auto;
+}
+
+/* --- Inputs --- */
+.o2-input {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: var(--o2-radius-md);
+  font-size: 0.95rem;
+  font-family: var(--o2-font);
+  background: white;
+  color: var(--o2-text-dark);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.o2-input:focus {
+  outline: none;
+  border-color: var(--o2-blue-dark);
+  box-shadow: 0 0 0 3px rgba(43, 63, 142, 0.08);
+}
+
+.o2-input:disabled {
+  background: #fafafa;
+  cursor: not-allowed;
+}
+
+.o2-label {
+  display: block;
+  font-weight: 600;
+  color: var(--o2-text-mid);
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.o2-required {
+  color: var(--o2-purple);
+}
+
+/* --- Badges --- */
+.o2-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--o2-radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--o2-light-bg);
+  color: var(--o2-blue-dark);
+  border: 1px solid var(--o2-blue-dark);
+}
+
+.o2-badge-purple {
+  background: #fdf4ff;
+  color: var(--o2-purple);
+  border-color: var(--o2-purple);
+}
+
+.o2-badge-success {
+  background: #f0fdf4;
+  color: var(--o2-success);
+  border-color: var(--o2-success);
+}
+
+.o2-badge-error {
+  background: #fef2f2;
+  color: var(--o2-error);
+  border-color: var(--o2-error);
+}
+
+.o2-badge-warning {
+  background: #fff8e1;
+  color: var(--o2-warning);
+  border-color: #ffb74d;
+}
+
+/* --- Toggle Switch --- */
+.o2-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.o2-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.o2-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.o2-toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.o2-toggle input:checked + .o2-toggle-slider {
+  background: var(--o2-purple);
+}
+
+.o2-toggle input:checked + .o2-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* --- Tabs --- */
+.o2-tabs {
+  display: flex;
+  gap: 0;
+  background: white;
+  padding: 0.35rem;
+  border-radius: var(--o2-radius-lg);
+  box-shadow: 0 1px 8px var(--o2-shadow);
+  border: 1px solid var(--o2-border);
+}
+
+.o2-tab {
+  flex: 1;
+  padding: 0.7rem 1.5rem;
+  background: transparent;
+  color: var(--o2-text-light);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-size: 0.9rem;
+  font-family: var(--o2-font);
+}
+
+.o2-tab:hover {
+  color: var(--o2-blue-dark);
+  background: var(--o2-light-bg);
+}
+
+.o2-tab.active {
+  background: var(--o2-gradient);
+  color: white;
+  box-shadow: 0 2px 8px var(--o2-shadow-strong);
+}
+
+/* --- Mensagens --- */
+.o2-alert-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--o2-radius-md);
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.o2-alert-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--o2-radius-md);
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.o2-alert-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--o2-radius-md);
+  background: #f0f4ff;
+  color: #283593;
+  border: 1px solid #c5cae9;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* --- Footer --- */
+.o2-footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--o2-text-muted);
+  font-size: 0.8rem;
+}
+
+.o2-footer .o2-brand {
+  color: var(--o2-purple);
+  font-weight: 600;
+}
+
+/* --- Textos com cores da marca --- */
+.o2-text-blue { color: var(--o2-blue-dark); }
+.o2-text-purple { color: var(--o2-purple); }
+.o2-text-cyan { color: var(--o2-cyan); }
+.o2-bg-gradient { background: var(--o2-gradient); color: white; }

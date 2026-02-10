@@ -51,7 +51,7 @@ export function StatCard({
                 'status-valid': variant === 'valid',
                 'status-expiring': variant === 'expiring',
                 'status-expired': variant === 'expired',
-                'bg-blue-100 dark:bg-blue-900': variant === 'default',
+                'bg-o2-blue-light dark:bg-o2-blue/20': variant === 'default',
               }
             )}
           >

@@ -243,7 +243,7 @@ const RegisterForm = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="btn-primary w-full text-primary-foreground text-sm sm:text-base"
+              className="w-full text-sm sm:text-base"
               disabled={isLoading}
             >
               {isLoading ? (

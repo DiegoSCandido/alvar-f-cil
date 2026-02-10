@@ -195,156 +195,200 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
     );
   }
 
+  // Helper para renderizar ações
+  const renderActions = (alvara: typeof alvaras[0]) => (
+    <div className="flex items-center gap-0.5 sm:gap-1 xl:gap-2 flex-wrap">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onEdit(alvara)}
+        className="h-7 w-7 sm:h-8 sm:w-8"
+        title="Editar Alvará"
+      >
+        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+      </Button>
+      {onFinalize && !alvara.issueDate && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onFinalize(alvara)}
+          className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 hover:text-green-700"
+          title="Finalizar Alvará"
+        >
+          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+        </Button>
+      )}
+      {alvara.issueDate && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handlePreview(alvara.id)}
+            className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+            title="Visualizar PDF"
+            disabled={isDownloading}
+          >
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDownload(alvara.id)}
+            className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+            title="Baixar PDF"
+            disabled={isDownloading}
+          >
+            <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        </>
+      )}
+      {onRenew && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onRenew(alvara)}
+          className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600 hover:text-amber-700"
+          title="Renovar Alvará"
+        >
+          <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(alvara.id)}
+        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
+        title="Excluir Alvará"
+      >
+        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <SortableHeader 
-                column="clientName" 
-                className="min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]"
-              >
-                Cliente
-              </SortableHeader>
-              <SortableHeader 
-                column="cnpj" 
-                className="hidden sm:table-cell"
-              >
-                CNPJ
-              </SortableHeader>
-              <SortableHeader 
-                column="type" 
-                className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px]"
-              >
-                Tipo
-              </SortableHeader>
-              <SortableHeader 
-                column="expirationDate" 
-                className="hidden xl:table-cell whitespace-nowrap"
-              >
-                Vencimento
-              </SortableHeader>
-              <SortableHeader 
-                column="daysUntilExpiration" 
-                className="whitespace-nowrap"
-              >
-                Prazo
-              </SortableHeader>
-              <SortableHeader 
-                column="status" 
-                className="whitespace-nowrap"
-              >
-                Status
-              </SortableHeader>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedAlvaras.map((alvara, index) => (
-              <TableRow
-                key={alvara.id}
-                className={`animate-fade-in text-xs sm:text-sm ${
-                  alvara.status === 'expiring' || alvara.status === 'expired'
-                    ? 'bg-amber-50'
-                    : ''
-                }`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
-                  <div className="truncate" title={alvara.clientName}>
-                    <span className="text-xs sm:text-sm lg:text-base">{alvara.clientName}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="font-mono text-muted-foreground whitespace-nowrap hidden sm:table-cell">
-                  <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(alvara.clientCnpj)}</span>
-                </TableCell>
-                <TableCell className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px] max-w-[250px] xl:max-w-[300px]">
-                  <div className="truncate" title={alvara.type}>
-                    <span className="text-xs sm:text-sm lg:text-base">{alvara.type}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                  <span className="text-xs sm:text-sm lg:text-base">{formatDate(alvara.expirationDate)}</span>
-                </TableCell>
-                <TableCell className="text-muted-foreground whitespace-nowrap">
-                  <span className="text-xs sm:text-sm lg:text-base">{getDaysText(alvara)}</span>
-                </TableCell>
-                <TableCell>
-                  <StatusBadge alvara={alvara} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(alvara)}
-                      className="h-7 w-7 sm:h-8 sm:w-8"
-                      title="Editar Alvará"
-                    >
-                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                    {onFinalize && !alvara.issueDate && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onFinalize(alvara)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 hover:text-green-700"
-                        title="Finalizar Alvará"
-                      >
-                        <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
-                    )}
-                    {alvara.issueDate && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handlePreview(alvara.id)}
-                          className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
-                          title="Visualizar PDF do Alvará"
-                          disabled={isDownloading}
-                        >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownload(alvara.id)}
-                          className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
-                          title="Baixar PDF do Alvará"
-                          disabled={isDownloading}
-                        >
-                          <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </>
-                    )}
-                    {onRenew && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onRenew(alvara)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600 hover:text-amber-700"
-                        title="Renovar Alvará"
-                      >
-                        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(alvara.id)}
-                      className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
-                      title="Excluir Alvará"
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+    <>
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 sm:hidden">
+        {sortedAlvaras.map((alvara, index) => (
+          <div
+            key={alvara.id}
+            className={cn(
+              'bg-card rounded-lg border shadow-sm p-3 space-y-2 animate-fade-in',
+              (alvara.status === 'expiring' || alvara.status === 'expired') && 'border-amber-200 bg-amber-50/50'
+            )}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm truncate" title={alvara.clientName}>{alvara.clientName}</p>
+                <p className="text-xs text-muted-foreground font-mono">{formatCnpj(alvara.clientCnpj)}</p>
+              </div>
+              <StatusBadge alvara={alvara} />
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="truncate">{alvara.type}</span>
+              <span className="whitespace-nowrap font-medium">{getDaysText(alvara)}</span>
+            </div>
+            {alvara.expirationDate && (
+              <p className="text-xs text-muted-foreground">
+                Venc: {formatDate(alvara.expirationDate)}
+              </p>
+            )}
+            <div className="flex items-center justify-end pt-1 border-t border-border/50">
+              {renderActions(alvara)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <SortableHeader 
+                  column="clientName" 
+                  className="min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]"
+                >
+                  Cliente
+                </SortableHeader>
+                <SortableHeader 
+                  column="cnpj" 
+                  className="hidden md:table-cell"
+                >
+                  CNPJ
+                </SortableHeader>
+                <SortableHeader 
+                  column="type" 
+                  className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px]"
+                >
+                  Tipo
+                </SortableHeader>
+                <SortableHeader 
+                  column="expirationDate" 
+                  className="hidden xl:table-cell whitespace-nowrap"
+                >
+                  Vencimento
+                </SortableHeader>
+                <SortableHeader 
+                  column="daysUntilExpiration" 
+                  className="whitespace-nowrap"
+                >
+                  Prazo
+                </SortableHeader>
+                <SortableHeader 
+                  column="status" 
+                  className="whitespace-nowrap"
+                >
+                  Status
+                </SortableHeader>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {sortedAlvaras.map((alvara, index) => (
+                <TableRow
+                  key={alvara.id}
+                  className={`animate-fade-in text-xs sm:text-sm ${
+                    alvara.status === 'expiring' || alvara.status === 'expired'
+                      ? 'bg-amber-50'
+                      : ''
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
+                    <div className="truncate" title={alvara.clientName}>
+                      <span className="text-xs sm:text-sm lg:text-base">{alvara.clientName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-muted-foreground whitespace-nowrap hidden md:table-cell">
+                    <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(alvara.clientCnpj)}</span>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px] max-w-[250px] xl:max-w-[300px]">
+                    <div className="truncate" title={alvara.type}>
+                      <span className="text-xs sm:text-sm lg:text-base">{alvara.type}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell whitespace-nowrap">
+                    <span className="text-xs sm:text-sm lg:text-base">{formatDate(alvara.expirationDate)}</span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <span className="text-xs sm:text-sm lg:text-base">{getDaysText(alvara)}</span>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge alvara={alvara} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
+                      {renderActions(alvara)}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Modal de pré-visualização */}
@@ -354,6 +398,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
         documentUrl={previewUrl}
         documentName={previewName}
       />
-    </div>
+    </>
   );
 }

@@ -108,7 +108,7 @@ export function AtividadeSecundariaSelect({
                       <button
                         type="button"
                         onClick={() => handleSelect(opt.codigo, opt.descricao)}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-100 transition"
+                        className="w-full text-left px-4 py-3 hover:bg-o2-blue-light transition"
                       >
                         <div className="font-medium text-sm text-gray-400">{opt.codigo}</div>
                         <div className="text-xs text-gray-600">{opt.descricao}</div>

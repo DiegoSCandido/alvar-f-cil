@@ -161,7 +161,7 @@ export function AlvaraForm({
     return (
       <>
         <div className="mb-1 text-sm text-black">Status das Taxas Alvará</div>
-        <div className="space-y-3 border rounded-md p-4 mt-0 bg-gray-50 shadow-sm">
+        <div className="space-y-3 border rounded-md p-3 sm:p-4 mt-0 bg-gray-50 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Label htmlFor="ano-taxas" className="text-sm font-medium">Ano:</Label>
             <Input
@@ -175,38 +175,42 @@ export function AlvaraForm({
             />
           </div>
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <input
-                id="taxa-enviada"
-                type="checkbox"
-                checked={taxaAno.taxaEnviada}
-                onChange={e => setTaxaAno(anoSelecionado, { taxaEnviada: e.target.checked })}
-                className="accent-blue-600 h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <Label htmlFor="taxa-enviada" className="text-sm select-none cursor-pointer">Taxas Enviadas</Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  id="taxa-enviada"
+                  type="checkbox"
+                  checked={taxaAno.taxaEnviada}
+                  onChange={e => setTaxaAno(anoSelecionado, { taxaEnviada: e.target.checked })}
+                  className="accent-o2-blue h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-o2-blue"
+                />
+                <Label htmlFor="taxa-enviada" className="text-sm select-none cursor-pointer whitespace-nowrap">Taxas Enviadas</Label>
+              </div>
               <Input
                 type="date"
                 value={taxaAno.dataTaxaEnviada ? formatDateForInput(taxaAno.dataTaxaEnviada) : ''}
                 onChange={e => setTaxaAno(anoSelecionado, { dataTaxaEnviada: e.target.value ? new Date(e.target.value) : null })}
                 disabled={!taxaAno.taxaEnviada}
-                className="ml-2 w-36 text-xs"
+                className="w-full sm:w-36 text-xs"
               />
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                id="taxa-paga"
-                type="checkbox"
-                checked={taxaAno.taxaPaga}
-                onChange={e => setTaxaAno(anoSelecionado, { taxaPaga: e.target.checked })}
-                className="accent-blue-600 h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <Label htmlFor="taxa-paga" className="text-sm select-none cursor-pointer">Taxas Pagas</Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  id="taxa-paga"
+                  type="checkbox"
+                  checked={taxaAno.taxaPaga}
+                  onChange={e => setTaxaAno(anoSelecionado, { taxaPaga: e.target.checked })}
+                  className="accent-o2-blue h-4 w-4 transition-colors duration-150 border-gray-300 rounded focus:ring-2 focus:ring-o2-blue"
+                />
+                <Label htmlFor="taxa-paga" className="text-sm select-none cursor-pointer whitespace-nowrap">Taxas Pagas</Label>
+              </div>
               <Input
                 type="date"
                 value={taxaAno.dataTaxaPaga ? formatDateForInput(taxaAno.dataTaxaPaga) : ''}
                 onChange={e => setTaxaAno(anoSelecionado, { dataTaxaPaga: e.target.value ? new Date(e.target.value) : null })}
                 disabled={!taxaAno.taxaPaga}
-                className="ml-2 w-36 text-xs"
+                className="w-full sm:w-36 text-xs"
               />
             </div>
           </div>
@@ -614,27 +618,28 @@ export function AlvaraForm({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
             {isRenewing ? (
-              <div className="flex gap-2 w-full">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button
                   type="button"
                   onClick={handleRenovationUpdated}
                   disabled={isLoading}
                   variant="outline"
-                  className="flex-1 text-amber-600 border-amber-200 hover:bg-amber-50"
+                  className="flex-1 text-xs sm:text-sm"
                 >
-                  {isLoading ? 'Salvando...' : 'Renovação Atualizada'}
+                  {isLoading ? 'Salvando...' : 'Renov. Atualizada'}
                 </Button>
                 <Button
                   type="button"
                   onClick={handleRenovationFinalized}
                   disabled={isLoading}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 text-xs sm:text-sm"
                 >
-                  {isLoading ? 'Finalizando...' : 'Renovação Finalizada'}
+                  {isLoading ? 'Finalizando...' : 'Renov. Finalizada'}
                 </Button>
               </div>
             ) : (
@@ -695,8 +700,8 @@ export function AlvaraForm({
             disabled={isLoading || uploading}
             className="text-sm"
           />
-          {finalizeFile && <span className="text-xs text-green-700">{finalizeFile.name}</span>}
-          {uploading && <span className="text-xs text-blue-700">Enviando documento...</span>}
+          {finalizeFile && <span className="text-xs text-o2-blue">{finalizeFile.name}</span>}
+          {uploading && <span className="text-xs text-o2-blue">Enviando documento...</span>}
         </div>
 
         <DialogFooter className="mt-6">
@@ -716,7 +721,6 @@ export function AlvaraForm({
             type="button"
             onClick={handleConfirmRenewalFinalized}
             disabled={isLoading || !renewalExpirationDate}
-            className="bg-green-600 hover:bg-green-700"
           >
             {isLoading ? 'Finalizando...' : 'Confirmar'}
           </Button>

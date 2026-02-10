@@ -1,4 +1,4 @@
-import logo2controle from "../assets/o2contole-logo.png";
+import logo2controle from "../assets/logo-o2con.png";
 
 const Logo = () => {
     return (

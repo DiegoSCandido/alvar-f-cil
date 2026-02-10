@@ -144,53 +144,108 @@ export default function TaxaFuncionamentoTable() {
     }
   };
 
-  if (loading) return <div>Carregando...</div>;
-
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cliente</TableHead>
-            <TableHead>CNPJ</TableHead>
-            <TableHead>Gerada</TableHead>
-            <TableHead>Enviada</TableHead>
-            <TableHead>Paga</TableHead>
-            <TableHead>Protocolo</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {clientes.map(cliente => {
-            const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
-            const protocoloValue = protocoloValues[cliente.id] !== undefined 
-              ? protocoloValues[cliente.id] 
-              : (taxa.protocolo || '');
-            return (
-              <TableRow key={cliente.id}>
-                <TableCell>{cliente.razaoSocial}</TableCell>
-                <TableCell>{cliente.cnpj}</TableCell>
-                <TableCell>
-                  <Checkbox checked={!!taxa.gerada} onCheckedChange={checked => handleCheckbox(cliente.id, 'gerada', !!checked)} />
-                </TableCell>
-                <TableCell>
-                  <Checkbox checked={!!taxa.enviada} onCheckedChange={checked => handleCheckbox(cliente.id, 'enviada', !!checked)} />
-                </TableCell>
-                <TableCell>
-                  <Checkbox checked={!!taxa.paga} onCheckedChange={checked => handleCheckbox(cliente.id, 'paga', !!checked)} />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    value={protocoloValue} 
-                    onChange={e => handleProtocoloInputChange(cliente.id, e.target.value)}
-                    onBlur={() => handleProtocoloBlur(cliente.id)}
-                    placeholder="Digite o protocolo"
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+  if (loading) return (
+    <div className="flex items-center justify-center p-8">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
+        <p className="text-muted-foreground text-sm">Carregando...</p>
+      </div>
     </div>
+  );
+
+  // Mobile: card layout; Desktop: table layout
+  return (
+    <>
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 lg:hidden">
+        {clientes.map(cliente => {
+          const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
+          const protocoloValue = protocoloValues[cliente.id] !== undefined 
+            ? protocoloValues[cliente.id] 
+            : (taxa.protocolo || '');
+          return (
+            <div key={cliente.id} className="bg-card rounded-lg border shadow-sm p-3 sm:p-4 space-y-3">
+              <div className="min-w-0">
+                <p className="font-medium text-sm sm:text-base truncate" title={cliente.razaoSocial}>{cliente.razaoSocial}</p>
+                <p className="text-xs text-muted-foreground font-mono">{cliente.cnpj}</p>
+              </div>
+              <div className="flex items-center gap-4 sm:gap-6">
+                <label className="flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
+                  <Checkbox checked={!!taxa.gerada} onCheckedChange={checked => handleCheckbox(cliente.id, 'gerada', !!checked)} />
+                  <span>Gerada</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
+                  <Checkbox checked={!!taxa.enviada} onCheckedChange={checked => handleCheckbox(cliente.id, 'enviada', !!checked)} />
+                  <span>Enviada</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
+                  <Checkbox checked={!!taxa.paga} onCheckedChange={checked => handleCheckbox(cliente.id, 'paga', !!checked)} />
+                  <span>Paga</span>
+                </label>
+              </div>
+              <Input 
+                value={protocoloValue} 
+                onChange={e => handleProtocoloInputChange(cliente.id, e.target.value)}
+                onBlur={() => handleProtocoloBlur(cliente.id)}
+                placeholder="Protocolo"
+                className="text-sm"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden lg:block bg-card rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-semibold text-sm min-w-[200px]">Cliente</TableHead>
+                <TableHead className="font-semibold text-sm whitespace-nowrap">CNPJ</TableHead>
+                <TableHead className="font-semibold text-sm text-center">Gerada</TableHead>
+                <TableHead className="font-semibold text-sm text-center">Enviada</TableHead>
+                <TableHead className="font-semibold text-sm text-center">Paga</TableHead>
+                <TableHead className="font-semibold text-sm min-w-[180px]">Protocolo</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientes.map(cliente => {
+                const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
+                const protocoloValue = protocoloValues[cliente.id] !== undefined 
+                  ? protocoloValues[cliente.id] 
+                  : (taxa.protocolo || '');
+                return (
+                  <TableRow key={cliente.id} className="text-sm">
+                    <TableCell className="font-medium min-w-[200px] max-w-[300px]">
+                      <div className="truncate" title={cliente.razaoSocial}>{cliente.razaoSocial}</div>
+                    </TableCell>
+                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap">{cliente.cnpj}</TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox checked={!!taxa.gerada} onCheckedChange={checked => handleCheckbox(cliente.id, 'gerada', !!checked)} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox checked={!!taxa.enviada} onCheckedChange={checked => handleCheckbox(cliente.id, 'enviada', !!checked)} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox checked={!!taxa.paga} onCheckedChange={checked => handleCheckbox(cliente.id, 'paga', !!checked)} />
+                    </TableCell>
+                    <TableCell>
+                      <Input 
+                        value={protocoloValue} 
+                        onChange={e => handleProtocoloInputChange(cliente.id, e.target.value)}
+                        onBlur={() => handleProtocoloBlur(cliente.id)}
+                        placeholder="Protocolo"
+                        className="text-sm"
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </>
   );
 }

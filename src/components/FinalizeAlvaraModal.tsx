@@ -109,11 +109,11 @@ export function FinalizeAlvaraModal({
             <Label className="text-sm font-medium">
               Documento do Alvará (PDF) <span className="text-destructive">*</span>
             </Label>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-11 px-3 rounded-md border border-input bg-background flex items-center">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <div className="flex-1 h-11 px-3 rounded-md border border-input bg-background flex items-center min-w-0">
                 {file ? (
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-2 text-sm min-w-0">
+                    <FileText className="w-4 h-4 text-primary flex-shrink-0" />
                     <span className="truncate">{file.name}</span>
                   </div>
                 ) : (
@@ -122,11 +122,11 @@ export function FinalizeAlvaraModal({
                   </span>
                 )}
               </div>
-              <label htmlFor="alvara-file">
+              <label htmlFor="alvara-file" className="flex-shrink-0">
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 cursor-pointer"
+                  className="gap-2 cursor-pointer w-full sm:w-auto"
                   asChild
                 >
                   <span>
@@ -146,14 +146,14 @@ export function FinalizeAlvaraModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-muted/30 border-t flex justify-end gap-3 flex-shrink-0">
-          <Button variant="outline" onClick={handleCancel}>
+        <div className="px-4 sm:px-6 py-4 bg-muted/30 border-t flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
+          <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={handleFinalize}
             disabled={!expirationDate}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <CheckCircle className="w-4 h-4" />
             Finalizar

@@ -69,96 +69,146 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
   }
 
   return (
-    <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base">CNPJ</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]">Razão Social</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">UF</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">Município</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Func.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará San.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
-              <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clientes.map((cliente, index) => {
-              const alvaraFuncionamento = getAlvaraByTipo(
-                alvaras,
-                cliente.id,
-                'Alvará de Funcionamento'
-              );
-              const alvaraSanitario = getAlvaraByTipo(
-                alvaras,
-                cliente.id,
-                'Alvará Sanitário'
-              );
-              const alvaraBombeiros = getAlvaraByTipo(
-                alvaras,
-                cliente.id,
-                'Alvará de Bombeiros'
-              );
+    <>
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 sm:hidden">
+        {clientes.map((cliente, index) => {
+          const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
+          const alvaraSanitario = getAlvaraByTipo(alvaras, cliente.id, 'Alvará Sanitário');
+          const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
 
-              return (
-                <TableRow
-                  key={cliente.id}
-                  className="animate-fade-in text-xs sm:text-sm"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
-                    <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(cliente.cnpj)}</span>
-                  </TableCell>
-                  <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
-                    <div className="truncate" title={cliente.razaoSocial}>
-                      <span className="text-xs sm:text-sm lg:text-base">{cliente.razaoSocial}</span>
+          return (
+            <div
+              key={cliente.id}
+              className="bg-card rounded-lg border shadow-sm p-3 space-y-2 animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate" title={cliente.razaoSocial}>{cliente.razaoSocial}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{formatCnpj(cliente.cnpj)}</p>
+                </div>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(cliente)} className="h-7 w-7" title="Editar">
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => onDelete(cliente.id)} className="h-7 w-7 text-destructive" title="Excluir">
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{cliente.uf}</span>
+                <span>•</span>
+                <span className="truncate">{cliente.municipio}</span>
+              </div>
+              {(alvaraFuncionamento || alvaraSanitario || alvaraBombeiros) && (
+                <div className="grid grid-cols-1 gap-1.5 pt-1.5 border-t border-border/50 text-xs">
+                  {alvaraFuncionamento && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Func.</span>
+                      <AlvaraCell alvara={alvaraFuncionamento} />
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <span className="text-xs sm:text-sm lg:text-base">{cliente.uf}</span>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell max-w-[120px] xl:max-w-[150px] truncate">
-                    <span className="text-xs sm:text-sm lg:text-base">{cliente.municipio}</span>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <AlvaraCell alvara={alvaraFuncionamento} />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <AlvaraCell alvara={alvaraSanitario} />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <AlvaraCell alvara={alvaraBombeiros} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(cliente)}
-                        className="h-7 w-7 sm:h-8 sm:w-8"
-                        title="Editar Cliente"
-                      >
-                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(cliente.id)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
-                        title="Excluir Cliente"
-                      >
-                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
+                  )}
+                  {alvaraSanitario && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">San.</span>
+                      <AlvaraCell alvara={alvaraSanitario} />
                     </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                  )}
+                  {alvaraBombeiros && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Bomb.</span>
+                      <AlvaraCell alvara={alvaraBombeiros} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base">CNPJ</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]">Razão Social</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">UF</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">Município</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Func.</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará San.</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientes.map((cliente, index) => {
+                const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
+                const alvaraSanitario = getAlvaraByTipo(alvaras, cliente.id, 'Alvará Sanitário');
+                const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
+
+                return (
+                  <TableRow
+                    key={cliente.id}
+                    className="animate-fade-in text-xs sm:text-sm"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
+                      <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(cliente.cnpj)}</span>
+                    </TableCell>
+                    <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
+                      <div className="truncate" title={cliente.razaoSocial}>
+                        <span className="text-xs sm:text-sm lg:text-base">{cliente.razaoSocial}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <span className="text-xs sm:text-sm lg:text-base">{cliente.uf}</span>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell max-w-[120px] xl:max-w-[150px] truncate">
+                      <span className="text-xs sm:text-sm lg:text-base">{cliente.municipio}</span>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <AlvaraCell alvara={alvaraFuncionamento} />
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <AlvaraCell alvara={alvaraSanitario} />
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <AlvaraCell alvara={alvaraBombeiros} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(cliente)}
+                          className="h-7 w-7 sm:h-8 sm:w-8"
+                          title="Editar Cliente"
+                        >
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(cliente.id)}
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
+                          title="Excluir Cliente"
+                        >
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </>
   );
 }

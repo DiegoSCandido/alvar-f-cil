@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import o2conLogo from '@/assets/o2contole-logo.png';
+import o2conLogo from '@/assets/logo-o2con.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const ClientesPage = () => {

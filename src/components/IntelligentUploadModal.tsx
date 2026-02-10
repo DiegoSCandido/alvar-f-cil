@@ -408,12 +408,12 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
 
           {/* Dados extraídos */}
           {extractedData && !isUploading && !uploadResult && (
-            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold">Dados Extraídos do PDF</h4>
-                <div className="flex items-center gap-2">
+            <div className="space-y-3 p-3 sm:p-4 border rounded-lg bg-muted/30">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h4 className="font-semibold text-sm sm:text-base">Dados Extraídos do PDF</h4>
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   <Badge className={getConfidenceColor(extractedData.confianca)}>
-                    {extractedData.confianca}% confiança
+                    {extractedData.confianca}%
                   </Badge>
                   {!isEditing && file && (
                     <>
@@ -422,18 +422,19 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                         variant="outline"
                         size="sm"
                         onClick={() => handlePreview(file)}
-                        className="h-7"
+                        className="h-7 text-xs"
                         title="Pré-visualizar PDF"
                       >
                         <Eye className="h-3 w-3 mr-1" />
-                        Ver PDF
+                        <span className="hidden sm:inline">Ver PDF</span>
+                        <span className="sm:hidden">PDF</span>
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleEdit}
-                        className="h-7"
+                        className="h-7 text-xs"
                       >
                         <Edit2 className="h-3 w-3 mr-1" />
                         Editar
@@ -486,9 +487,9 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-data-emissao">Data de Emissão</Label>
+                        <Label htmlFor="edit-data-emissao" className="text-xs sm:text-sm">Dt. Emissão</Label>
                         <Input
                           id="edit-data-emissao"
                           type="date"
@@ -500,11 +501,12 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                               dataEmissao: isoString,
                             });
                           }}
+                          className="text-sm"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="edit-data-vencimento">Data de Vencimento</Label>
+                        <Label htmlFor="edit-data-vencimento" className="text-xs sm:text-sm">Dt. Vencimento</Label>
                         <Input
                           id="edit-data-vencimento"
                           type="date"
@@ -516,6 +518,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                               dataVencimento: isoString,
                             });
                           }}
+                          className="text-sm"
                         />
                       </div>
                     </div>
@@ -539,10 +542,10 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                 </div>
               ) : (
                 // Visualização dos dados
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                   <div>
                     <p className="text-muted-foreground">Tipo de Alvará</p>
-                    <p className="font-medium">{editedData.tipo || extractedData.tipo || '-'}</p>
+                    <p className="font-medium truncate">{editedData.tipo || extractedData.tipo || '-'}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">CNPJ</p>
@@ -550,17 +553,17 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                   </div>
                   <div>
                     <p className="text-muted-foreground">Razão Social</p>
-                    <p className="font-medium">{editedData.razaoSocial || extractedData.razaoSocial || '-'}</p>
+                    <p className="font-medium truncate">{editedData.razaoSocial || extractedData.razaoSocial || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Data de Vencimento</p>
+                    <p className="text-muted-foreground">Dt. Vencimento</p>
                     <p className="font-medium">
                       {formatDate(editedData.dataVencimento || extractedData.dataVencimento)}
                     </p>
                   </div>
                   {extractedData.numeroAlvara && (
                     <div>
-                      <p className="text-muted-foreground">Número do Alvará</p>
+                      <p className="text-muted-foreground">Nº Alvará</p>
                       <p className="font-medium">{extractedData.numeroAlvara}</p>
                     </div>
                   )}
@@ -576,8 +579,8 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                     </Button>
                   ) : (
                     <div className="space-y-2">
-                      <Alert className="bg-blue-50 border-blue-200">
-                        <AlertDescription className="text-blue-800 text-sm">
+                      <Alert className="bg-o2-blue-light border-o2-blue/20">
+                        <AlertDescription className="text-o2-blue text-sm">
                           Dados confirmados. Clique no botão abaixo para criar o alvará.
                         </AlertDescription>
                       </Alert>
@@ -824,9 +827,9 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                                 />
                               </div>
 
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-2">
-                                  <Label>Data de Emissão</Label>
+                                  <Label className="text-xs sm:text-sm">Dt. Emissão</Label>
                                   <Input
                                     type="date"
                                     value={formatDateForInput(fileData.editedData?.dataEmissao || fileData.extractedData?.dataEmissao)}
@@ -838,11 +841,12 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                                         dataEmissao: isoString,
                                       });
                                     }}
+                                    className="text-sm"
                                   />
                                 </div>
 
                                 <div className="space-y-2">
-                                  <Label>Data de Vencimento</Label>
+                                  <Label className="text-xs sm:text-sm">Dt. Vencimento</Label>
                                   <Input
                                     type="date"
                                     value={formatDateForInput(fileData.editedData?.dataVencimento || fileData.extractedData?.dataVencimento)}
@@ -854,6 +858,7 @@ export function IntelligentUploadModal({ open, onOpenChange, onSuccess }: Intell
                                         dataVencimento: isoString,
                                       });
                                     }}
+                                    className="text-sm"
                                   />
                                 </div>
                               </div>

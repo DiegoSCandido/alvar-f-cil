@@ -73,7 +73,7 @@ const Sidebar = () => {
     <>
       {/* Mobile Menu Button */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-50 p-3 sm:p-4 flex justify-between items-center">
-        <h1 className="text-lg sm:text-xl font-bold text-slate-900">O2controle</h1>
+        <h1 className="text-lg sm:text-xl font-bold text-o2-blue">O2controle</h1>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 hover:bg-slate-100 rounded-lg transition"
@@ -106,7 +106,7 @@ const Sidebar = () => {
           isCollapsed && 'lg:justify-center lg:px-2'
         )}>
           {!isCollapsed && (
-            <h1 className="text-xl 2xl:text-2xl font-bold text-slate-900">Menu</h1>
+            <h1 className="text-xl 2xl:text-2xl font-bold text-o2-blue">Menu</h1>
           )}
           {/* Botão Circular para Toggle - Desktop/Tablet only */}
           <button
@@ -114,7 +114,7 @@ const Sidebar = () => {
             className={cn(
               'hidden lg:flex items-center justify-center',
               'w-9 h-9 rounded-full',
-              'bg-blue-600 hover:bg-blue-700 text-white',
+              'bg-o2-blue hover:bg-o2-blue-mid text-white',
               'shadow-md hover:shadow-lg',
               'transition-all duration-200',
               'hover:scale-105 active:scale-95',
@@ -146,8 +146,8 @@ const Sidebar = () => {
                     'lg:justify-start',
                     isCollapsed && 'lg:justify-center lg:px-2',
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'brand-gradient text-white shadow-lg'
+                      : 'text-foreground hover:bg-o2-blue-light'
                   )}
                 >
                   <Icon size={18} className="lg:w-5 lg:h-5 flex-shrink-0" />
@@ -178,8 +178,8 @@ const Sidebar = () => {
         {/* User Info & Logout - fixo na base */}
         <div className="border-t border-slate-200 p-4 lg:p-6 space-y-3 lg:space-y-4 flex-shrink-0">
           {user && !isCollapsed && (
-            <div className="text-xs lg:text-sm text-slate-500 px-1 hidden lg:block">
-              <p className="font-medium text-slate-700 truncate">{user.fullName || user.email}</p>
+            <div className="text-xs lg:text-sm text-muted-foreground px-1">
+              <p className="font-medium text-foreground truncate">{user.fullName || user.email}</p>
             </div>
           )}
           <TooltipProvider delayDuration={300}>
@@ -188,7 +188,7 @@ const Sidebar = () => {
                 <button
                   onClick={handleLogout}
                   className={cn(
-                    'w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 text-sm lg:text-base',
+                    'w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-foreground hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 text-sm lg:text-base',
                     'lg:justify-start',
                     isCollapsed && 'lg:justify-center lg:px-2'
                   )}

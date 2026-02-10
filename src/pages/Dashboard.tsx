@@ -3,7 +3,7 @@ import { useClientes } from "@/hooks/useClientes";
 import { useAlvaras } from "@/hooks/useAlvaras";
 import { StatCard } from "@/components/StatCard";
 import { useNavigate } from "react-router-dom";
-import o2conLogo from '@/assets/o2contole-logo.png';
+import o2conLogo from '@/assets/logo-o2con.png';
 
 const Dashboard = () => {
   const { user } = useAuth();
