@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AtividadeSecundaria, AtividadeSecundariaFormData } from '@/types/atividadeSecundaria';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export function useAtividadesSecundarias(clienteId: string) {
   const [atividades, setAtividades] = useState<AtividadeSecundaria[]>([]);

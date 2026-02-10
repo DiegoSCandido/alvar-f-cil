@@ -63,7 +63,7 @@ const RegisterForm = () => {
 
       setIsLoading(true);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {

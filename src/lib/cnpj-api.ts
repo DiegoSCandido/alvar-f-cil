@@ -48,7 +48,7 @@ export async function fetchCNPJData(cnpj: string): Promise<CNPJData | null> {
       throw new Error('CNPJ deve ter 14 dígitos');
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(
       `${apiUrl}/cnpj/${cnpjLimpo}`
     );

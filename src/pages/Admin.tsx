@@ -35,7 +35,7 @@ export default function Admin() {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const apiUrl = import.meta.env.VITE_API_URL || "/api";
       const response = await fetch(`${apiUrl}/users`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -93,7 +93,7 @@ export default function Admin() {
 
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const apiUrl = import.meta.env.VITE_API_URL || "/api";
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: {
@@ -135,7 +135,7 @@ export default function Admin() {
   const handleDeleteUser = async (user: User) => {
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const apiUrl = import.meta.env.VITE_API_URL || "/api";
       const response = await fetch(`${apiUrl}/users/${user.id}`, {
         method: "DELETE",
         headers: {

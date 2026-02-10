@@ -99,7 +99,7 @@ export function ClienteForm({
   const [documentos, setDocumentos] = useState<any[]>([]);
   const [documentosLoading, setDocumentosLoading] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
   // Handler para selecionar uma CNAE da lista
   const handleSelecionarCnae = (codigo: string, descricao: string) => {
@@ -317,7 +317,7 @@ export function ClienteForm({
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documentos-cliente/upload/${editingCliente.id}`,
+        `${import.meta.env.VITE_API_URL || '/api'}/documentos-cliente/upload/${editingCliente.id}`,
         {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},

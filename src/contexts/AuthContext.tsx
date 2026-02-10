@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(`Senha fraca: ${passwordValidation.errors.join(', ')}`);
       }
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
