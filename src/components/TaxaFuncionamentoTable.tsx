@@ -4,6 +4,9 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface Cliente {
   id: string;
@@ -30,6 +33,12 @@ export default function TaxaFuncionamentoTable() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    clienteId: string;
+    campo: 'gerada' | 'enviada' | 'paga';
+    clienteNome: string;
+  } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -53,6 +62,23 @@ export default function TaxaFuncionamentoTable() {
   }, []);
 
   const handleCheckbox = async (clienteId: string, campo: 'gerada'|'enviada'|'paga', checked: boolean) => {
+    // Se está desmarcando (checked = false), pedir confirmação
+    if (!checked) {
+      const cliente = clientes.find(c => c.id === clienteId);
+      setConfirmDialog({
+        open: true,
+        clienteId,
+        campo,
+        clienteNome: cliente?.razaoSocial || 'Cliente'
+      });
+      return;
+    }
+
+    // Se está marcando, executar diretamente
+    await executeCheckboxChange(clienteId, campo, checked);
+  };
+
+  const executeCheckboxChange = async (clienteId: string, campo: 'gerada'|'enviada'|'paga', checked: boolean) => {
     const taxa = taxas[clienteId] || {
       clienteId,
       ano: ANO_ATUAL,
@@ -85,6 +111,12 @@ export default function TaxaFuncionamentoTable() {
         variant: 'destructive' 
       });
     }
+  };
+
+  const handleConfirmUncheck = async () => {
+    if (!confirmDialog) return;
+    await executeCheckboxChange(confirmDialog.clienteId, confirmDialog.campo, false);
+    setConfirmDialog(null);
   };
 
   const handleProtocoloInputChange = (clienteId: string, protocolo: string) => {
@@ -144,6 +176,11 @@ export default function TaxaFuncionamentoTable() {
     }
   };
 
+  // Calcular totais
+  const totalGeradas = Object.values(taxas).filter(t => t.gerada).length;
+  const totalEnviadas = Object.values(taxas).filter(t => t.enviada).length;
+  const totalPagas = Object.values(taxas).filter(t => t.paga).length;
+
   if (loading) return (
     <div className="flex items-center justify-center p-8">
       <div className="text-center">
@@ -156,6 +193,51 @@ export default function TaxaFuncionamentoTable() {
   // Mobile: card layout; Desktop: table layout
   return (
     <>
+      {/* Cards com totais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Total de Taxas Geradas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{totalGeradas}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Total de Taxas Enviadas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{totalEnviadas}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Total de Taxas Pagas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{totalPagas}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Dialog de Confirmação */}
+      <Dialog open={!!confirmDialog} onOpenChange={(open) => { if (!open) setConfirmDialog(null); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Confirmar Alteração</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              Tem certeza que deseja desmarcar <b>{confirmDialog?.campo === 'gerada' ? 'Gerada' : confirmDialog?.campo === 'enviada' ? 'Enviada' : 'Paga'}</b> para o cliente <b>{confirmDialog?.clienteNome}</b>?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog(null)}>Não</Button>
+            <Button variant="destructive" onClick={handleConfirmUncheck}>Sim</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Mobile Card Layout */}
       <div className="space-y-3 lg:hidden">
         {clientes.map(cliente => {
