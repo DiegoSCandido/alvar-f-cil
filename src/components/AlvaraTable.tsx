@@ -197,7 +197,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
 
   // Helper para renderizar ações
   const renderActions = (alvara: typeof alvaras[0]) => (
-    <div className="flex items-center gap-0.5 sm:gap-1 xl:gap-2 flex-wrap">
+    <div className="flex items-center gap-0.5 sm:gap-1 xl:gap-2 flex-nowrap">
       <Button
         variant="ghost"
         size="icon"
@@ -343,7 +343,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                 >
                   Status
                 </SortableHeader>
-                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-center whitespace-nowrap min-w-[200px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -379,8 +379,8 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                   <TableCell>
                     <StatusBadge alvara={alvara} />
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
+                  <TableCell className="text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 xl:gap-2 flex-nowrap">
                       {renderActions(alvara)}
                     </div>
                   </TableCell>

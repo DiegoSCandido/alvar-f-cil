@@ -61,7 +61,7 @@ export default function TaxaFuncionamentoTable() {
     fetchData();
   }, []);
 
-  const handleCheckbox = async (clienteId: string, campo: 'gerada'|'enviada'|'paga', checked: boolean) => {
+  const handleCheckbox = (clienteId: string, campo: 'gerada'|'enviada'|'paga', checked: boolean) => {
     // Se está desmarcando (checked = false), pedir confirmação
     if (!checked) {
       const cliente = clientes.find(c => c.id === clienteId);
@@ -75,7 +75,7 @@ export default function TaxaFuncionamentoTable() {
     }
 
     // Se está marcando, executar diretamente
-    await executeCheckboxChange(clienteId, campo, checked);
+    executeCheckboxChange(clienteId, campo, checked);
   };
 
   const executeCheckboxChange = async (clienteId: string, campo: 'gerada'|'enviada'|'paga', checked: boolean) => {
