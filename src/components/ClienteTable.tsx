@@ -1,9 +1,12 @@
+import { useState, Fragment } from 'react';
 import { Cliente } from '@/types/cliente';
 import { Alvara, AlvaraStatus } from '@/types/alvara';
 import { formatCnpj } from '@/lib/alvara-utils';
 import { formatDateSafe } from '@/lib/alvara-utils';
-import { Trash2, Edit, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Trash2, Edit, CheckCircle2, Clock, XCircle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -59,7 +62,15 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
   );
 }
 
+// Função para truncar texto
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
 export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTableProps) {
+  const [showCnpj, setShowCnpj] = useState(true);
+
   if (clientes.length === 0) {
     return (
       <div className="bg-card rounded-lg border p-8 sm:p-12 text-center">
@@ -69,7 +80,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
   }
 
   return (
-    <>
+    <Fragment>
       {/* Mobile Card Layout */}
       <div className="space-y-3 sm:hidden">
         {clientes.map((cliente, index) => {
@@ -130,13 +141,34 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
       </div>
 
       {/* Desktop Table Layout */}
-      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table className="w-full min-w-[650px] lg:min-w-[680px]">
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px]">CNPJ</TableHead>
-                <TableHead className="font-semibold text-xs w-[170px] lg:w-[180px]">Razão Social</TableHead>
+      <div className="hidden sm:block">
+        {/* Toggle para mostrar/ocultar CNPJ */}
+        <div className="flex items-center justify-end gap-2 mb-2 px-1">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="show-cnpj"
+              checked={showCnpj}
+              onCheckedChange={setShowCnpj}
+            />
+            <Label 
+              htmlFor="show-cnpj" 
+              className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1"
+            >
+              {showCnpj ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              Mostrar CNPJ
+            </Label>
+          </div>
+        </div>
+        
+        <div className="bg-card rounded-lg border shadow-sm overflow-hidden w-full">
+          <div className="overflow-x-auto">
+            <Table className="w-full min-w-[550px] lg:min-w-[580px]">
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  {showCnpj && (
+                    <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px]">CNPJ</TableHead>
+                  )}
+                  <TableHead className="font-semibold text-xs w-[170px] lg:w-[180px]">Razão Social</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px]">UF</TableHead>
                 <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px]">Município</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px]">Sanitário</TableHead>
@@ -157,12 +189,14 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     className="animate-fade-in text-xs"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs">
-                      {formatCnpj(cliente.cnpj)}
-                    </TableCell>
+                    {showCnpj && (
+                      <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs">
+                        {formatCnpj(cliente.cnpj)}
+                      </TableCell>
+                    )}
                     <TableCell className="font-medium text-xs">
                       <div className="truncate" title={cliente.razaoSocial}>
-                        {cliente.razaoSocial}
+                        {truncateText(cliente.razaoSocial, 40)}
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs">
@@ -207,8 +241,9 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
               })}
             </TableBody>
           </Table>
+          </div>
         </div>
       </div>
-    </>
+    </Fragment>
   );
 }
