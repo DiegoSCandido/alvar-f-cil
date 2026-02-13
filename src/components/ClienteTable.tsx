@@ -132,17 +132,17 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
       {/* Desktop Table Layout */}
       <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <Table className="w-full min-w-[700px]">
+          <Table className="w-full min-w-[650px] lg:min-w-[680px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="font-semibold text-xs w-[115px]">CNPJ</TableHead>
-                <TableHead className="font-semibold text-xs w-[180px]">Razão Social</TableHead>
+                <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px]">CNPJ</TableHead>
+                <TableHead className="font-semibold text-xs w-[170px] lg:w-[180px]">Razão Social</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px]">UF</TableHead>
                 <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px]">Município</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[90px]">Sanitário</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[90px]">Bombeiros</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[105px]">Funcionamento</TableHead>
-                <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[75px]">Ações</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px]">Sanitário</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px]">Bombeiros</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px]">Funcionamento</TableHead>
+                <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

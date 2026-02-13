@@ -304,24 +304,24 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
       {/* Desktop Table Layout */}
       <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <Table className="w-full min-w-[700px]">
+          <Table className="w-full min-w-[650px] lg:min-w-[680px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <SortableHeader 
                   column="clientName" 
-                  className="text-xs w-[180px]"
+                  className="text-xs w-[170px] lg:w-[180px]"
                 >
                   Cliente
                 </SortableHeader>
                 <SortableHeader 
                   column="cnpj" 
-                  className="text-xs hidden md:table-cell w-[115px]"
+                  className="text-xs hidden md:table-cell w-[110px] lg:w-[115px]"
                 >
                   CNPJ
                 </SortableHeader>
                 <SortableHeader 
                   column="type" 
-                  className="text-xs hidden lg:table-cell w-[150px]"
+                  className="text-xs hidden lg:table-cell w-[140px] lg:w-[150px]"
                 >
                   Tipo
                 </SortableHeader>
@@ -333,17 +333,17 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                 </SortableHeader>
                 <SortableHeader 
                   column="daysUntilExpiration" 
-                  className="text-xs whitespace-nowrap w-[90px]"
+                  className="text-xs whitespace-nowrap w-[85px] lg:w-[90px]"
                 >
                   Prazo
                 </SortableHeader>
                 <SortableHeader 
                   column="status" 
-                  className="text-xs whitespace-nowrap w-[90px]"
+                  className="text-xs whitespace-nowrap w-[85px] lg:w-[90px]"
                 >
                   Status
                 </SortableHeader>
-                <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[180px]">Ações</TableHead>
+                <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[170px] lg:w-[180px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
