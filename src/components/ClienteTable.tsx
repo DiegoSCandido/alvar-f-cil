@@ -104,12 +104,6 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
               </div>
               {(alvaraFuncionamento || alvaraSanitario || alvaraBombeiros) && (
                 <div className="grid grid-cols-1 gap-1.5 pt-1.5 border-t border-border/50 text-xs">
-                  {alvaraFuncionamento && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Func.</span>
-                      <AlvaraCell alvara={alvaraFuncionamento} />
-                    </div>
-                  )}
                   {alvaraSanitario && (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">San.</span>
@@ -120,6 +114,12 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Bomb.</span>
                       <AlvaraCell alvara={alvaraBombeiros} />
+                    </div>
+                  )}
+                  {alvaraFuncionamento && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Func.</span>
+                      <AlvaraCell alvara={alvaraFuncionamento} />
                     </div>
                   )}
                 </div>
@@ -139,9 +139,9 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                 <TableHead className="font-semibold text-xs sm:text-sm lg:text-base min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]">Razão Social</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">UF</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden lg:table-cell">Município</TableHead>
-                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Func.</TableHead>
-                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará San.</TableHead>
-                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell whitespace-nowrap">Alvará Bomb.</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell min-w-[120px]">Sanitário</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell min-w-[120px]">Bombeiros</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base hidden xl:table-cell min-w-[140px]">Funcionamento</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-right whitespace-nowrap">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -172,13 +172,13 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                       <span className="text-xs sm:text-sm lg:text-base">{cliente.municipio}</span>
                     </TableCell>
                     <TableCell className="hidden xl:table-cell">
-                      <AlvaraCell alvara={alvaraFuncionamento} />
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
                       <AlvaraCell alvara={alvaraSanitario} />
                     </TableCell>
                     <TableCell className="hidden xl:table-cell">
                       <AlvaraCell alvara={alvaraBombeiros} />
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <AlvaraCell alvara={alvaraFuncionamento} />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-0.5 sm:gap-1 xl:gap-2">
