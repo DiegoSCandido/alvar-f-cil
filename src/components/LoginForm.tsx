@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {User, Lock, Eye, EyeOff} from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { validatePassword } from "@/lib/password-validator";
 
+const REMEMBERED_EMAIL_KEY = 'rememberedEmail';
+const REMEMBERED_PASSWORD_KEY = 'rememberedPassword';
+
 const LoginForm = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,6 +19,19 @@ const LoginForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    // Carregar email e senha salvos quando o componente montar
+    useEffect(() => {
+        const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+        const rememberedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
+        if (rememberedEmail) {
+            setEmail(rememberedEmail);
+            setRememberMe(true);
+        }
+        if (rememberedPassword) {
+            setPassword(rememberedPassword);
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,6 +69,16 @@ const LoginForm = () => {
             setIsLoading(true);
 
             await login(email, password);
+            
+            // Salvar ou remover email e senha baseado no checkbox "lembrar-me"
+            if (rememberMe) {
+                localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+                localStorage.setItem(REMEMBERED_PASSWORD_KEY, password);
+            } else {
+                localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+                localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+            }
+            
             toast({
                 title: "Sucesso",
                 description: "Login realizado com sucesso!",
@@ -128,7 +154,15 @@ const LoginForm = () => {
           <Checkbox
             id="remember"
             checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            onCheckedChange={(checked) => {
+              const isChecked = checked as boolean;
+              setRememberMe(isChecked);
+              // Se desmarcar, remover o email e senha salvos imediatamente
+              if (!isChecked) {
+                localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+                localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+              }
+            }}
             className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           <label
