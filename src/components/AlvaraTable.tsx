@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { Alvara } from '@/types/alvara';
 import { StatusBadge } from './StatusBadge';
 import { getDaysUntilExpiration, formatCnpj, formatDateSafe } from '@/lib/alvara-utils';
-import { Trash2, Edit, CheckCircle, RotateCw, Download, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Trash2, Edit, CheckCircle, RotateCw, Download, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDocumentosAlvaraDownload } from '@/hooks/useDocumentosAlvaraDownload';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 import {
   Table,
@@ -27,6 +29,12 @@ interface AlvaraTableProps {
   onRenew?: (alvara: Alvara) => void;
 }
 
+// Função para truncar texto
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
 export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: AlvaraTableProps) {
   const { getDownloadUrl, isLoading: isDownloading } = useDocumentosAlvaraDownload();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -34,6 +42,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showCnpj, setShowCnpj] = useState(true);
 
   // Handler para visualizar o PDF do alvará
   const handlePreview = async (alvaraId: string) => {
@@ -266,7 +275,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
   );
 
   return (
-    <>
+    <Fragment>
       {/* Mobile Card Layout */}
       <div className="space-y-3 sm:hidden">
         {sortedAlvaras.map((alvara, index) => (
@@ -302,23 +311,44 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
       </div>
 
       {/* Desktop Table Layout */}
-      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table className="w-full min-w-[650px] lg:min-w-[680px]">
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <SortableHeader 
-                  column="clientName" 
-                  className="text-xs w-[170px] lg:w-[180px]"
-                >
-                  Cliente
-                </SortableHeader>
-                <SortableHeader 
-                  column="cnpj" 
-                  className="text-xs hidden md:table-cell w-[110px] lg:w-[115px]"
-                >
-                  CNPJ
-                </SortableHeader>
+      <div className="hidden sm:block">
+        {/* Toggle para mostrar/ocultar CNPJ */}
+        <div className="flex items-center justify-end gap-2 mb-2 px-1">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="show-cnpj-alvaras"
+              checked={showCnpj}
+              onCheckedChange={setShowCnpj}
+            />
+            <Label 
+              htmlFor="show-cnpj-alvaras" 
+              className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1"
+            >
+              {showCnpj ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              Mostrar CNPJ
+            </Label>
+          </div>
+        </div>
+        
+        <div className="bg-card rounded-lg border shadow-sm overflow-hidden w-full">
+          <div className="overflow-x-auto">
+            <Table className="w-full min-w-[550px] lg:min-w-[580px]">
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <SortableHeader 
+                    column="clientName" 
+                    className="text-xs w-[170px] lg:w-[180px]"
+                  >
+                    Cliente
+                  </SortableHeader>
+                  {showCnpj && (
+                    <SortableHeader 
+                      column="cnpj" 
+                      className="text-xs hidden md:table-cell w-[110px] lg:w-[115px]"
+                    >
+                      CNPJ
+                    </SortableHeader>
+                  )}
                 <SortableHeader 
                   column="type" 
                   className="text-xs hidden lg:table-cell w-[140px] lg:w-[150px]"
@@ -359,12 +389,14 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                 >
                   <TableCell className="font-medium text-xs">
                     <div className="truncate" title={alvara.clientName}>
-                      {alvara.clientName}
+                      {truncateText(alvara.clientName || '', 40)}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell">
-                    {formatCnpj(alvara.clientCnpj)}
-                  </TableCell>
+                  {showCnpj && (
+                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell">
+                      {formatCnpj(alvara.clientCnpj)}
+                    </TableCell>
+                  )}
                   <TableCell className="hidden lg:table-cell text-xs">
                     <div className="truncate" title={alvara.type}>
                       {alvara.type}
@@ -388,6 +420,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       </div>
 
@@ -398,6 +431,6 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
         documentUrl={previewUrl}
         documentName={previewName}
       />
-    </>
+    </Fragment>
   );
 }
