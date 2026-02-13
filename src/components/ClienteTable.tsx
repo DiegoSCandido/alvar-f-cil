@@ -162,19 +162,19 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
         
         <div className="bg-card rounded-lg border shadow-sm overflow-hidden w-full">
           <div className="overflow-x-auto">
-            <Table className="w-full min-w-[550px] lg:min-w-[580px]">
+            <Table className="w-full min-w-[500px] lg:min-w-[530px]">
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-muted/50 h-10">
                   {showCnpj && (
-                    <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px]">CNPJ</TableHead>
+                    <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px] px-1.5">CNPJ</TableHead>
                   )}
-                  <TableHead className="font-semibold text-xs w-[170px] lg:w-[180px]">Razão Social</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px]">UF</TableHead>
-                <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px]">Município</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px]">Sanitário</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px]">Bombeiros</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px]">Funcionamento</TableHead>
-                <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px]">Ações</TableHead>
+                  <TableHead className="font-semibold text-xs w-[140px] lg:w-[150px] px-1.5">Razão Social</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px] px-1.5">UF</TableHead>
+                <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px] px-1.5">Município</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5">Sanitário</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5">Bombeiros</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5">Funcionamento</TableHead>
+                <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -186,53 +186,53 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                 return (
                   <TableRow
                     key={cliente.id}
-                    className="animate-fade-in text-xs"
+                    className="animate-fade-in text-xs h-10"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {showCnpj && (
-                      <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs">
+                      <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs px-1.5 py-1.5">
                         {formatCnpj(cliente.cnpj)}
                       </TableCell>
                     )}
-                    <TableCell className="font-medium text-xs">
+                    <TableCell className="font-medium text-xs px-1.5 py-1.5">
                       <div className="truncate" title={cliente.razaoSocial}>
                         {truncateText(cliente.razaoSocial, 40)}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-xs">
+                    <TableCell className="hidden md:table-cell text-xs px-1.5 py-1.5">
                       {cliente.uf}
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell text-xs truncate">
+                    <TableCell className="hidden xl:table-cell text-xs truncate px-1.5 py-1.5">
                       {cliente.municipio}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
                       <AlvaraCell alvara={alvaraSanitario} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
                       <AlvaraCell alvara={alvaraBombeiros} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
                       <AlvaraCell alvara={alvaraFuncionamento} />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-0.5">
+                    <TableCell className="text-right px-1.5 py-1.5">
+                      <div className="flex items-center justify-end gap-0">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(cliente)}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                           title="Editar Cliente"
                         >
-                          <Edit className="h-3.5 w-3.5" />
+                          <Edit className="h-3 w-3" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(cliente.id)}
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          className="h-6 w-6 text-destructive hover:text-destructive"
                           title="Excluir Cliente"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>

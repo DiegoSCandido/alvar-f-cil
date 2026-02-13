@@ -206,25 +206,25 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
 
   // Helper para renderizar ações
   const renderActions = (alvara: typeof alvaras[0]) => (
-    <div className="flex items-center gap-0.5 flex-nowrap">
+    <div className="flex items-center gap-0 flex-nowrap">
       <Button
         variant="ghost"
         size="icon"
         onClick={() => onEdit(alvara)}
-        className="h-7 w-7"
+        className="h-6 w-6"
         title="Editar Alvará"
       >
-        <Edit className="h-3.5 w-3.5" />
+        <Edit className="h-3 w-3" />
       </Button>
       {onFinalize && !alvara.issueDate && (
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onFinalize(alvara)}
-          className="h-7 w-7 text-green-600 hover:text-green-700"
+          className="h-6 w-6 text-green-600 hover:text-green-700"
           title="Finalizar Alvará"
         >
-          <CheckCircle className="h-3.5 w-3.5" />
+          <CheckCircle className="h-3 w-3" />
         </Button>
       )}
       {alvara.issueDate && (
@@ -233,21 +233,21 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
             variant="ghost"
             size="icon"
             onClick={() => handlePreview(alvara.id)}
-            className="h-7 w-7 text-primary hover:text-primary/80"
+            className="h-6 w-6 text-primary hover:text-primary/80"
             title="Visualizar PDF"
             disabled={isDownloading}
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-3 w-3" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleDownload(alvara.id)}
-            className="h-7 w-7 text-primary hover:text-primary/80"
+            className="h-6 w-6 text-primary hover:text-primary/80"
             title="Baixar PDF"
             disabled={isDownloading}
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-3 w-3" />
           </Button>
         </>
       )}
@@ -256,20 +256,20 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
           variant="ghost"
           size="icon"
           onClick={() => onRenew(alvara)}
-          className="h-7 w-7 text-amber-600 hover:text-amber-700"
+          className="h-6 w-6 text-amber-600 hover:text-amber-700"
           title="Renovar Alvará"
         >
-          <RotateCw className="h-3.5 w-3.5" />
+          <RotateCw className="h-3 w-3" />
         </Button>
       )}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => onDelete(alvara.id)}
-        className="h-7 w-7 text-destructive hover:text-destructive"
+        className="h-6 w-6 text-destructive hover:text-destructive"
         title="Excluir Alvará"
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2 className="h-3 w-3" />
       </Button>
     </div>
   );
@@ -332,89 +332,87 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
         
         <div className="bg-card rounded-lg border shadow-sm overflow-hidden w-full">
           <div className="overflow-x-auto">
-            <Table className="w-full min-w-[550px] lg:min-w-[580px]">
+            <Table className="w-full min-w-[420px] lg:min-w-[480px]">
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-muted/50 h-10">
                   <SortableHeader 
                     column="clientName" 
-                    className="text-xs w-[170px] lg:w-[180px]"
+                    className="text-xs w-[130px] lg:w-[140px] px-1.5"
                   >
                     Cliente
                   </SortableHeader>
                   {showCnpj && (
                     <SortableHeader 
                       column="cnpj" 
-                      className="text-xs hidden md:table-cell w-[110px] lg:w-[115px]"
+                      className="text-xs hidden md:table-cell w-[95px] lg:w-[100px] px-1.5"
                     >
                       CNPJ
                     </SortableHeader>
                   )}
                 <SortableHeader 
                   column="type" 
-                  className="text-xs hidden lg:table-cell w-[140px] lg:w-[150px]"
+                  className="text-xs hidden lg:table-cell w-[110px] lg:w-[120px] px-1.5"
                 >
                   Tipo
                 </SortableHeader>
                 <SortableHeader 
                   column="expirationDate" 
-                  className="text-xs hidden xl:table-cell whitespace-nowrap w-[100px]"
+                  className="text-xs hidden xl:table-cell whitespace-nowrap w-[90px] px-1.5"
                 >
                   Vencimento
                 </SortableHeader>
                 <SortableHeader 
                   column="daysUntilExpiration" 
-                  className="text-xs whitespace-nowrap w-[85px] lg:w-[90px]"
+                  className="text-xs whitespace-nowrap w-[70px] lg:w-[75px] px-1.5"
                 >
                   Prazo
                 </SortableHeader>
                 <SortableHeader 
                   column="status" 
-                  className="text-xs whitespace-nowrap w-[85px] lg:w-[90px]"
+                  className="text-xs whitespace-nowrap w-[70px] lg:w-[75px] px-1.5"
                 >
                   Status
                 </SortableHeader>
-                <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[170px] lg:w-[180px]">Ações</TableHead>
+                <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[110px] lg:w-[120px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAlvaras.map((alvara, index) => (
                 <TableRow
                   key={alvara.id}
-                  className={`animate-fade-in text-xs ${
+                  className={`animate-fade-in text-xs h-10 ${
                     alvara.status === 'expiring' || alvara.status === 'expired'
                       ? 'bg-amber-50'
                       : ''
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <TableCell className="font-medium text-xs">
+                  <TableCell className="font-medium text-xs px-1.5 py-1.5">
                     <div className="truncate" title={alvara.clientName}>
                       {truncateText(alvara.clientName || '', 40)}
                     </div>
                   </TableCell>
                   {showCnpj && (
-                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell">
+                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell px-1.5 py-1.5">
                       {formatCnpj(alvara.clientCnpj)}
                     </TableCell>
                   )}
-                  <TableCell className="hidden lg:table-cell text-xs">
+                  <TableCell className="hidden lg:table-cell text-xs px-1.5 py-1.5">
                     <div className="truncate" title={alvara.type}>
                       {alvara.type}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-xs">
+                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-xs px-1.5 py-1.5">
                     {formatDate(alvara.expirationDate)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                  <TableCell className="text-muted-foreground whitespace-nowrap text-xs px-1.5 py-1.5">
                     {getDaysText(alvara)}
                   </TableCell>
-                  <TableCell className="text-xs">
-                    <StatusBadge alvara={alvara} />
+                  <TableCell className="text-xs px-1.5 py-1.5">
+                    <StatusBadge alvara={alvara} className="px-1.5 py-0.5 text-[10px]" />
                   </TableCell>
-                  <TableCell className="text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-0.5 flex-nowrap">
-                      {renderActions(alvara)}
-                    </div>
+                  <TableCell className="text-center whitespace-nowrap px-1.5 py-1.5">
+                    {renderActions(alvara)}
                   </TableCell>
                 </TableRow>
               ))}

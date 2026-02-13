@@ -16,7 +16,7 @@ const Dashboard = () => {
 
       {/* Header (same as Clientes/Alvarás pages, no action button) */}
       <header className="bg-card border-b sticky top-0 xl:top-0 z-10 xl:mt-0 mt-14 sm:mt-16">
-        <div className="container px-2 sm:px-2 lg:px-2 xl:px-8 py-3 sm:py-4 lg:py-4 xl:py-6">
+        <div className="container px-1 sm:px-1 lg:px-1 xl:px-8 py-3 sm:py-4 lg:py-4 xl:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 lg:gap-4 xl:gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4 flex-1 min-w-0">
               <img
@@ -34,7 +34,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container px-2 sm:px-2 lg:px-2 xl:px-8 py-4 sm:py-5 lg:py-4 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-4 xl:space-y-6 w-full">
+      <main className="container px-1 sm:px-1 lg:px-1 xl:px-8 py-4 sm:py-5 lg:py-4 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-4 xl:space-y-6 w-full">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 xl:gap-8">
           {/* Total de Clientes */}
