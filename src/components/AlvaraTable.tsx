@@ -164,22 +164,22 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
     return (
       <TableHead 
         className={cn(
-          'font-semibold text-xs sm:text-sm lg:text-base cursor-pointer hover:bg-muted/70 transition-colors select-none',
+          'font-semibold cursor-pointer hover:bg-muted/70 transition-colors select-none',
           className
         )}
         onClick={() => handleSort(column)}
       >
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1">
           <span>{children}</span>
           <div className="flex flex-col">
             {isSorted ? (
               sortDirection === 'asc' ? (
-                <ArrowUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                <ArrowUp className="h-3 w-3 text-primary" />
               ) : (
-                <ArrowDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                <ArrowDown className="h-3 w-3 text-primary" />
               )
             ) : (
-              <ArrowUpDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground opacity-50" />
+              <ArrowUpDown className="h-3 w-3 text-muted-foreground opacity-50" />
             )}
           </div>
         </div>
@@ -197,25 +197,25 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
 
   // Helper para renderizar ações
   const renderActions = (alvara: typeof alvaras[0]) => (
-    <div className="flex items-center gap-0.5 sm:gap-1 xl:gap-2 flex-nowrap">
+    <div className="flex items-center gap-0.5 flex-nowrap">
       <Button
         variant="ghost"
         size="icon"
         onClick={() => onEdit(alvara)}
-        className="h-7 w-7 sm:h-8 sm:w-8"
+        className="h-7 w-7"
         title="Editar Alvará"
       >
-        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+        <Edit className="h-3.5 w-3.5" />
       </Button>
       {onFinalize && !alvara.issueDate && (
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onFinalize(alvara)}
-          className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 hover:text-green-700"
+          className="h-7 w-7 text-green-600 hover:text-green-700"
           title="Finalizar Alvará"
         >
-          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+          <CheckCircle className="h-3.5 w-3.5" />
         </Button>
       )}
       {alvara.issueDate && (
@@ -224,21 +224,21 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
             variant="ghost"
             size="icon"
             onClick={() => handlePreview(alvara.id)}
-            className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+            className="h-7 w-7 text-primary hover:text-primary/80"
             title="Visualizar PDF"
             disabled={isDownloading}
           >
-            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Eye className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleDownload(alvara.id)}
-            className="h-7 w-7 sm:h-8 sm:w-8 text-primary hover:text-primary/80"
+            className="h-7 w-7 text-primary hover:text-primary/80"
             title="Baixar PDF"
             disabled={isDownloading}
           >
-            <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Download className="h-3.5 w-3.5" />
           </Button>
         </>
       )}
@@ -247,20 +247,20 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
           variant="ghost"
           size="icon"
           onClick={() => onRenew(alvara)}
-          className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600 hover:text-amber-700"
+          className="h-7 w-7 text-amber-600 hover:text-amber-700"
           title="Renovar Alvará"
         >
-          <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+          <RotateCw className="h-3.5 w-3.5" />
         </Button>
       )}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => onDelete(alvara.id)}
-        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
+        className="h-7 w-7 text-destructive hover:text-destructive"
         title="Excluir Alvará"
       >
-        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+        <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
@@ -302,85 +302,85 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
       </div>
 
       {/* Desktop Table Layout */}
-      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden">
+      <div className="hidden sm:block bg-card rounded-lg border shadow-sm overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="w-full min-w-[700px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <SortableHeader 
                   column="clientName" 
-                  className="min-w-[200px] sm:min-w-[250px] xl:min-w-[300px]"
+                  className="text-xs w-[180px]"
                 >
                   Cliente
                 </SortableHeader>
                 <SortableHeader 
                   column="cnpj" 
-                  className="hidden md:table-cell"
+                  className="text-xs hidden md:table-cell w-[115px]"
                 >
                   CNPJ
                 </SortableHeader>
                 <SortableHeader 
                   column="type" 
-                  className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px]"
+                  className="text-xs hidden lg:table-cell w-[150px]"
                 >
                   Tipo
                 </SortableHeader>
                 <SortableHeader 
                   column="expirationDate" 
-                  className="hidden xl:table-cell whitespace-nowrap"
+                  className="text-xs hidden xl:table-cell whitespace-nowrap w-[100px]"
                 >
                   Vencimento
                 </SortableHeader>
                 <SortableHeader 
                   column="daysUntilExpiration" 
-                  className="whitespace-nowrap"
+                  className="text-xs whitespace-nowrap w-[90px]"
                 >
                   Prazo
                 </SortableHeader>
                 <SortableHeader 
                   column="status" 
-                  className="whitespace-nowrap"
+                  className="text-xs whitespace-nowrap w-[90px]"
                 >
                   Status
                 </SortableHeader>
-                <TableHead className="font-semibold text-xs sm:text-sm lg:text-base text-center whitespace-nowrap min-w-[200px]">Ações</TableHead>
+                <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[180px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAlvaras.map((alvara, index) => (
                 <TableRow
                   key={alvara.id}
-                  className={`animate-fade-in text-xs sm:text-sm ${
+                  className={`animate-fade-in text-xs ${
                     alvara.status === 'expiring' || alvara.status === 'expired'
                       ? 'bg-amber-50'
                       : ''
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <TableCell className="font-medium min-w-[200px] sm:min-w-[250px] xl:min-w-[300px] max-w-[250px] sm:max-w-[350px] xl:max-w-[400px]">
+                  <TableCell className="font-medium text-xs">
                     <div className="truncate" title={alvara.clientName}>
-                      <span className="text-xs sm:text-sm lg:text-base">{alvara.clientName}</span>
+                      {alvara.clientName}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-muted-foreground whitespace-nowrap hidden md:table-cell">
-                    <span className="text-xs sm:text-sm lg:text-base">{formatCnpj(alvara.clientCnpj)}</span>
+                  <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell">
+                    {formatCnpj(alvara.clientCnpj)}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell min-w-[180px] xl:min-w-[200px] max-w-[250px] xl:max-w-[300px]">
+                  <TableCell className="hidden lg:table-cell text-xs">
                     <div className="truncate" title={alvara.type}>
-                      <span className="text-xs sm:text-sm lg:text-base">{alvara.type}</span>
+                      {alvara.type}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                    <span className="text-xs sm:text-sm lg:text-base">{formatDate(alvara.expirationDate)}</span>
+                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-xs">
+                    {formatDate(alvara.expirationDate)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">
-                    <span className="text-xs sm:text-sm lg:text-base">{getDaysText(alvara)}</span>
+                  <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                    {getDaysText(alvara)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs">
                     <StatusBadge alvara={alvara} />
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 xl:gap-2 flex-nowrap">
+                    <div className="flex items-center justify-center gap-0.5 flex-nowrap">
                       {renderActions(alvara)}
                     </div>
                   </TableCell>
