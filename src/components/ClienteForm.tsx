@@ -760,14 +760,58 @@ export function ClienteForm({
                         <div className="min-w-0">
                           <div className="font-medium truncate text-sm sm:text-base text-primary">{doc.nomeDocumento}</div>
                           <div className="flex items-center gap-1 sm:gap-2 mt-0.5 flex-wrap">
-                            <span className="bg-primary/10 text-primary text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-0.5 font-medium truncate max-w-[120px] sm:max-w-none">{doc.tipoDocumento || doc.tipo || doc.nomeArquivo || 'Documento'}</span>
-                            {doc.dataUpload && (
-                              <span className="text-[10px] sm:text-xs text-gray-400">{new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</span>
+                            {/* Se for alvará antigo, extrai e mostra a data de vencimento */}
+                            {doc.tipoDocumento?.includes('Alvará Antigo') ? (
+                              <>
+                                <span className="bg-orange-100 text-orange-700 text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-0.5 font-medium">
+                                  Alvará Antigo
+                                </span>
+                                {doc.dataUpload && (
+                                  <span className="text-[10px] sm:text-xs text-gray-400">
+                                    Registrado em {new Date(doc.dataUpload).toLocaleDateString('pt-BR')}
+                                  </span>
+                                )}
+                                {(() => {
+                                  // Extrai a data de vencimento do nomeArquivo
+                                  // Formato esperado: "Alvará Antigo - Vencimento: 31/03/2026"
+                                  if (doc.nomeArquivo) {
+                                    const vencimentoMatch = doc.nomeArquivo.match(/Vencimento:\s*([^-\n]+)/i);
+                                    if (vencimentoMatch && vencimentoMatch[1]) {
+                                      const vencimentoStr = vencimentoMatch[1].trim();
+                                      if (vencimentoStr && vencimentoStr.toLowerCase() !== 'sem data de vencimento') {
+                                        return (
+                                          <span className="text-[10px] sm:text-xs text-gray-600 font-medium">
+                                            Vencimento {vencimentoStr}
+                                          </span>
+                                        );
+                                      }
+                                    }
+                                    
+                                    // Fallback: verifica se contém "Sem data de vencimento"
+                                    if (doc.nomeArquivo.toLowerCase().includes('sem data de vencimento')) {
+                                      return (
+                                        <span className="text-[10px] sm:text-xs text-gray-500 italic">
+                                          Sem data de vencimento
+                                        </span>
+                                      );
+                                    }
+                                  }
+                                  return null;
+                                })()}
+                              </>
+                            ) : (
+                              <>
+                                <span className="bg-primary/10 text-primary text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-0.5 font-medium truncate max-w-[120px] sm:max-w-none">{doc.tipoDocumento || doc.tipo || doc.nomeArquivo || 'Documento'}</span>
+                                {doc.dataUpload && (
+                                  <span className="text-[10px] sm:text-xs text-gray-400">{new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</span>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2 items-center flex-shrink-0">
+                        {/* Mostra botão de download para todos os documentos, incluindo alvarás antigos */}
                         <Button
                           variant="ghost"
                           size="icon"
