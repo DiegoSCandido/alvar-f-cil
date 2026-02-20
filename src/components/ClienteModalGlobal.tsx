@@ -3,11 +3,18 @@ import { useClientes } from '@/hooks/useClientes';
 import { ClienteForm } from './ClienteForm';
 import { ClienteFormData } from '@/types/cliente';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function ClienteModalGlobal() {
+  const { isAuthenticated } = useAuth();
   const { isOpen, editingCliente, closeModal } = useClienteModal();
   const { updateCliente, refetch } = useClientes();
   const { toast } = useToast();
+
+  // Não renderiza se não estiver autenticado para evitar chamadas à API
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleSubmit = async (data: ClienteFormData) => {
     if (!editingCliente) return;

@@ -46,18 +46,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('authToken');
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setAuthToken(storedToken);
-      } catch {
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
+    try {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('authToken');
+      if (storedUser && storedToken) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setAuthToken(storedToken);
+        } catch (parseError) {
+          console.error('Erro ao fazer parse do usuário:', parseError);
+          localStorage.removeItem('user');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('loginTime');
+        }
       }
+    } catch (error) {
+      console.error('Erro ao restaurar autenticação:', error);
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('loginTime');
+    } finally {
+      setIsInitializing(false);
     }
-    setIsInitializing(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -119,7 +130,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthToken(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('loginTime');
   };
 
   return (

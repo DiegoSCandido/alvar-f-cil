@@ -42,10 +42,16 @@ async function apiCall<T>(
 
   // Se receber 401, significa que o token expirou
   if (response.status === 401) {
-    // Limpa o localStorage e redireciona para login
+    // Limpa o localStorage
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    window.location.href = '/';
+    localStorage.removeItem('loginTime');
+    
+    // Só redireciona se não estiver já na página de login para evitar loops
+    if (window.location.pathname !== '/' && !window.location.pathname.includes('/login')) {
+      window.location.href = '/';
+    }
+    
     throw new Error('Sessão expirada. Por favor, faça login novamente.');
   }
 

@@ -28,8 +28,9 @@ const AppContent = () => {
   const isLoginPage = location.pathname === "/";
   const isPublicPage = isLoginPage;
 
-  // Enquanto está inicializando, não redireciona
-  if (isInitializing) {
+  // Enquanto está inicializando, mostra loading apenas se não estiver na página de login
+  // Na página de login, permite renderizar normalmente para evitar loops
+  if (isInitializing && !isPublicPage) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -41,7 +42,8 @@ const AppContent = () => {
   }
 
   // Redireciona para login se não autenticado em páginas protegidas
-  if (!isAuthenticated && !isPublicPage) {
+  // Mas só depois que a inicialização terminar
+  if (!isInitializing && !isAuthenticated && !isPublicPage) {
     return <Navigate to="/" replace />;
   }
 
@@ -120,10 +122,10 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
           <ClienteModalProvider>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
             <ClienteModalGlobal />
           </ClienteModalProvider>
         </AuthProvider>

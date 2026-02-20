@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { clienteAPI } from '@/lib/api-client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useClientes() {
+  const { isAuthenticated } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load clientes from API on mount
+  // Load clientes from API on mount, mas só se estiver autenticado
   useEffect(() => {
-    loadClientes();
-  }, []);
+    if (isAuthenticated) {
+      loadClientes();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const loadClientes = async () => {
     try {
