@@ -33,6 +33,8 @@ export interface Alvara {
   processingStatus?: AlvaraProcessingStatus; // Status de processamento do alvará
   notes?: string;
   taxasPorAno?: TaxaAno[];
+  isento?: boolean; // Indica se o alvará é isento (apenas para Funcionamento, Sanitário e Bombeiros)
+  semPontoFixo?: boolean; // Indica se o alvará é sem ponto fixo (apenas para Funcionamento, Sanitário e Bombeiros)
 }
 
 export interface AlvaraFormData {
@@ -44,4 +46,6 @@ export interface AlvaraFormData {
   processingStatus?: AlvaraProcessingStatus;
   notes?: string;
   taxasPorAno?: TaxaAno[];
+  isento?: boolean; // Indica se o alvará é isento (apenas para Funcionamento, Sanitário e Bombeiros)
+  semPontoFixo?: boolean; // Indica se o alvará é sem ponto fixo (apenas para Funcionamento, Sanitário e Bombeiros)
 }

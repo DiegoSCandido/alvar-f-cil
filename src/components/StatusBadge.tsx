@@ -8,6 +8,8 @@ interface StatusBadgeProps {
     issueDate?: Date;
     expirationDate?: Date;
     processingStatus?: AlvaraProcessingStatus;
+    isento?: boolean;
+    semPontoFixo?: boolean;
   };
   status?: AlvaraStatus;
   processingStatus?: AlvaraProcessingStatus;
@@ -81,6 +83,41 @@ export function StatusBadge({ alvara, status, processingStatus, className }: Sta
     expiring: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     expired: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   };
+
+  // Verifica se é isento ou sem ponto fixo
+  const isExempt = alvara?.isento || alvara?.semPontoFixo;
+  const isento = alvara?.isento;
+  const semPontoFixo = alvara?.semPontoFixo;
+
+  // Se for isento ou sem ponto fixo, mostra apenas os badges Isento/SPF (sem o status)
+  if (isExempt) {
+    return (
+      <div className="inline-flex items-center gap-1 flex-wrap">
+        {isento && (
+          <span
+            className={cn(
+              'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+              'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+              className
+            )}
+          >
+            Isento
+          </span>
+        )}
+        {semPontoFixo && (
+          <span
+            className={cn(
+              'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+              'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+              className
+            )}
+          >
+            SPF
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <span

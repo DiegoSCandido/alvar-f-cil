@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip } from 'lucide-react';
+import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip, Eye } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -38,6 +38,8 @@ import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
 import { atividadeSecundariaAPI, documentoClienteAPI } from '@/lib/api-client';
+import { DocumentPreviewModal } from './DocumentPreviewModal';
+import { useDocumentosClienteDownload } from '@/hooks/useDocumentosClienteDownload';
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -98,6 +100,11 @@ export function ClienteForm({
   const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
   const [documentos, setDocumentos] = useState<any[]>([]);
   const [documentosLoading, setDocumentosLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const { getDownloadUrl, isLoading: isDownloading } = useDocumentosClienteDownload();
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -364,25 +371,26 @@ export function ClienteForm({
     }
   };
 
+  // Handler para visualizar o documento
+  const handlePreview = async (documentoId: string) => {
+    try {
+      const { signedUrl, originalName } = await getDownloadUrl(documentoId);
+      setPreviewUrl(signedUrl);
+      setPreviewName(originalName || 'Documento');
+      setIsPreviewOpen(true);
+    } catch (err) {
+      alert('Erro ao carregar documento.');
+    }
+  };
+
+  // Handler para download do documento
   const downloadDocumento = async (id: string) => {
     try {
-      // Faz a requisição para obter a signed URL
-      const response = await fetch(documentoClienteAPI.download(id), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Erro ao obter link de download');
-      }
-      const data = await response.json();
-      if (data && data.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-      } else {
-        throw new Error('Link de download não encontrado');
-      }
-    } catch (err: any) {
-      alert(err.message || 'Erro ao baixar documento');
+      const { signedUrl } = await getDownloadUrl(id);
+      // Abre o documento em uma nova aba
+      window.open(signedUrl, '_blank', 'noopener');
+    } catch (err) {
+      alert('Erro ao abrir documento.');
     }
   };
 
@@ -811,12 +819,23 @@ export function ClienteForm({
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2 items-center flex-shrink-0">
-                        {/* Mostra botão de download para todos os documentos, incluindo alvarás antigos */}
+                        {/* Botão de visualização */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handlePreview(doc.id)}
+                          title="Visualizar"
+                          disabled={isDownloading}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {/* Botão de download */}
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => downloadDocumento(doc.id)}
                           title="Baixar"
+                          disabled={isDownloading}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -854,6 +873,14 @@ export function ClienteForm({
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Modal de pré-visualização */}
+        <DocumentPreviewModal
+          open={isPreviewOpen}
+          onOpenChange={setIsPreviewOpen}
+          documentUrl={previewUrl}
+          documentName={previewName}
+        />
       </DialogContent>
     </Dialog>
   );

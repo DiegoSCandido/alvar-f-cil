@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAlvaraUpload } from '@/hooks/useAlvaraUpload';
 import {
@@ -73,6 +74,8 @@ export function AlvaraForm({
     processingStatus: editingAlvara?.processingStatus,
     notes: editingAlvara?.notes || '',
     taxasPorAno: editingAlvara?.taxasPorAno || [],
+    isento: editingAlvara?.isento || false,
+    semPontoFixo: editingAlvara?.semPontoFixo || false,
   }));
 
   // Filtrar tipos de alvará permitidos pelo cliente selecionado
@@ -95,6 +98,8 @@ export function AlvaraForm({
           processingStatus: editingAlvara.processingStatus,
           notes: editingAlvara.notes || '',
           taxasPorAno: editingAlvara.taxasPorAno || [],
+          isento: editingAlvara.isento || false,
+          semPontoFixo: editingAlvara.semPontoFixo || false,
         });
         setAnoSelecionado(anoAtual);
       } else {
@@ -107,6 +112,8 @@ export function AlvaraForm({
           processingStatus: undefined,
           notes: '',
           taxasPorAno: [],
+          isento: false,
+          semPontoFixo: false,
         });
         setAnoSelecionado(anoAtual);
       }
@@ -121,6 +128,8 @@ export function AlvaraForm({
         processingStatus: undefined,
         notes: '',
         taxasPorAno: [],
+        isento: false,
+        semPontoFixo: false,
       });
       setTempNote('');
       setRenewalExpirationDate('');
@@ -286,24 +295,28 @@ export function AlvaraForm({
     try {
       setIsLoading(true);
       setError(null);
-      if (!renewalExpirationDate) {
-        setError('Data de vencimento é obrigatória');
-        return;
-      }
-      if (!finalizeFile) {
-        setError('É obrigatório anexar o PDF do alvará.');
-        return;
+      const isExempt = formData.isento || formData.semPontoFixo;
+      
+      // Se não for isento ou sem ponto fixo, valida campos obrigatórios
+      if (!isExempt) {
+        if (!renewalExpirationDate) {
+          setError('Data de vencimento é obrigatória');
+          return;
+        }
+        if (!finalizeFile) {
+          setError('É obrigatório anexar o PDF do alvará.');
+          return;
+        }
       }
       const dataToSubmit: AlvaraFormData = {
         ...formData,
         type: editingAlvara?.type || formData.type,
-        expirationDate: new Date(renewalExpirationDate),
+        expirationDate: renewalExpirationDate ? new Date(renewalExpirationDate) : undefined,
         processingStatus: 'lançado' as AlvaraProcessingStatus,
       };
       await onSubmit(dataToSubmit);
-      // Upload documento obrigatório
-      // Se precisar do id do novo alvará após criar, ajuste o onSubmit/backend para retornar esse valor
-      if (editingAlvara?.id) {
+      // Upload documento apenas se houver arquivo (não obrigatório para isento/sem ponto fixo)
+      if (editingAlvara?.id && finalizeFile) {
         setUploading(true);
         try {
           await uploadAlvaraDocument(editingAlvara.id, finalizeFile);
@@ -519,6 +532,49 @@ export function AlvaraForm({
             )}
           </div>
 
+          {/* Checkboxes para Isento e Sem Ponto Fixo (apenas para Funcionamento, Sanitário e Bombeiros) */}
+          {(formData.type === 'Alvará de Funcionamento' || 
+            formData.type === 'Alvará Sanitário' || 
+            formData.type === 'Alvará de Bombeiros') && (
+            <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+              <Label className="text-xs sm:text-sm font-semibold">Opções Especiais</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isento"
+                    checked={formData.isento || false}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isento: checked === true })
+                    }
+                    disabled={isRenewing}
+                  />
+                  <Label
+                    htmlFor="isento"
+                    className="text-xs sm:text-sm font-normal cursor-pointer"
+                  >
+                    Isento
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="semPontoFixo"
+                    checked={formData.semPontoFixo || false}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, semPontoFixo: checked === true })
+                    }
+                    disabled={isRenewing}
+                  />
+                  <Label
+                    htmlFor="semPontoFixo"
+                    className="text-xs sm:text-sm font-normal cursor-pointer"
+                  >
+                    Sem Ponto Fixo
+                  </Label>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="requestDate" className="text-xs sm:text-sm">Data Solicitação *</Label>
             <Input
@@ -670,7 +726,18 @@ export function AlvaraForm({
         )}
 
         <div className="grid w-full items-center gap-2">
-          <Label htmlFor="renewal-expiration-date">Data de Vencimento *</Label>
+          <Label htmlFor="renewal-expiration-date">
+            Data de Vencimento {!(formData.isento || formData.semPontoFixo) && <span className="text-destructive">*</span>}
+          </Label>
+          {(formData.isento || formData.semPontoFixo) && (
+            <p className="text-xs text-muted-foreground">
+              {formData.isento && formData.semPontoFixo 
+                ? 'Alvará isento e sem ponto fixo - data de vencimento não é obrigatória'
+                : formData.isento 
+                ? 'Alvará isento - data de vencimento não é obrigatória'
+                : 'Alvará sem ponto fixo - data de vencimento não é obrigatória'}
+            </p>
+          )}
           <Input
             id="renewal-expiration-date"
             type="date"
@@ -683,7 +750,18 @@ export function AlvaraForm({
           />
         </div>
         <div className="grid w-full items-center gap-2 mt-2">
-          <Label htmlFor="finalize-alvara-pdf">Documento do Alvará (PDF) *</Label>
+          <Label htmlFor="finalize-alvara-pdf">
+            Documento do Alvará (PDF) {!(formData.isento || formData.semPontoFixo) && <span className="text-destructive">*</span>}
+          </Label>
+          {(formData.isento || formData.semPontoFixo) && (
+            <p className="text-xs text-muted-foreground">
+              {formData.isento && formData.semPontoFixo 
+                ? 'Alvará isento e sem ponto fixo - documento não é obrigatório'
+                : formData.isento 
+                ? 'Alvará isento - documento não é obrigatório'
+                : 'Alvará sem ponto fixo - documento não é obrigatório'}
+            </p>
+          )}
           <Input
             id="finalize-alvara-pdf"
             type="file"
@@ -720,7 +798,7 @@ export function AlvaraForm({
           <Button
             type="button"
             onClick={handleConfirmRenewalFinalized}
-            disabled={isLoading || !renewalExpirationDate}
+            disabled={isLoading || (!(formData.isento || formData.semPontoFixo) && !renewalExpirationDate)}
           >
             {isLoading ? 'Finalizando...' : 'Confirmar'}
           </Button>

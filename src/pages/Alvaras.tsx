@@ -340,37 +340,45 @@ const AlvarasPage = () => {
   };
 
   const handleConfirmFinalize = async () => {
-    if (!finalizandoAlvara || !finalizacaoDate) return;
-    if (!finalizeFile) {
-      toast({
-        title: 'Documento obrigatório',
-        description: 'Anexe o PDF do alvará para finalizar.',
-        variant: 'destructive',
-      });
-      return;
+    if (!finalizandoAlvara) return;
+    const isExempt = finalizandoAlvara.isento || finalizandoAlvara.semPontoFixo;
+    
+    // Se não for isento ou sem ponto fixo, valida campos obrigatórios
+    if (!isExempt) {
+      if (!finalizacaoDate) return;
+      if (!finalizeFile) {
+        toast({
+          title: 'Documento obrigatório',
+          description: 'Anexe o PDF do alvará para finalizar.',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
     try {
-      const expirationDate = new Date(finalizacaoDate);
+      const expirationDate = finalizacaoDate ? new Date(finalizacaoDate) : undefined;
       const issueDate = new Date();
       await updateAlvara(finalizandoAlvara.id, {
         ...finalizandoAlvara,
         issueDate,
         expirationDate,
       });
-      // Upload obrigatório
-      setUploading(true);
-      try {
-        await uploadAlvaraDocument(finalizandoAlvara.id, finalizeFile);
-      } catch (uploadErr) {
-        toast({
-          title: 'Erro no upload',
-          description: 'Erro ao enviar o PDF do alvará.',
-          variant: 'destructive',
-        });
+      // Upload apenas se houver arquivo (não obrigatório para isento/sem ponto fixo)
+      if (finalizeFile) {
+        setUploading(true);
+        try {
+          await uploadAlvaraDocument(finalizandoAlvara.id, finalizeFile);
+        } catch (uploadErr) {
+          toast({
+            title: 'Erro no upload',
+            description: 'Erro ao enviar o PDF do alvará.',
+            variant: 'destructive',
+          });
+          setUploading(false);
+          return;
+        }
         setUploading(false);
-        return;
       }
-      setUploading(false);
       setFinalizandoAlvara(null);
       setFinalizacaoDate('');
       setFinalizeFile(null);
@@ -678,8 +686,14 @@ const AlvarasPage = () => {
             setFinalizandoAlvara(null);
           }
         }}
+        isento={finalizandoAlvara?.isento}
+        semPontoFixo={finalizandoAlvara?.semPontoFixo}
         onFinalize={async ({ expirationDate, file }) => {
-          if (!finalizandoAlvara || !expirationDate || !file) return;
+          if (!finalizandoAlvara) return;
+          const isExempt = finalizandoAlvara.isento || finalizandoAlvara.semPontoFixo;
+          
+          // Se não for isento ou sem ponto fixo, valida campos obrigatórios
+          if (!isExempt && (!expirationDate || !file)) return;
           try {
             const issueDate = new Date();
             await updateAlvara(finalizandoAlvara.id, {
@@ -687,19 +701,22 @@ const AlvarasPage = () => {
               issueDate,
               expirationDate,
             });
-            setUploading(true);
-            try {
-              await uploadAlvaraDocument(finalizandoAlvara.id, file);
-            } catch (uploadErr) {
-              toast({
-                title: 'Erro no upload',
-                description: 'Erro ao enviar o PDF do alvará.',
-                variant: 'destructive',
-              });
+            // Upload apenas se houver arquivo (não obrigatório para isento/sem ponto fixo)
+            if (file) {
+              setUploading(true);
+              try {
+                await uploadAlvaraDocument(finalizandoAlvara.id, file);
+              } catch (uploadErr) {
+                toast({
+                  title: 'Erro no upload',
+                  description: 'Erro ao enviar o PDF do alvará.',
+                  variant: 'destructive',
+                });
+                setUploading(false);
+                return;
+              }
               setUploading(false);
-              return;
             }
-            setUploading(false);
             setFinalizandoAlvara(null);
             setActiveTab('funcionamento');
             toast({

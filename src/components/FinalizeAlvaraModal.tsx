@@ -20,14 +20,19 @@ import { cn } from "@/lib/utils";
 interface FinalizeAlvaraModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFinalize?: (data: { expirationDate: Date; file: File | null }) => void;
+  onFinalize?: (data: { expirationDate: Date | null; file: File | null }) => void;
+  isento?: boolean;
+  semPontoFixo?: boolean;
 }
 
 export function FinalizeAlvaraModal({
   open,
   onOpenChange,
   onFinalize,
+  isento = false,
+  semPontoFixo = false,
 }: FinalizeAlvaraModalProps) {
+  const isExempt = isento || semPontoFixo;
   const [expirationDate, setExpirationDate] = useState<Date>();
   const [file, setFile] = useState<File | null>(null);
 
@@ -38,8 +43,9 @@ export function FinalizeAlvaraModal({
   };
 
   const handleFinalize = () => {
-    if (expirationDate) {
-      onFinalize?.({ expirationDate, file });
+    // Se isento ou sem ponto fixo, não precisa de data de vencimento nem arquivo
+    if (isExempt || expirationDate) {
+      onFinalize?.({ expirationDate: expirationDate || null, file });
       onOpenChange(false);
       setExpirationDate(undefined);
       setFile(null);
@@ -73,8 +79,17 @@ export function FinalizeAlvaraModal({
           {/* Data de Vencimento */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Data de Vencimento <span className="text-destructive">*</span>
+              Data de Vencimento {!isExempt && <span className="text-destructive">*</span>}
             </Label>
+            {isExempt && (
+              <p className="text-xs text-muted-foreground">
+                {isento && semPontoFixo 
+                  ? 'Alvará isento e sem ponto fixo - data de vencimento não é obrigatória'
+                  : isento 
+                  ? 'Alvará isento - data de vencimento não é obrigatória'
+                  : 'Alvará sem ponto fixo - data de vencimento não é obrigatória'}
+              </p>
+            )}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -107,8 +122,17 @@ export function FinalizeAlvaraModal({
           {/* Upload do Documento */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Documento do Alvará (PDF) <span className="text-destructive">*</span>
+              Documento do Alvará (PDF) {!isExempt && <span className="text-destructive">*</span>}
             </Label>
+            {isExempt && (
+              <p className="text-xs text-muted-foreground">
+                {isento && semPontoFixo 
+                  ? 'Alvará isento e sem ponto fixo - documento não é obrigatório'
+                  : isento 
+                  ? 'Alvará isento - documento não é obrigatório'
+                  : 'Alvará sem ponto fixo - documento não é obrigatório'}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <div className="flex-1 h-11 px-3 rounded-md border border-input bg-background flex items-center min-w-0">
                 {file ? (
@@ -152,7 +176,7 @@ export function FinalizeAlvaraModal({
           </Button>
           <Button
             onClick={handleFinalize}
-            disabled={!expirationDate}
+            disabled={!isExempt && !expirationDate}
             className="gap-2 w-full sm:w-auto"
           >
             <CheckCircle className="w-4 h-4" />
