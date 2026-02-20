@@ -123,11 +123,11 @@ const App = () => (
         <Sonner />
         <AuthProvider>
           <BrowserRouter>
-            <AppContent />
+            <ClienteModalProvider>
+              <AppContent />
+              <ClienteModalGlobal />
+            </ClienteModalProvider>
           </BrowserRouter>
-          <ClienteModalProvider>
-            <ClienteModalGlobal />
-          </ClienteModalProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
