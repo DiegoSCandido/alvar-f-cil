@@ -28,9 +28,10 @@ import {
 } from '@/components/ui/select';
 import { formatCnpj } from '@/lib/alvara-utils';
 import { Link } from 'react-router-dom';
-import { AlertCircle, RotateCw } from 'lucide-react';
+import { AlertCircle, RotateCw, Eye } from 'lucide-react';
 import { formatDateSafe } from '@/lib/alvara-utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { DocumentPreviewModal } from './DocumentPreviewModal';
 
 interface AlvaraFormProps {
   open: boolean;
@@ -68,6 +69,12 @@ export function AlvaraForm({
   const [renewalFiles, setRenewalFiles] = useState<File[]>([]);
   const renewalFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingRenewalFiles, setUploadingRenewalFiles] = useState(false);
+  
+  // Estados para preview de documentos
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [loadingDocument, setLoadingDocument] = useState(false);
 
   // Estado para seleção de ano das taxas
   const anoAtual = new Date().getFullYear();
@@ -358,13 +365,9 @@ export function AlvaraForm({
     try {
       setIsLoading(true);
       setError(null);
-      // Em renovação, o tipo já está preenchido do alvará original
-      const dataToSubmit = {
-        ...formData,
-        type: editingAlvara?.type || formData.type,
-        processingStatus: 'renovacao' as AlvaraProcessingStatus,
-      };
-      await onSubmit(dataToSubmit);
+      
+      // Preparar lista de documentos anexados para adicionar ao histórico
+      const documentosAnexados: string[] = [];
       
       // Upload de documentos anexados na renovação
       if (editingAlvara?.id && renewalFiles.length > 0) {
@@ -385,6 +388,7 @@ export function AlvaraForm({
               const error = await response.json().catch(() => ({ error: 'Upload failed' }));
               throw new Error(error.error || 'Erro ao fazer upload do documento');
             }
+            documentosAnexados.push(file.name);
           }
         } catch (uploadErr) {
           setError('Erro ao fazer upload de alguns documentos. As observações foram salvas.');
@@ -393,6 +397,33 @@ export function AlvaraForm({
           setUploadingRenewalFiles(false);
         }
       }
+      
+      // Adicionar observação ao histórico se houver
+      let notasAtualizadas = formData.notes || '';
+      if (tempNote.trim()) {
+        notasAtualizadas = addNoteWithTimestamp(tempNote, notasAtualizadas);
+      }
+      
+      // Adicionar informações dos documentos anexados ao histórico
+      if (documentosAnexados.length > 0) {
+        const now = new Date();
+        const timestamp = format(now, 'dd/MM/yyyy HH:mm', { locale: ptBR });
+        const userName = user?.fullName || 'Usuário';
+        const documentosTexto = documentosAnexados.length === 1
+          ? `Documento anexado: ${documentosAnexados[0]}`
+          : `Documentos anexados: ${documentosAnexados.join(', ')}`;
+        const noteEntry = `[${timestamp} - ${userName}] ${documentosTexto}`;
+        notasAtualizadas = notasAtualizadas ? `${notasAtualizadas}\n\n${noteEntry}` : noteEntry;
+      }
+      
+      // Em renovação, o tipo já está preenchido do alvará original
+      const dataToSubmit = {
+        ...formData,
+        notes: notasAtualizadas,
+        type: editingAlvara?.type || formData.type,
+        processingStatus: 'renovacao' as AlvaraProcessingStatus,
+      };
+      await onSubmit(dataToSubmit);
       
       // Limpar o campo de notas e arquivos apenas após sucesso
       setFormData(prev => ({ ...prev, notes: '' }));
@@ -443,6 +474,93 @@ export function AlvaraForm({
     setFormData(prev => ({ ...prev, notes: updatedNotes }));
     // Limpa o campo temporário
     setTempNote('');
+  };
+
+  // Função para buscar e visualizar documento anexado
+  const handleViewDocument = async (fileName: string) => {
+    if (!editingAlvara?.id) return;
+    
+    try {
+      setLoadingDocument(true);
+      const token = localStorage.getItem('authToken');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      
+      // Busca lista de documentos do alvará
+      const res = await fetch(`${API_BASE_URL}/documentos-alvara/alvara/${editingAlvara.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      
+      if (!res.ok) throw new Error('Erro ao buscar documentos do alvará');
+      const docs = await res.json();
+      
+      if (!docs || !docs.length) {
+        alert('Nenhum documento encontrado');
+        return;
+      }
+      
+      // Normaliza o nome do arquivo para comparação (remove espaços extras e converte para minúsculas)
+      const normalizedFileName = fileName.toLowerCase().trim();
+      
+      // Primeiro, tenta encontrar documento de renovação que corresponda ao nome
+      let doc = docs.find((d: any) => {
+        if (d.tipo_documento !== 'renovacao') return false;
+        const normalizedDocName = d.nome_arquivo?.toLowerCase().trim() || '';
+        return normalizedDocName === normalizedFileName || 
+               normalizedDocName.includes(normalizedFileName) ||
+               normalizedFileName.includes(normalizedDocName);
+      });
+      
+      // Se não encontrou, busca qualquer documento de renovação (mais recente primeiro)
+      if (!doc) {
+        const renovacaoDocs = docs.filter((d: any) => d.tipo_documento === 'renovacao');
+        if (renovacaoDocs.length > 0) {
+          // Ordena por data de upload (mais recente primeiro)
+          renovacaoDocs.sort((a: any, b: any) => {
+            const dateA = new Date(a.data_upload || 0).getTime();
+            const dateB = new Date(b.data_upload || 0).getTime();
+            return dateB - dateA;
+          });
+          doc = renovacaoDocs[0];
+        }
+      }
+      
+      if (!doc) {
+        alert('Documento não encontrado');
+        return;
+      }
+      
+      // Busca signedUrl do documento encontrado
+      const res2 = await fetch(`${API_BASE_URL}/documentos-alvara/download/${doc.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      
+      if (!res2.ok) throw new Error('Erro ao gerar link de download');
+      const { signedUrl, originalName } = await res2.json();
+      setPreviewUrl(signedUrl);
+      setPreviewName(originalName || fileName);
+      setIsPreviewOpen(true);
+    } catch (err) {
+      console.error('Erro ao visualizar documento:', err);
+      alert('Erro ao visualizar documento. Tente novamente.');
+    } finally {
+      setLoadingDocument(false);
+    }
+  };
+
+  // Função para extrair nomes de arquivos de uma entrada de histórico
+  const extractFileNames = (noteText: string): string[] => {
+    // Procura por padrões como "Documento anexado: arquivo.pdf" ou "Documentos anexados: arquivo1.pdf, arquivo2.pdf"
+    const match = noteText.match(/Documento(?:s)? anexado(?:s)?:\s*(.+)/i);
+    if (!match) return [];
+    
+    const filesStr = match[1].trim();
+    // Divide por vírgula e remove espaços
+    return filesStr.split(',').map(f => f.trim()).filter(f => f.length > 0);
+  };
+
+  // Verifica se uma nota é sobre documentos anexados
+  const isDocumentNote = (noteText: string): boolean => {
+    return /Documento(?:s)? anexado(?:s)?:/i.test(noteText);
   };
 
   return (
@@ -704,16 +822,31 @@ export function AlvaraForm({
               <div className="mt-2 pt-2 border-t space-y-2">
                 <div className="text-xs font-semibold text-muted-foreground">Histórico</div>
                 <div className="bg-gray-50 rounded p-2 text-xs space-y-0 overflow-y-auto max-h-32 border border-gray-200 min-h-fit">
-                  {formData.notes.split('\n\n').map((note, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs py-1.5 px-1 border-b border-gray-200 last:border-b-0">
-                      <span className="text-amber-600 shrink-0 mt-0.5 font-bold">•</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-mono text-gray-700 whitespace-pre-wrap break-words text-xs leading-tight">
-                          {note}
+                  {formData.notes.split('\n\n').reverse().map((note, idx) => {
+                    const isDocNote = isDocumentNote(note);
+                    const fileNames = isDocNote ? extractFileNames(note) : [];
+                    return (
+                      <div key={idx} className="flex items-start gap-2 text-xs py-1.5 px-1 border-b border-gray-200 last:border-b-0">
+                        <span className="text-amber-600 shrink-0 mt-0.5 font-bold">•</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-mono text-gray-700 whitespace-pre-wrap break-words text-xs leading-tight">
+                            {note}
+                          </div>
                         </div>
+                        {isDocNote && fileNames.length > 0 && editingAlvara?.id && (
+                          <button
+                            type="button"
+                            onClick={() => handleViewDocument(fileNames[0])}
+                            disabled={loadingDocument}
+                            className="shrink-0 mt-0.5 text-primary hover:text-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={`Visualizar ${fileNames.length > 1 ? `${fileNames.length} documentos` : fileNames[0]}`}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -918,6 +1051,14 @@ export function AlvaraForm({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Modal de preview de documentos */}
+    <DocumentPreviewModal
+      open={isPreviewOpen}
+      onOpenChange={setIsPreviewOpen}
+      documentUrl={previewUrl}
+      documentName={previewName}
+    />
     </>
   );
 }
