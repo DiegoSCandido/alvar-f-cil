@@ -4,6 +4,8 @@ import { StatusBadge } from './StatusBadge';
 import { getDaysUntilExpiration, formatCnpj, formatDateSafe } from '@/lib/alvara-utils';
 import { Trash2, Edit, CheckCircle, RotateCw, Download, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDocumentosAlvaraDownload } from '@/hooks/useDocumentosAlvaraDownload';
+import { useClientes } from '@/hooks/useClientes';
+import { useClienteModal } from '@/contexts/ClienteModalContext';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -58,12 +60,23 @@ export function AlvaraTable({
   statusLabels = {},
 }: AlvaraTableProps) {
   const { getDownloadUrl, isLoading: isDownloading } = useDocumentosAlvaraDownload();
+  const { getClienteById } = useClientes();
+  const { openModal } = useClienteModal();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showCnpj, setShowCnpj] = useState(true);
+
+  const handleClienteClick = (alvara: Alvara) => {
+    if (alvara.clienteId) {
+      const cliente = getClienteById(alvara.clienteId);
+      if (cliente) {
+        openModal(cliente);
+      }
+    }
+  };
 
   // Handler para visualizar o PDF do alvará
   const handlePreview = async (alvaraId: string) => {
@@ -309,7 +322,13 @@ export function AlvaraTable({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm truncate" title={alvara.clientName}>{alvara.clientName}</p>
+                  <p 
+                    className="font-medium text-sm truncate cursor-pointer hover:text-primary transition-colors" 
+                    title={alvara.clientName}
+                    onClick={() => handleClienteClick(alvara)}
+                  >
+                    {alvara.clientName}
+                  </p>
                   <p className="text-xs text-muted-foreground font-mono">{formatCnpj(alvara.clientCnpj)}</p>
                 </div>
                 <StatusBadge alvara={alvara} />
@@ -480,7 +499,11 @@ export function AlvaraTable({
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <TableCell className="font-medium text-xs px-1.5 py-1.5">
-                      <div className="truncate" title={alvara.clientName}>
+                      <div 
+                        className="truncate cursor-pointer hover:text-primary transition-colors" 
+                        title={alvara.clientName}
+                        onClick={() => handleClienteClick(alvara)}
+                      >
                         {truncateText(alvara.clientName || '', 40)}
                       </div>
                     </TableCell>

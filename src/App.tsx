@@ -14,6 +14,8 @@ import TaxasPage from "./pages/Taxas";
 import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ClienteModalProvider } from "./contexts/ClienteModalContext";
+import { ClienteModalGlobal } from "./components/ClienteModalGlobal";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
@@ -118,9 +120,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <ClienteModalProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+            <ClienteModalGlobal />
+          </ClienteModalProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

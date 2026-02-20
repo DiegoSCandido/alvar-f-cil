@@ -7,12 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useClienteModal } from '@/contexts/ClienteModalContext';
+import { Cliente } from '@/types/cliente';
 
-interface Cliente {
-  id: string;
-  razaoSocial: string;
-  cnpj: string;
-}
 
 interface TaxaCliente {
   id?: string;
@@ -32,6 +29,7 @@ export default function TaxaFuncionamentoTable() {
   const [protocoloValues, setProtocoloValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { openModal } = useClienteModal();
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -248,7 +246,13 @@ export default function TaxaFuncionamentoTable() {
           return (
             <div key={cliente.id} className="bg-card rounded-lg border shadow-sm p-3 sm:p-4 space-y-3">
               <div className="min-w-0">
-                <p className="font-medium text-sm sm:text-base truncate" title={cliente.razaoSocial}>{cliente.razaoSocial}</p>
+                <p 
+                  className="font-medium text-sm sm:text-base truncate cursor-pointer hover:text-primary transition-colors" 
+                  title={cliente.razaoSocial}
+                  onClick={() => openModal(cliente)}
+                >
+                  {cliente.razaoSocial}
+                </p>
                 <p className="text-xs text-muted-foreground font-mono">{cliente.cnpj}</p>
               </div>
               <div className="flex items-center gap-4 sm:gap-6">
@@ -300,7 +304,13 @@ export default function TaxaFuncionamentoTable() {
                 return (
                   <TableRow key={cliente.id} className="text-sm">
                     <TableCell className="font-medium min-w-[200px] max-w-[300px]">
-                      <div className="truncate" title={cliente.razaoSocial}>{cliente.razaoSocial}</div>
+                      <div 
+                        className="truncate cursor-pointer hover:text-primary transition-colors" 
+                        title={cliente.razaoSocial}
+                        onClick={() => openModal(cliente)}
+                      >
+                        {cliente.razaoSocial}
+                      </div>
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground whitespace-nowrap">{cliente.cnpj}</TableCell>
                     <TableCell className="text-center">
