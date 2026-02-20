@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Alvara, AlvaraFormData, ALVARA_TYPES, AlvaraType, AlvaraProcessingStatus, TaxaAno } from '@/types/alvara';
 import { Cliente } from '@/types/cliente';
 import { AlvaraProcessingStatusSelect } from './AlvaraProcessingStatusSelect';
@@ -61,6 +63,11 @@ export function AlvaraForm({
   const [uploading, setUploading] = useState(false);
   const finalizeFileInputRef = useRef<HTMLInputElement>(null);
   const { uploadAlvaraDocument } = useAlvaraUpload();
+  
+  // Upload de documentos para renovação
+  const [renewalFiles, setRenewalFiles] = useState<File[]>([]);
+  const renewalFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingRenewalFiles, setUploadingRenewalFiles] = useState(false);
 
   // Estado para seleção de ano das taxas
   const anoAtual = new Date().getFullYear();
@@ -88,6 +95,11 @@ export function AlvaraForm({
   useEffect(() => {
     if (open) {
       setError(null);
+      // Limpar arquivos de renovação quando abrir o modal
+      setRenewalFiles([]);
+      if (renewalFileInputRef.current) {
+        renewalFileInputRef.current.value = '';
+      }
       if (editingAlvara) {
         setFormData({
           clienteId: editingAlvara.clienteId,
@@ -353,9 +365,42 @@ export function AlvaraForm({
         processingStatus: 'renovacao' as AlvaraProcessingStatus,
       };
       await onSubmit(dataToSubmit);
-      // Limpar o campo de notas
+      
+      // Upload de documentos anexados na renovação
+      if (editingAlvara?.id && renewalFiles.length > 0) {
+        setUploadingRenewalFiles(true);
+        try {
+          for (const file of renewalFiles) {
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', file);
+            formDataUpload.append('nomeDocumento', `Documento Renovação - ${file.name}`);
+            formDataUpload.append('tipoDocumento', 'renovacao');
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/documentos-alvara/upload/${editingAlvara.id}`, {
+              method: 'POST',
+              body: formDataUpload,
+              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+              throw new Error(error.error || 'Erro ao fazer upload do documento');
+            }
+          }
+        } catch (uploadErr) {
+          setError('Erro ao fazer upload de alguns documentos. As observações foram salvas.');
+          console.error('Erro no upload:', uploadErr);
+        } finally {
+          setUploadingRenewalFiles(false);
+        }
+      }
+      
+      // Limpar o campo de notas e arquivos apenas após sucesso
       setFormData(prev => ({ ...prev, notes: '' }));
       setTempNote('');
+      setRenewalFiles([]);
+      if (renewalFileInputRef.current) {
+        renewalFileInputRef.current.value = '';
+      }
       onOpenChange(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao atualizar renovação';
@@ -638,6 +683,12 @@ export function AlvaraForm({
                 placeholder={isRenewing ? "Digite uma nota sobre a renovação..." : "Digite uma observação..."}
                 className="text-sm flex-1"
                 rows={2}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleAddNote();
+                  }
+                }}
               />
               <Button
                 type="button"
@@ -667,6 +718,68 @@ export function AlvaraForm({
               </div>
             )}
           </div>
+
+          {/* Upload de documentos para renovação */}
+          {isRenewing && (
+            <div className="space-y-2 pt-2 border-t">
+              <Label htmlFor="renewal-documents" className="text-xs sm:text-sm font-semibold">
+                Anexar Documentos (Opcional)
+              </Label>
+              <Input
+                id="renewal-documents"
+                type="file"
+                multiple
+                accept="application/pdf,image/*"
+                ref={renewalFileInputRef}
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const filesArray = Array.from(e.target.files);
+                    setRenewalFiles(prev => [...prev, ...filesArray]);
+                  }
+                  // Limpar o input para permitir selecionar o mesmo arquivo novamente
+                  if (e.target) {
+                    e.target.value = '';
+                  }
+                }}
+                disabled={isLoading || uploadingRenewalFiles}
+                className="text-sm cursor-pointer"
+              />
+              {renewalFiles.length > 0 && (
+                <div className="space-y-1 mt-2">
+                  <div className="text-xs font-semibold text-muted-foreground">
+                    Arquivos selecionados ({renewalFiles.length}):
+                  </div>
+                  {renewalFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted rounded text-xs border">
+                      <span className="truncate flex-1" title={file.name}>{file.name}</span>
+                      <span className="text-muted-foreground text-[10px]">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setRenewalFiles(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        disabled={isLoading || uploadingRenewalFiles}
+                        className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        title="Remover arquivo"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {uploadingRenewalFiles && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <RotateCw className="h-3 w-3 animate-spin" />
+                  <span>Enviando documentos...</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <DialogFooter className={`gap-2 flex flex-col-reverse ${isRenewing ? 'sm:flex-row sm:justify-end' : 'sm:flex-row'}`}>
             <Button

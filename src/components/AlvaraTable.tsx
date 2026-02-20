@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
+import { TableColumnFilter } from './TableColumnFilter';
 import {
   Table,
   TableBody,
@@ -27,6 +28,13 @@ interface AlvaraTableProps {
   onEdit: (alvara: Alvara) => void;
   onFinalize?: (alvara: Alvara) => void;
   onRenew?: (alvara: Alvara) => void;
+  typeFilter?: string[];
+  onTypeFilterChange?: (values: string[]) => void;
+  availableTypes?: string[];
+  statusFilter?: string[];
+  onStatusFilterChange?: (values: string[]) => void;
+  availableStatuses?: string[];
+  statusLabels?: Record<string, string>;
 }
 
 // Função para truncar texto
@@ -35,7 +43,20 @@ const truncateText = (text: string, maxLength: number) => {
   return text.substring(0, maxLength) + '...';
 };
 
-export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: AlvaraTableProps) {
+export function AlvaraTable({ 
+  alvaras, 
+  onDelete, 
+  onEdit, 
+  onFinalize, 
+  onRenew,
+  typeFilter = [],
+  onTypeFilterChange,
+  availableTypes = [],
+  statusFilter = [],
+  onStatusFilterChange,
+  availableStatuses = [],
+  statusLabels = {},
+}: AlvaraTableProps) {
   const { getDownloadUrl, isLoading: isDownloading } = useDocumentosAlvaraDownload();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>('');
@@ -196,13 +217,7 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
     );
   };
 
-  if (alvaras.length === 0) {
-    return (
-      <div className="bg-card rounded-lg border p-8 sm:p-12 text-center">
-        <p className="text-muted-foreground text-sm sm:text-base">Nenhum alvará cadastrado</p>
-      </div>
-    );
-  }
+  // Não retornamos mais cedo quando não há alvarás - mantemos a tabela visível para não perder o cabeçalho
 
   // Helper para renderizar ações
   const renderActions = (alvara: typeof alvaras[0]) => (
@@ -278,36 +293,42 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
     <Fragment>
       {/* Mobile Card Layout */}
       <div className="space-y-3 sm:hidden">
-        {sortedAlvaras.map((alvara, index) => (
-          <div
-            key={alvara.id}
-            className={cn(
-              'bg-card rounded-lg border shadow-sm p-3 space-y-2 animate-fade-in',
-              (alvara.status === 'expiring' || alvara.status === 'expired') && 'border-amber-200 bg-amber-50/50'
-            )}
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm truncate" title={alvara.clientName}>{alvara.clientName}</p>
-                <p className="text-xs text-muted-foreground font-mono">{formatCnpj(alvara.clientCnpj)}</p>
-              </div>
-              <StatusBadge alvara={alvara} />
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="truncate">{alvara.type}</span>
-              <span className="whitespace-nowrap font-medium">{getDaysText(alvara)}</span>
-            </div>
-            {alvara.expirationDate && (
-              <p className="text-xs text-muted-foreground">
-                Venc: {formatDate(alvara.expirationDate)}
-              </p>
-            )}
-            <div className="flex items-center justify-end pt-1 border-t border-border/50">
-              {renderActions(alvara)}
-            </div>
+        {sortedAlvaras.length === 0 ? (
+          <div className="bg-card rounded-lg border p-6 text-center">
+            <p className="text-muted-foreground text-sm">Nenhum alvará encontrado</p>
           </div>
-        ))}
+        ) : (
+          sortedAlvaras.map((alvara, index) => (
+            <div
+              key={alvara.id}
+              className={cn(
+                'bg-card rounded-lg border shadow-sm p-3 space-y-2 animate-fade-in',
+                (alvara.status === 'expiring' || alvara.status === 'expired') && 'border-amber-200 bg-amber-50/50'
+              )}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate" title={alvara.clientName}>{alvara.clientName}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{formatCnpj(alvara.clientCnpj)}</p>
+                </div>
+                <StatusBadge alvara={alvara} />
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="truncate">{alvara.type}</span>
+                <span className="whitespace-nowrap font-medium">{getDaysText(alvara)}</span>
+              </div>
+              {alvara.expirationDate && (
+                <p className="text-xs text-muted-foreground">
+                  Venc: {formatDate(alvara.expirationDate)}
+                </p>
+              )}
+              <div className="flex items-center justify-end pt-1 border-t border-border/50">
+                {renderActions(alvara)}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Desktop Table Layout */}
@@ -349,12 +370,37 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                       CNPJ
                     </SortableHeader>
                   )}
-                <SortableHeader 
-                  column="type" 
+                <TableHead 
                   className="text-xs hidden lg:table-cell w-[110px] lg:w-[120px] px-1.5"
                 >
-                  Tipo
-                </SortableHeader>
+                  <div className="flex items-center justify-between gap-1">
+                    <div 
+                      className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-muted/70 transition-colors select-none"
+                      onClick={() => handleSort('type')}
+                    >
+                      <span>Tipo</span>
+                      <div className="flex flex-col">
+                        {sortColumn === 'type' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp className="h-3 w-3 text-primary" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3 text-primary" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground opacity-50" />
+                        )}
+                      </div>
+                    </div>
+                    {onTypeFilterChange && availableTypes.length > 0 && (
+                      <TableColumnFilter
+                        options={availableTypes}
+                        selectedValues={typeFilter}
+                        onSelectionChange={onTypeFilterChange}
+                        label="Filtrar por tipo"
+                      />
+                    )}
+                  </div>
+                </TableHead>
                 <SortableHeader 
                   column="expirationDate" 
                   className="text-xs hidden xl:table-cell whitespace-nowrap w-[90px] px-1.5"
@@ -367,55 +413,102 @@ export function AlvaraTable({ alvaras, onDelete, onEdit, onFinalize, onRenew }: 
                 >
                   Prazo
                 </SortableHeader>
-                <SortableHeader 
-                  column="status" 
+                <TableHead 
                   className="text-xs whitespace-nowrap w-[70px] lg:w-[75px] px-1.5"
                 >
-                  Status
-                </SortableHeader>
+                  <div className="flex items-center justify-between gap-1">
+                    <div 
+                      className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-muted/70 transition-colors select-none"
+                      onClick={() => handleSort('status')}
+                    >
+                      <span>Status</span>
+                      <div className="flex flex-col">
+                        {sortColumn === 'status' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp className="h-3 w-3 text-primary" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3 text-primary" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground opacity-50" />
+                        )}
+                      </div>
+                    </div>
+                    {onStatusFilterChange && availableStatuses.length > 0 && (
+                      <TableColumnFilter
+                        options={availableStatuses.map(status => statusLabels[status] || status)}
+                        selectedValues={statusFilter.map(status => statusLabels[status] || status)}
+                        onSelectionChange={(labels) => {
+                          // Converter labels de volta para valores de status
+                          const values = labels.map(label => {
+                            // Verificar se é um status especial primeiro
+                            if (label === 'Isento') return 'isento';
+                            if (label === 'SPF') return 'semPontoFixo';
+                            // Depois verificar status normais
+                            const entry = Object.entries(statusLabels).find(([_, l]) => l === label);
+                            return entry ? entry[0] : label;
+                          });
+                          onStatusFilterChange(values);
+                        }}
+                        label="Filtrar por status"
+                      />
+                    )}
+                  </div>
+                </TableHead>
                 <TableHead className="font-semibold text-xs text-center whitespace-nowrap w-[110px] lg:w-[120px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedAlvaras.map((alvara, index) => (
-                <TableRow
-                  key={alvara.id}
-                  className={`animate-fade-in text-xs h-10 ${
-                    alvara.status === 'expiring' || alvara.status === 'expired'
-                      ? 'bg-amber-50'
-                      : ''
-                  }`}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <TableCell className="font-medium text-xs px-1.5 py-1.5">
-                    <div className="truncate" title={alvara.clientName}>
-                      {truncateText(alvara.clientName || '', 40)}
-                    </div>
-                  </TableCell>
-                  {showCnpj && (
-                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell px-1.5 py-1.5">
-                      {formatCnpj(alvara.clientCnpj)}
-                    </TableCell>
-                  )}
-                  <TableCell className="hidden lg:table-cell text-xs px-1.5 py-1.5">
-                    <div className="truncate" title={alvara.type}>
-                      {alvara.type}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-xs px-1.5 py-1.5">
-                    {formatDate(alvara.expirationDate)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap text-xs px-1.5 py-1.5">
-                    {getDaysText(alvara)}
-                  </TableCell>
-                  <TableCell className="text-xs px-1.5 py-1.5">
-                    <StatusBadge alvara={alvara} className="px-1.5 py-0.5 text-[10px]" />
-                  </TableCell>
-                  <TableCell className="text-center whitespace-nowrap px-1.5 py-1.5">
-                    {renderActions(alvara)}
+              {sortedAlvaras.length === 0 ? (
+                <TableRow>
+                  <TableCell 
+                    colSpan={10}
+                    className="text-center py-8 text-muted-foreground text-sm"
+                  >
+                    Nenhum alvará encontrado
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                sortedAlvaras.map((alvara, index) => (
+                  <TableRow
+                    key={alvara.id}
+                    className={`animate-fade-in text-xs h-10 ${
+                      alvara.status === 'expiring' || alvara.status === 'expired'
+                        ? 'bg-amber-50'
+                        : ''
+                    }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <TableCell className="font-medium text-xs px-1.5 py-1.5">
+                      <div className="truncate" title={alvara.clientName}>
+                        {truncateText(alvara.clientName || '', 40)}
+                      </div>
+                    </TableCell>
+                    {showCnpj && (
+                      <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs hidden md:table-cell px-1.5 py-1.5">
+                        {formatCnpj(alvara.clientCnpj)}
+                      </TableCell>
+                    )}
+                    <TableCell className="hidden lg:table-cell text-xs px-1.5 py-1.5">
+                      <div className="truncate" title={alvara.type}>
+                        {alvara.type}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell whitespace-nowrap text-xs px-1.5 py-1.5">
+                      {formatDate(alvara.expirationDate)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap text-xs px-1.5 py-1.5">
+                      {getDaysText(alvara)}
+                    </TableCell>
+                    <TableCell className="text-xs px-1.5 py-1.5">
+                      <StatusBadge alvara={alvara} className="px-1.5 py-0.5 text-[10px]" />
+                    </TableCell>
+                    <TableCell className="text-center whitespace-nowrap px-1.5 py-1.5">
+                      {renderActions(alvara)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
           </div>

@@ -8,7 +8,23 @@ import { AlvaraTable } from '@/components/AlvaraTable';
 import { AlvaraForm } from '@/components/AlvaraForm';
 import { IntelligentUploadModal } from '@/components/IntelligentUploadModal';
 import { StatCard } from '@/components/StatCard';
-import { Alvara, AlvaraFormData, AlvaraStatus } from '@/types/alvara';
+import { Alvara, AlvaraFormData, AlvaraStatus, ALVARA_TYPES } from '@/types/alvara';
+
+// Array com os status disponíveis para o filtro
+const STATUS_OPTIONS: AlvaraStatus[] = ['pending', 'valid', 'expiring', 'expired'];
+const STATUS_LABELS: Record<AlvaraStatus, string> = {
+  pending: 'Pendente',
+  valid: 'Ativo',
+  expiring: 'Vencendo',
+  expired: 'Vencido',
+};
+
+// Opções especiais para filtro (Isento e SPF)
+const SPECIAL_STATUS_OPTIONS = ['isento', 'semPontoFixo'];
+const SPECIAL_STATUS_LABELS: Record<string, string> = {
+  isento: 'Isento',
+  semPontoFixo: 'SPF',
+};
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -50,6 +66,8 @@ const AlvarasPage = () => {
   const [isRenewing, setIsRenewing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<string[]>([]); // Filtro por tipo de alvará
+  const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]); // Filtro por status na coluna (inclui isento e SPF)
 
   // Para destacar o StatCard ativo em funcionamento
   const handleStatCardClick = (status: AlvaraStatus | 'all') => {
@@ -116,6 +134,7 @@ const AlvarasPage = () => {
       setStatusFilter('all');
       setProcessingFilter('all');
     }
+    // Não resetamos o filtro de tipo ao trocar de aba, pois pode ser útil manter
   }, [activeTab]);
 
   // Filtrar e ordenar alvarás baseado na aba ativa e filtros
@@ -131,7 +150,16 @@ const AlvarasPage = () => {
           alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesProcessing =
           processingFilter === 'all' || alvara.processingStatus === processingFilter;
-        return matchesSearch && matchesProcessing;
+        const matchesType =
+          typeFilter.length === 0 || typeFilter.includes(alvara.type);
+        const matchesStatusColumn =
+          statusColumnFilter.length === 0 || 
+          statusColumnFilter.some(filter => {
+            if (filter === 'isento') return alvara.isento === true;
+            if (filter === 'semPontoFixo') return alvara.semPontoFixo === true;
+            return alvara.status === filter;
+          });
+        return matchesSearch && matchesProcessing && matchesType && matchesStatusColumn;
       });
       
       // Ordenar novos alvarás por data de criação (mais recentes primeiro)
@@ -155,7 +183,16 @@ const AlvarasPage = () => {
           alvara.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           alvara.clientCnpj.includes(searchTerm) ||
           alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        const matchesType =
+          typeFilter.length === 0 || typeFilter.includes(alvara.type);
+        const matchesStatusColumn =
+          statusColumnFilter.length === 0 || 
+          statusColumnFilter.some(filter => {
+            if (filter === 'isento') return alvara.isento === true;
+            if (filter === 'semPontoFixo') return alvara.semPontoFixo === true;
+            return alvara.status === filter;
+          });
+        return matchesSearch && matchesType && matchesStatusColumn;
       });
       
       // Ordenar alvarás em renovação por data de vencimento (mais próximo primeiro)
@@ -178,7 +215,16 @@ const AlvarasPage = () => {
           alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus =
           statusFilter === 'all' || alvara.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesType =
+          typeFilter.length === 0 || typeFilter.includes(alvara.type);
+        const matchesStatusColumn =
+          statusColumnFilter.length === 0 || 
+          statusColumnFilter.some(filter => {
+            if (filter === 'isento') return alvara.isento === true;
+            if (filter === 'semPontoFixo') return alvara.semPontoFixo === true;
+            return alvara.status === filter;
+          });
+        return matchesSearch && matchesStatus && matchesType && matchesStatusColumn;
       });
       
       // Ordenar por data de vencimento: mais próxima primeiro
@@ -204,7 +250,7 @@ const AlvarasPage = () => {
     }
     
     return filtered;
-  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilter, statusFilter]);
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilter, statusFilter, typeFilter, statusColumnFilter]);
 
   const handleAddAlvara = async (data: AlvaraFormData) => {
     try {
@@ -541,6 +587,13 @@ const AlvarasPage = () => {
               onDelete={handleDelete}
               onEdit={handleEdit}
               onFinalize={handleFinalize}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              availableTypes={ALVARA_TYPES}
+              statusFilter={statusColumnFilter}
+              onStatusFilterChange={setStatusColumnFilter}
+              availableStatuses={[...STATUS_OPTIONS, ...SPECIAL_STATUS_OPTIONS]}
+              statusLabels={{ ...STATUS_LABELS, ...SPECIAL_STATUS_LABELS }}
             />
           </TabsContent>
 
@@ -613,6 +666,13 @@ const AlvarasPage = () => {
               onDelete={handleDelete}
               onEdit={handleEdit}
               onRenew={handleRenew}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              availableTypes={ALVARA_TYPES}
+              statusFilter={statusColumnFilter}
+              onStatusFilterChange={setStatusColumnFilter}
+              availableStatuses={[...STATUS_OPTIONS, ...SPECIAL_STATUS_OPTIONS]}
+              statusLabels={{ ...STATUS_LABELS, ...SPECIAL_STATUS_LABELS }}
             />
           </TabsContent>
 
@@ -654,6 +714,13 @@ const AlvarasPage = () => {
               onDelete={handleDelete}
               onEdit={handleEdit}
               onRenew={handleRenew}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              availableTypes={ALVARA_TYPES}
+              statusFilter={statusColumnFilter}
+              onStatusFilterChange={setStatusColumnFilter}
+              availableStatuses={[...STATUS_OPTIONS, ...SPECIAL_STATUS_OPTIONS]}
+              statusLabels={{ ...STATUS_LABELS, ...SPECIAL_STATUS_LABELS }}
             />
           </TabsContent>
         </Tabs>
