@@ -70,7 +70,7 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
     badges.push(
       <span
         key="isento"
-        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+        className="text-[11px] font-medium text-purple-600 dark:text-purple-400"
       >
         Isento
       </span>
@@ -80,7 +80,7 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
     badges.push(
       <span
         key="spf"
-        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        className="text-[11px] font-medium text-blue-600 dark:text-blue-400"
       >
         SPF
       </span>
