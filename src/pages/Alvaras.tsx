@@ -85,9 +85,10 @@ const AlvarasPage = () => {
   const { uploadAlvaraDocument } = useAlvaraUpload();
 
   // Separar alvarás em categorias
+  // Em funcionamento: todos os alvarás emitidos (com issueDate), incluindo os em renovação
   const { novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao } = useMemo(() => {
     const novos = alvaras.filter((a) => !a.issueDate && a.processingStatus !== 'renovacao');
-    const emFuncionamento = alvaras.filter((a) => a.issueDate && a.processingStatus !== 'renovacao');
+    const emFuncionamento = alvaras.filter((a) => a.issueDate);
     const renovacao = alvaras.filter((a) => a.processingStatus === 'renovacao');
     return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento, alvarasRenovacao: renovacao };
   }, [alvaras]);
