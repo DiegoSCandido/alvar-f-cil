@@ -28,19 +28,29 @@ interface ClienteTableProps {
 // Função para buscar alvará por cliente e tipo
 function getAlvaraByTipo(alvaras: Alvara[], clienteId: string, tipo: string): Alvara | undefined {
   return alvaras.find(
-    (a) => a.clienteId === clienteId && a.type === tipo && a.issueDate
+    (a) => a.clienteId === clienteId && a.type === tipo
   );
 }
 
-// Componente para exibir alvará com status
+// Para Sanitário: pode ser Alvará Sanitário ou Dispensa de Alvará Sanitário
+function getAlvaraSanitario(alvaras: Alvara[], clienteId: string): Alvara | undefined {
+  return alvaras.find(
+    (a) =>
+      a.clienteId === clienteId &&
+      (a.type === 'Alvará Sanitário' || a.type === 'Dispensa de Alvará Sanitário')
+  );
+}
+
+// Componente para exibir alvará com status, isento e SPF
 function AlvaraCell({ alvara }: { alvara?: Alvara }) {
-  if (!alvara || !alvara.expirationDate) {
+  if (!alvara) {
     return <span className="text-muted-foreground text-xs">-</span>;
   }
 
-  const formatDate = (date: Date) => {
-    return formatDateSafe(date);
-  };
+  const formatDate = (date: Date) => formatDateSafe(date);
+  const isento = alvara.isento;
+  const spf = alvara.semPontoFixo;
+  const temData = !!alvara.expirationDate;
 
   const getStatusIcon = (status: AlvaraStatus) => {
     switch (status) {
@@ -55,10 +65,41 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
     }
   };
 
+  const badges: React.ReactNode[] = [];
+  if (isento) {
+    badges.push(
+      <span
+        key="isento"
+        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+      >
+        Isento
+      </span>
+    );
+  }
+  if (spf) {
+    badges.push(
+      <span
+        key="spf"
+        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+      >
+        SPF
+      </span>
+    );
+  }
+
+  const temBadges = badges.length > 0;
+
   return (
-    <div className="flex items-center gap-1">
-      <span className="text-xs font-medium whitespace-nowrap">{formatDate(alvara.expirationDate)}</span>
-      <span className="flex-shrink-0">{getStatusIcon(alvara.status)}</span>
+    <div className="flex flex-col items-center gap-0.5">
+      {temBadges && <div className="flex items-center gap-1 flex-wrap justify-center">{badges}</div>}
+      {temData ? (
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-medium whitespace-nowrap">{formatDate(alvara.expirationDate)}</span>
+          <span className="flex-shrink-0">{getStatusIcon(alvara.status)}</span>
+        </div>
+      ) : temBadges ? null : (
+        <span className="text-muted-foreground text-xs">-</span>
+      )}
     </div>
   );
 }
@@ -87,7 +128,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
       <div className="space-y-3 sm:hidden">
         {clientes.map((cliente, index) => {
           const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
-          const alvaraSanitario = getAlvaraByTipo(alvaras, cliente.id, 'Alvará Sanitário');
+          const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
           const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
 
           return (
@@ -179,16 +220,16 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                   <TableHead className="font-semibold text-xs w-[140px] lg:w-[150px] px-1.5">Razão Social</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px] px-1.5">UF</TableHead>
                 <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px] px-1.5">Município</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5">Sanitário</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5">Bombeiros</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5">Funcionamento</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Sanitário</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Bombeiros</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5 text-center">Funcionamento</TableHead>
                 <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clientes.map((cliente, index) => {
                 const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
-                const alvaraSanitario = getAlvaraByTipo(alvaras, cliente.id, 'Alvará Sanitário');
+                const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
                 const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
 
                 return (
@@ -217,13 +258,13 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     <TableCell className="hidden xl:table-cell text-xs truncate px-1.5 py-1.5">
                       {cliente.municipio}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5 text-center">
                       <AlvaraCell alvara={alvaraSanitario} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5 text-center">
                       <AlvaraCell alvara={alvaraBombeiros} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell px-1.5 py-1.5">
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5 text-center">
                       <AlvaraCell alvara={alvaraFuncionamento} />
                     </TableCell>
                     <TableCell className="text-right px-1.5 py-1.5">
