@@ -431,10 +431,18 @@ export function AlvaraForm({
       setIsLoading(true);
       setError(null);
       const isExempt = formData.isento || formData.semPontoFixo;
+      const parsedRenewalExpirationDate = renewalExpirationDate
+        ? parseDateInput(renewalExpirationDate)
+        : null;
+
+      if (renewalExpirationDate && !parsedRenewalExpirationDate) {
+        setError("Data de vencimento inválida.");
+        return;
+      }
 
       // Se não for isento ou sem ponto fixo, valida campos obrigatórios
       if (!isExempt) {
-        if (!renewalExpirationDate) {
+        if (!parsedRenewalExpirationDate) {
           setError("Data de vencimento é obrigatória");
           return;
         }
@@ -446,9 +454,7 @@ export function AlvaraForm({
       const dataToSubmit: AlvaraFormData = {
         ...formData,
         type: editingAlvara?.type || formData.type,
-        expirationDate: renewalExpirationDate
-          ? new Date(renewalExpirationDate)
-          : undefined,
+        expirationDate: parsedRenewalExpirationDate || undefined,
         processingStatus: "lançado" as AlvaraProcessingStatus,
       };
       await onSubmit(dataToSubmit);
@@ -1237,7 +1243,9 @@ export function AlvaraForm({
             )}
             <Input
               id="renewal-expiration-date"
-              type="date"
+              type="text"
+              inputMode="numeric"
+              placeholder="dd/mm/aaaa ou aaaa-mm-dd"
               value={renewalExpirationDate}
               onChange={(e) => {
                 setRenewalExpirationDate(e.target.value);
