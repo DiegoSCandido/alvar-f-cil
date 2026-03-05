@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -20,7 +21,10 @@ import { cn } from "@/lib/utils";
 interface FinalizeAlvaraModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFinalize?: (data: { expirationDate: Date | null; file: File | null }) => void;
+  onFinalize?: (data: {
+    expirationDate: Date | null;
+    file: File | null;
+  }) => void;
   isento?: boolean;
   semPontoFixo?: boolean;
 }
@@ -34,7 +38,43 @@ export function FinalizeAlvaraModal({
 }: FinalizeAlvaraModalProps) {
   const isExempt = isento || semPontoFixo;
   const [expirationDate, setExpirationDate] = useState<Date>();
+  const [expirationDateInput, setExpirationDateInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  const parseDateInput = (value: string): Date | null => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return null;
+
+    const isoMatch = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      const [_, year, month, day] = isoMatch;
+      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+      if (
+        parsed.getFullYear() === Number(year) &&
+        parsed.getMonth() === Number(month) - 1 &&
+        parsed.getDate() === Number(day)
+      ) {
+        return parsed;
+      }
+      return null;
+    }
+
+    const brMatch = trimmedValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (brMatch) {
+      const [_, day, month, year] = brMatch;
+      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+      if (
+        parsed.getFullYear() === Number(year) &&
+        parsed.getMonth() === Number(month) - 1 &&
+        parsed.getDate() === Number(day)
+      ) {
+        return parsed;
+      }
+      return null;
+    }
+
+    return null;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -43,11 +83,14 @@ export function FinalizeAlvaraModal({
   };
 
   const handleFinalize = () => {
+    const parsedExpirationDate = parseDateInput(expirationDateInput);
+
     // Se isento ou sem ponto fixo, não precisa de data de vencimento nem arquivo
-    if (isExempt || expirationDate) {
-      onFinalize?.({ expirationDate: expirationDate || null, file });
+    if (isExempt || parsedExpirationDate) {
+      onFinalize?.({ expirationDate: parsedExpirationDate || null, file });
       onOpenChange(false);
       setExpirationDate(undefined);
+      setExpirationDateInput("");
       setFile(null);
     }
   };
@@ -55,6 +98,7 @@ export function FinalizeAlvaraModal({
   const handleCancel = () => {
     onOpenChange(false);
     setExpirationDate(undefined);
+    setExpirationDateInput("");
     setFile(null);
   };
 
@@ -79,15 +123,16 @@ export function FinalizeAlvaraModal({
           {/* Data de Vencimento */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Data de Vencimento {!isExempt && <span className="text-destructive">*</span>}
+              Data de Vencimento{" "}
+              {!isExempt && <span className="text-destructive">*</span>}
             </Label>
             {isExempt && (
               <p className="text-xs text-muted-foreground">
-                {isento && semPontoFixo 
-                  ? 'Alvará isento e sem ponto fixo - data de vencimento não é obrigatória'
-                  : isento 
-                  ? 'Alvará isento - data de vencimento não é obrigatória'
-                  : 'Alvará sem ponto fixo - data de vencimento não é obrigatória'}
+                {isento && semPontoFixo
+                  ? "Alvará isento e sem ponto fixo - data de vencimento não é obrigatória"
+                  : isento
+                    ? "Alvará isento - data de vencimento não é obrigatória"
+                    : "Alvará sem ponto fixo - data de vencimento não é obrigatória"}
               </p>
             )}
             <Popover>
@@ -96,7 +141,7 @@ export function FinalizeAlvaraModal({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal h-11",
-                    !expirationDate && "text-muted-foreground"
+                    !expirationDate && "text-muted-foreground",
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -111,26 +156,43 @@ export function FinalizeAlvaraModal({
                 <Calendar
                   mode="single"
                   selected={expirationDate}
-                  onSelect={setExpirationDate}
+                  onSelect={(date) => {
+                    setExpirationDate(date);
+                    setExpirationDateInput(date ? formatDateSafe(date) : "");
+                  }}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
+            <Input
+              type="text"
+              inputMode="numeric"
+              placeholder="dd/mm/aaaa ou aaaa-mm-dd"
+              value={expirationDateInput}
+              onChange={(e) => {
+                const inputValue = e.target.value;
+                setExpirationDateInput(inputValue);
+                const parsed = parseDateInput(inputValue);
+                setExpirationDate(parsed || undefined);
+              }}
+              className="h-11"
+            />
           </div>
 
           {/* Upload do Documento */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Documento do Alvará (PDF) {!isExempt && <span className="text-destructive">*</span>}
+              Documento do Alvará (PDF){" "}
+              {!isExempt && <span className="text-destructive">*</span>}
             </Label>
             {isExempt && (
               <p className="text-xs text-muted-foreground">
-                {isento && semPontoFixo 
-                  ? 'Alvará isento e sem ponto fixo - documento não é obrigatório'
-                  : isento 
-                  ? 'Alvará isento - documento não é obrigatório'
-                  : 'Alvará sem ponto fixo - documento não é obrigatório'}
+                {isento && semPontoFixo
+                  ? "Alvará isento e sem ponto fixo - documento não é obrigatório"
+                  : isento
+                    ? "Alvará isento - documento não é obrigatório"
+                    : "Alvará sem ponto fixo - documento não é obrigatório"}
               </p>
             )}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -171,12 +233,16 @@ export function FinalizeAlvaraModal({
         </div>
 
         <div className="px-4 sm:px-6 py-4 bg-muted/30 border-t flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
-          <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="w-full sm:w-auto"
+          >
             Cancelar
           </Button>
           <Button
             onClick={handleFinalize}
-            disabled={!isExempt && !expirationDate}
+            disabled={!isExempt && !parseDateInput(expirationDateInput)}
             className="gap-2 w-full sm:w-auto"
           >
             <CheckCircle className="w-4 h-4" />
