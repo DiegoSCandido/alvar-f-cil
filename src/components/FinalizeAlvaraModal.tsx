@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { formatDateSafe } from "@/lib/alvara-utils";
-import { CalendarIcon, FileText, Upload, CheckCircle } from "lucide-react";
+import { FileText, Upload, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 interface FinalizeAlvaraModalProps {
   open: boolean;
@@ -37,27 +29,12 @@ export function FinalizeAlvaraModal({
   semPontoFixo = false,
 }: FinalizeAlvaraModalProps) {
   const isExempt = isento || semPontoFixo;
-  const [expirationDate, setExpirationDate] = useState<Date>();
   const [expirationDateInput, setExpirationDateInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const parseDateInput = (value: string): Date | null => {
     const trimmedValue = value.trim();
     if (!trimmedValue) return null;
-
-    const isoMatch = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) {
-      const [_, year, month, day] = isoMatch;
-      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
-      if (
-        parsed.getFullYear() === Number(year) &&
-        parsed.getMonth() === Number(month) - 1 &&
-        parsed.getDate() === Number(day)
-      ) {
-        return parsed;
-      }
-      return null;
-    }
 
     const brMatch = trimmedValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (brMatch) {
@@ -76,6 +53,17 @@ export function FinalizeAlvaraModal({
     return null;
   };
 
+  const formatDateInput = (value: string): string => {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 8);
+
+    if (digitsOnly.length <= 2) return digitsOnly;
+    if (digitsOnly.length <= 4) {
+      return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
+    }
+
+    return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4)}`;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -89,7 +77,6 @@ export function FinalizeAlvaraModal({
     if (isExempt || parsedExpirationDate) {
       onFinalize?.({ expirationDate: parsedExpirationDate || null, file });
       onOpenChange(false);
-      setExpirationDate(undefined);
       setExpirationDateInput("");
       setFile(null);
     }
@@ -97,7 +84,6 @@ export function FinalizeAlvaraModal({
 
   const handleCancel = () => {
     onOpenChange(false);
-    setExpirationDate(undefined);
     setExpirationDateInput("");
     setFile(null);
   };
@@ -135,46 +121,13 @@ export function FinalizeAlvaraModal({
                     : "Alvará sem ponto fixo - data de vencimento não é obrigatória"}
               </p>
             )}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-11",
-                    !expirationDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {expirationDate ? (
-                    formatDateSafe(expirationDate)
-                  ) : (
-                    <span>dd/mm/aaaa</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={expirationDate}
-                  onSelect={(date) => {
-                    setExpirationDate(date);
-                    setExpirationDateInput(date ? formatDateSafe(date) : "");
-                  }}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="dd/mm/aaaa ou aaaa-mm-dd"
+              placeholder="dd/mm/aaaa"
               value={expirationDateInput}
               onChange={(e) => {
-                const inputValue = e.target.value;
-                setExpirationDateInput(inputValue);
-                const parsed = parseDateInput(inputValue);
-                setExpirationDate(parsed || undefined);
+                setExpirationDateInput(formatDateInput(e.target.value));
               }}
               className="h-11"
             />
