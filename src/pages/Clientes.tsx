@@ -6,13 +6,40 @@ import { ClienteForm } from '@/components/ClienteForm';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Filter } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/logo-o2con.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
+const COLUNA_OPTIONS = [
+  { value: 'sanitario', label: 'Sanitário' },
+  { value: 'bombeiros', label: 'Bombeiros' },
+  { value: 'funcionamento', label: 'Funcionamento' },
+] as const;
+
+const OPCAO_OPTIONS = [
+  { value: 'ativo', label: 'Ativo' },
+  { value: 'vencendo', label: 'Vencendo' },
+  { value: 'vencido', label: 'Vencido' },
+  { value: 'spf', label: 'SPF' },
+  { value: 'isento', label: 'Isento' },
+  { value: 'sem_status', label: 'Sem alvará' },
+] as const;
+
 const ClientesPage = () => {
-  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes();
+  const [filtroColuna, setFiltroColuna] = useState<string>('');
+  const [filtroOpcao, setFiltroOpcao] = useState<string>('');
+  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes({
+    coluna: filtroColuna || undefined,
+    opcao: filtroOpcao || undefined,
+  });
   const { alvaras } = useAlvaras();
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -20,19 +47,15 @@ const ClientesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [clienteParaExcluir, setClienteParaExcluir] = useState<Cliente | null>(null);
 
+  const filtroAtivo = !!(filtroColuna && filtroOpcao);
+
   const filteredClientes = useMemo(() => {
     return clientes.filter((cliente) => {
-      // Validar que cliente existe e tem propriedades essenciais
-      if (!cliente || !cliente.razaoSocial) {
-        return false;
-      }
-
+      if (!cliente || !cliente.razaoSocial) return false;
       const searchLower = searchTerm.toLowerCase();
-      const razaoSocialMatch = cliente.razaoSocial ? cliente.razaoSocial.toLowerCase().includes(searchLower) : false;
-      // Removido nomeFantasiaMatch
-      const cnpjMatch = cliente.cnpj ? cliente.cnpj.includes(searchTerm) : false;
-      const municipioMatch = cliente.municipio ? cliente.municipio.toLowerCase().includes(searchLower) : false;
-
+      const razaoSocialMatch = cliente.razaoSocial?.toLowerCase().includes(searchLower) ?? false;
+      const cnpjMatch = cliente.cnpj?.includes(searchTerm) ?? false;
+      const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
   }, [clientes, searchTerm]);
@@ -133,29 +156,75 @@ const ClientesPage = () => {
           <div className="bg-card rounded-lg border p-3 sm:p-4 lg:p-5 flex items-center gap-3 flex-shrink-0 min-w-[200px] sm:min-w-0 sm:flex-1">
             <Users className="h-5 w-5 lg:h-6 lg:w-6 text-muted-foreground flex-shrink-0" />
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">Total de Clientes</p>
+              <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
+                {filtroAtivo ? `Clientes (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})` : 'Total de Clientes'}
+              </p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{clientes.length}</p>
             </div>
           </div>
         </div>
 
-        {/* Search */}
+        {/* Search e Filtros */}
         <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cliente..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm sm:text-base"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cliente..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-sm sm:text-base"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Select value={filtroColuna || 'todos'} onValueChange={(v) => setFiltroColuna(v === 'todos' ? '' : v)}>
+                <SelectTrigger className="w-[140px] sm:w-[150px]">
+                  <SelectValue placeholder="Coluna" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {COLUNA_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filtroOpcao || 'todos'} onValueChange={(v) => setFiltroOpcao(v === 'todos' ? '' : v)}>
+                <SelectTrigger className="w-[140px] sm:w-[150px]">
+                  <SelectValue placeholder="Opção" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {OPCAO_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(filtroColuna || filtroOpcao) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFiltroColuna('');
+                    setFiltroOpcao('');
+                  }}
+                >
+                  Limpar
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Results info */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
           <p>
             {filteredClientes.length} de {clientes.length} clientes
+            {filtroAtivo && ` (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
           </p>
         </div>
 

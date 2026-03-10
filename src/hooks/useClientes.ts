@@ -3,26 +3,28 @@ import { Cliente, ClienteFormData } from '@/types/cliente';
 import { clienteAPI } from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function useClientes() {
+export function useClientes(options?: { coluna?: string; opcao?: string }) {
   const { isAuthenticated } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load clientes from API on mount, mas só se estiver autenticado
   useEffect(() => {
     if (isAuthenticated) {
       loadClientes();
     } else {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, options?.coluna, options?.opcao]);
 
   const loadClientes = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await clienteAPI.list();
+      const data = await clienteAPI.list({
+        coluna: options?.coluna,
+        opcao: options?.opcao,
+      });
       setClientes(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar clientes';

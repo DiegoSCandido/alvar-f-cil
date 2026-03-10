@@ -74,7 +74,13 @@ async function apiCall<T>(
 
 // Clientes
 export const clienteAPI = {
-  list: () => apiCall('/clientes'),
+  list: (params?: { coluna?: string; opcao?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.coluna) searchParams.set('coluna', params.coluna);
+    if (params?.opcao) searchParams.set('opcao', params.opcao);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiCall(`/clientes${qs}`);
+  },
   get: (id: string) => apiCall(`/clientes/${id}`),
   create: (data: any) => apiCall('/clientes', { method: 'POST', body: data }),
   update: (id: string, data: any) => apiCall(`/clientes/${id}`, { method: 'PUT', body: data }),
