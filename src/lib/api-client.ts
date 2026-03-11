@@ -56,13 +56,18 @@ async function apiCall<T>(
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
     // Se for erro de validação do Zod, mostrar detalhes
-    if (error.details && Array.isArray(error.details)) {
-      const details = error.details.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ');
+    if (errorBody.details && Array.isArray(errorBody.details)) {
+      const details = errorBody.details.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ');
       throw new Error(`Erro de validação: ${details}`);
     }
-    throw new Error(error.error || `API error: ${response.statusText}`);
+    const errorMsg = typeof errorBody.message === 'string'
+      ? errorBody.message
+      : typeof errorBody.error === 'string'
+        ? errorBody.error
+        : `API error: ${response.statusText}`;
+    throw new Error(errorMsg);
   }
 
   if (response.status === 204) {
