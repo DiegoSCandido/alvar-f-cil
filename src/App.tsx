@@ -14,6 +14,7 @@ import TaxasPage from "./pages/Taxas";
 import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { ClienteModalProvider } from "./contexts/ClienteModalContext";
 import { ClienteModalGlobal } from "./components/ClienteModalGlobal";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -24,7 +25,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const { isAuthenticated, isInitializing } = useAuth();
+  const { isAuthenticated, isInitializing, mustChangePassword, clearMustChangePassword } = useAuth();
   const isLoginPage = location.pathname === "/";
   const isPublicPage = isLoginPage;
 
@@ -96,6 +97,15 @@ const AppContent = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* Modal obrigatório de redefinição de senha no primeiro login */}
+      {!isPublicPage && isAuthenticated && mustChangePassword && (
+        <ChangePasswordModal
+          open={true}
+          onOpenChange={() => {}}
+          onSuccess={clearMustChangePassword}
+          required={true}
+        />
+      )}
       {/* Sidebar - mobile: top, desktop: left - hidden on login page */}
       {!isPublicPage && <Sidebar />}
       {/* Main content - aplica margin-left no desktop/tablet somente quando não for página pública (login) */}

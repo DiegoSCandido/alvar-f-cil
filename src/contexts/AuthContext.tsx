@@ -23,6 +23,8 @@ interface AuthContextType {
   isLoading: boolean;
   isInitializing: boolean;
   authToken: string | null;
+  mustChangePassword: boolean;
+  clearMustChangePassword: () => void;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -111,9 +114,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       setUser(data.user);
       setAuthToken(data.token);
+      setMustChangePassword(data.mustChangePassword === true);
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      // Armazena o horário de login para logout automático após 1 hora
       localStorage.setItem('loginTime', Date.now().toString());
     } finally {
       setIsLoading(false);
@@ -121,16 +124,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Se estiver em modo desenvolvimento, manter mock auth
-    if (USE_MOCK_AUTH) {
-      return;
-    }
-    
+    if (USE_MOCK_AUTH) return;
     setUser(null);
     setAuthToken(null);
+    setMustChangePassword(false);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   };
+
+  const clearMustChangePassword = () => setMustChangePassword(false);
 
   return (
     <AuthContext.Provider
@@ -139,6 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         authToken,
         isLoading,
+        mustChangePassword,
+        clearMustChangePassword,
         login,
         logout,
         isAuthenticated: !!user,

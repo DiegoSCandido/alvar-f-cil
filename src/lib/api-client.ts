@@ -77,6 +77,15 @@ async function apiCall<T>(
   return response.json();
 }
 
+// Auth
+export const authAPI = {
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiCall('/auth/change-password', {
+      method: 'PUT',
+      body: { currentPassword, newPassword },
+    }),
+};
+
 // Clientes
 export const clienteAPI = {
   list: (params?: { coluna?: string; opcao?: string }) => {

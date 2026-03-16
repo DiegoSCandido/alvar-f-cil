@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {User, Lock, Eye, EyeOff} from "lucide-react";
+import { User, Lock, Eye, EyeOff, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { validatePassword } from "@/lib/password-validator";
@@ -17,6 +24,7 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -172,13 +180,35 @@ const LoginForm = () => {
             Lembrar-me
           </label>
         </div>
-        <a
-          href="#"
+        <button
+          type="button"
+          onClick={() => setForgotPasswordOpen(true)}
           className="text-sm text-secondary hover:text-secondary/80 transition-colors font-medium"
         >
           Esqueci minha senha
-        </a>
+        </button>
       </div>
+
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" />
+              Redefinir senha
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <p>
+                  Para redefinir sua senha, entre em contato com o setor de TI.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Informe seu e-mail cadastrado e a equipe poderá ajudá-lo a recuperar o acesso.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       {/* Submit Button */}
       <Button
