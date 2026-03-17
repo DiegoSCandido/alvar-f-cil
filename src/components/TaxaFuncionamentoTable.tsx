@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useClienteModal } from '@/contexts/ClienteModalContext';
@@ -23,11 +24,14 @@ interface TaxaCliente {
 
 const ANO_ATUAL = new Date().getFullYear();
 
+type FiltroStatus = 'gerada' | 'enviada' | 'paga' | null;
+
 export default function TaxaFuncionamentoTable() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [taxas, setTaxas] = useState<Record<string, TaxaCliente>>({});
   const [protocoloValues, setProtocoloValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>(null);
   const { toast } = useToast();
   const { openModal } = useClienteModal();
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -179,6 +183,14 @@ export default function TaxaFuncionamentoTable() {
   const totalEnviadas = Object.values(taxas).filter(t => t.enviada).length;
   const totalPagas = Object.values(taxas).filter(t => t.paga).length;
 
+  // Clientes filtrados conforme o card selecionado
+  const clientesFiltrados = filtroStatus
+    ? clientes.filter(cliente => {
+        const taxa = taxas[cliente.id];
+        return taxa && taxa[filtroStatus];
+      })
+    : clientes;
+
   if (loading) return (
     <div className="flex items-center justify-center p-8">
       <div className="text-center">
@@ -191,30 +203,57 @@ export default function TaxaFuncionamentoTable() {
   // Mobile: card layout; Desktop: table layout
   return (
     <>
-      {/* Cards com totais */}
+      {/* Cards como filtros */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card
+          className={cn(
+            'cursor-pointer transition-all hover:border-primary/50 hover:shadow-md',
+            filtroStatus === 'gerada' && 'border-primary ring-2 ring-primary/30'
+          )}
+          onClick={() => setFiltroStatus(filtroStatus === 'gerada' ? null : 'gerada')}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">Total de Taxas Geradas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{totalGeradas}</div>
+            {filtroStatus === 'gerada' && (
+              <p className="text-xs text-muted-foreground mt-1">Clique para ver todos</p>
+            )}
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={cn(
+            'cursor-pointer transition-all hover:border-primary/50 hover:shadow-md',
+            filtroStatus === 'enviada' && 'border-primary ring-2 ring-primary/30'
+          )}
+          onClick={() => setFiltroStatus(filtroStatus === 'enviada' ? null : 'enviada')}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">Total de Taxas Enviadas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{totalEnviadas}</div>
+            {filtroStatus === 'enviada' && (
+              <p className="text-xs text-muted-foreground mt-1">Clique para ver todos</p>
+            )}
           </CardContent>
         </Card>
-        <Card>
+        <Card
+          className={cn(
+            'cursor-pointer transition-all hover:border-primary/50 hover:shadow-md',
+            filtroStatus === 'paga' && 'border-primary ring-2 ring-primary/30'
+          )}
+          onClick={() => setFiltroStatus(filtroStatus === 'paga' ? null : 'paga')}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">Total de Taxas Pagas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{totalPagas}</div>
+            {filtroStatus === 'paga' && (
+              <p className="text-xs text-muted-foreground mt-1">Clique para ver todos</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -236,9 +275,26 @@ export default function TaxaFuncionamentoTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Indicador de filtro ativo */}
+      {filtroStatus && (
+        <p className="text-sm text-muted-foreground mb-4">
+          Exibindo apenas clientes com taxa{' '}
+          <span className="font-medium text-foreground">
+            {filtroStatus === 'gerada' ? 'gerada' : filtroStatus === 'enviada' ? 'enviada' : 'paga'}
+          </span>
+          {' '}({clientesFiltrados.length} {clientesFiltrados.length === 1 ? 'cliente' : 'clientes'})
+        </p>
+      )}
+
       {/* Mobile Card Layout */}
       <div className="space-y-3 lg:hidden">
-        {clientes.map(cliente => {
+        {clientesFiltrados.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            {filtroStatus
+              ? 'Nenhum cliente encontrado com esse filtro.'
+              : 'Nenhum cliente cadastrado.'}
+          </p>
+        ) : clientesFiltrados.map(cliente => {
           const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
           const protocoloValue = protocoloValues[cliente.id] !== undefined 
             ? protocoloValues[cliente.id] 
@@ -296,7 +352,15 @@ export default function TaxaFuncionamentoTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clientes.map(cliente => {
+              {clientesFiltrados.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    {filtroStatus
+                      ? 'Nenhum cliente encontrado com esse filtro.'
+                      : 'Nenhum cliente cadastrado.'}
+                  </TableCell>
+                </TableRow>
+              ) : clientesFiltrados.map(cliente => {
                 const taxa = taxas[cliente.id] || { gerada: false, enviada: false, paga: false, protocolo: '' };
                 const protocoloValue = protocoloValues[cliente.id] !== undefined 
                   ? protocoloValues[cliente.id] 
