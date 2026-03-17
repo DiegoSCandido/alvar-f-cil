@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { Search } from 'lucide-react';
 import { clienteAPI, taxaAPI } from '@/lib/api-client';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -32,6 +33,7 @@ export default function TaxaFuncionamentoTable() {
   const [protocoloValues, setProtocoloValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { openModal } = useClienteModal();
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -183,13 +185,26 @@ export default function TaxaFuncionamentoTable() {
   const totalEnviadas = Object.values(taxas).filter(t => t.enviada).length;
   const totalPagas = Object.values(taxas).filter(t => t.paga).length;
 
-  // Clientes filtrados conforme o card selecionado
-  const clientesFiltrados = filtroStatus
-    ? clientes.filter(cliente => {
+  // Clientes filtrados por status (cards) e busca (nome/CNPJ/município) - padrão do sistema
+  const clientesFiltrados = useMemo(() => {
+    let lista = clientes;
+    if (filtroStatus) {
+      lista = lista.filter(cliente => {
         const taxa = taxas[cliente.id];
         return taxa && taxa[filtroStatus];
-      })
-    : clientes;
+      });
+    }
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      lista = lista.filter(cliente => {
+        const razaoSocialMatch = cliente.razaoSocial?.toLowerCase().includes(searchLower) ?? false;
+        const cnpjMatch = cliente.cnpj?.includes(searchTerm) ?? false;
+        const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
+        return razaoSocialMatch || cnpjMatch || municipioMatch;
+      });
+    }
+    return lista;
+  }, [clientes, taxas, filtroStatus, searchTerm]);
 
   if (loading) return (
     <div className="flex items-center justify-center p-8">
@@ -258,6 +273,19 @@ export default function TaxaFuncionamentoTable() {
         </Card>
       </div>
 
+      {/* Busca por nome de empresa - padrão do sistema */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar cliente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 text-sm sm:text-base"
+          />
+        </div>
+      </div>
+
       {/* Dialog de Confirmação */}
       <Dialog open={!!confirmDialog} onOpenChange={(open) => { if (!open) setConfirmDialog(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -275,16 +303,17 @@ export default function TaxaFuncionamentoTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Indicador de filtro ativo */}
-      {filtroStatus && (
-        <p className="text-sm text-muted-foreground mb-4">
-          Exibindo apenas clientes com taxa{' '}
-          <span className="font-medium text-foreground">
-            {filtroStatus === 'gerada' ? 'gerada' : filtroStatus === 'enviada' ? 'enviada' : 'paga'}
-          </span>
-          {' '}({clientesFiltrados.length} {clientesFiltrados.length === 1 ? 'cliente' : 'clientes'})
+      {/* Indicador de resultados - padrão do sistema */}
+      <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground mb-4">
+        <p>
+          {clientesFiltrados.length} de {clientes.length} clientes
+          {filtroStatus && (
+            <span className="ml-1">
+              (taxa {filtroStatus === 'gerada' ? 'gerada' : filtroStatus === 'enviada' ? 'enviada' : 'paga'})
+            </span>
+          )}
         </p>
-      )}
+      </div>
 
       {/* Mobile Card Layout */}
       <div className="space-y-3 lg:hidden">
