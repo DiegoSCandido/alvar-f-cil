@@ -152,12 +152,11 @@ export function AlvaraForm({
     semPontoFixo: editingAlvara?.semPontoFixo || false,
   }));
 
-  // Filtrar tipos de alvará permitidos pelo cliente selecionado
+  // Tipos de alvará: usa os configurados no cliente ou todos se estiver vazio (permite adicionar qualquer tipo)
   const tiposPermitidos = useMemo(() => {
     const cliente = clientes.find((c) => c.id === formData.clienteId);
-    return cliente?.alvaras && cliente.alvaras.length > 0
-      ? cliente.alvaras
-      : [];
+    const clientTypes = cliente?.alvaras && cliente.alvaras.length > 0 ? cliente.alvaras : [];
+    return clientTypes.length > 0 ? clientTypes : ALVARA_TYPES;
   }, [clientes, formData.clienteId]);
 
   // Atualizar formData quando editingAlvara mudar ou quando o dialog abrir/fechar
