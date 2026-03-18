@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useClientes } from '@/hooks/useClientes';
 import { useAlvaras } from '@/hooks/useAlvaras';
-import { ClienteTable } from '@/components/ClienteTable';
+import { ClienteTable, TaxaPagaMap } from '@/components/ClienteTable';
+import { taxaAPI } from '@/lib/api-client';
 import { ClienteForm } from '@/components/ClienteForm';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const COLUNA_OPTIONS = [
   { value: 'sanitario', label: 'Sanitário' },
   { value: 'bombeiros', label: 'Bombeiros' },
   { value: 'funcionamento', label: 'Funcionamento' },
+  { value: 'taxas', label: 'Taxas' },
 ] as const;
 
 const OPCAO_OPTIONS = [
@@ -31,16 +33,40 @@ const OPCAO_OPTIONS = [
   { value: 'spf', label: 'SPF' },
   { value: 'isento', label: 'Isento' },
   { value: 'sem_status', label: 'Sem alvará' },
+  { value: 'paga', label: 'Paga' },
 ] as const;
+
+const ANO_ATUAL = new Date().getFullYear();
 
 const ClientesPage = () => {
   const [filtroColuna, setFiltroColuna] = useState<string>('');
   const [filtroOpcao, setFiltroOpcao] = useState<string>('');
+  const [taxasPaga, setTaxasPaga] = useState<TaxaPagaMap>({});
+
+  const isFiltroTaxasPaga = (filtroColuna === 'funcionamento' || filtroColuna === 'taxas') && filtroOpcao === 'paga';
   const { clientes, addCliente, updateCliente, deleteCliente } = useClientes({
-    coluna: filtroColuna || undefined,
-    opcao: filtroOpcao || undefined,
+    coluna: isFiltroTaxasPaga ? undefined : (filtroColuna || undefined),
+    opcao: isFiltroTaxasPaga ? undefined : (filtroOpcao || undefined),
   });
   const { alvaras } = useAlvaras();
+
+  useEffect(() => {
+    async function loadTaxas() {
+      try {
+        const taxasRes = await taxaAPI.list(ANO_ATUAL);
+        const map: TaxaPagaMap = {};
+        if (Array.isArray(taxasRes)) {
+          taxasRes.forEach((t: { clienteId: string; paga: boolean }) => {
+            map[t.clienteId] = { paga: !!t.paga };
+          });
+        }
+        setTaxasPaga(map);
+      } catch {
+        setTaxasPaga({});
+      }
+    }
+    loadTaxas();
+  }, []);
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
@@ -50,7 +76,11 @@ const ClientesPage = () => {
   const filtroAtivo = !!(filtroColuna && filtroOpcao);
 
   const filteredClientes = useMemo(() => {
-    return clientes.filter((cliente) => {
+    let base = clientes;
+    if (isFiltroTaxasPaga) {
+      base = clientes.filter((c) => taxasPaga[c.id]?.paga);
+    }
+    return base.filter((cliente) => {
       if (!cliente || !cliente.razaoSocial) return false;
       const searchLower = searchTerm.toLowerCase();
       const razaoSocialMatch = cliente.razaoSocial?.toLowerCase().includes(searchLower) ?? false;
@@ -58,7 +88,7 @@ const ClientesPage = () => {
       const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
-  }, [clientes, searchTerm]);
+  }, [clientes, searchTerm, isFiltroTaxasPaga, taxasPaga]);
 
   const handleAddCliente = async (data: ClienteFormData) => {
     try {
@@ -159,7 +189,11 @@ const ClientesPage = () => {
               <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
                 {filtroAtivo ? `Clientes (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})` : 'Total de Clientes'}
               </p>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{clientes.length}</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
+                {isFiltroTaxasPaga
+                  ? clientes.filter((c) => taxasPaga[c.id]?.paga).length
+                  : clientes.length}
+              </p>
             </div>
           </div>
         </div>
@@ -223,7 +257,11 @@ const ClientesPage = () => {
         {/* Results info */}
         <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
           <p>
-            {filteredClientes.length} de {clientes.length} clientes
+            {filteredClientes.length} de{' '}
+            {isFiltroTaxasPaga
+              ? clientes.filter((c) => taxasPaga[c.id]?.paga).length
+              : clientes.length}{' '}
+            clientes
             {filtroAtivo && ` (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
           </p>
         </div>
@@ -232,6 +270,7 @@ const ClientesPage = () => {
         <ClienteTable
           clientes={filteredClientes}
           alvaras={alvaras}
+          taxasPaga={taxasPaga}
           onDelete={handleDelete}
           onEdit={handleEdit}
         />

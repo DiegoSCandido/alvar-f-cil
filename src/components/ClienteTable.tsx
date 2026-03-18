@@ -18,9 +18,14 @@ import {
 import { cn } from '@/lib/utils';
 import { useClienteModal } from '@/contexts/ClienteModalContext';
 
+export interface TaxaPagaMap {
+  [clienteId: string]: { paga: boolean };
+}
+
 interface ClienteTableProps {
   clientes: Cliente[];
   alvaras: Alvara[];
+  taxasPaga?: TaxaPagaMap;
   onDelete: (id: string) => void;
   onEdit: (cliente: Cliente) => void;
 }
@@ -110,7 +115,7 @@ const truncateText = (text: string, maxLength: number) => {
   return text.substring(0, maxLength) + '...';
 };
 
-export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTableProps) {
+export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEdit }: ClienteTableProps) {
   const [showCnpj, setShowCnpj] = useState(true);
   const { openModal } = useClienteModal();
 
@@ -130,6 +135,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
           const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
           const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
           const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
+          const taxaPaga = taxasPaga[cliente.id]?.paga;
 
           return (
             <div
@@ -162,7 +168,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                 <span>•</span>
                 <span className="truncate">{cliente.municipio}</span>
               </div>
-              {(alvaraFuncionamento || alvaraSanitario || alvaraBombeiros) && (
+              {(alvaraFuncionamento || alvaraSanitario || alvaraBombeiros || taxaPaga) && (
                 <div className="grid grid-cols-1 gap-1.5 pt-1.5 border-t border-border/50 text-xs">
                   {alvaraSanitario && (
                     <div className="flex items-center justify-between">
@@ -180,6 +186,12 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Func.</span>
                       <AlvaraCell alvara={alvaraFuncionamento} />
+                    </div>
+                  )}
+                  {taxaPaga && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Taxas</span>
+                      <span className="text-[11px] font-medium text-green-600 dark:text-green-400">Paga</span>
                     </div>
                   )}
                 </div>
@@ -223,6 +235,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Sanitário</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Bombeiros</TableHead>
                 <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5 text-center">Funcionamento</TableHead>
+                <TableHead className="font-semibold text-xs hidden md:table-cell w-[70px] lg:w-[75px] px-1.5 text-center">Taxas</TableHead>
                 <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -231,6 +244,7 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                 const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
                 const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
                 const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
+                const taxaPaga = taxasPaga[cliente.id]?.paga;
 
                 return (
                   <TableRow
@@ -266,6 +280,13 @@ export function ClienteTable({ clientes, alvaras, onDelete, onEdit }: ClienteTab
                     </TableCell>
                     <TableCell className="hidden md:table-cell px-1.5 py-1.5 text-center">
                       <AlvaraCell alvara={alvaraFuncionamento} />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell px-1.5 py-1.5 text-center">
+                      {taxaPaga ? (
+                        <span className="text-[11px] font-medium text-green-600 dark:text-green-400">Paga</span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right px-1.5 py-1.5">
                       <div className="flex items-center justify-end gap-0">
