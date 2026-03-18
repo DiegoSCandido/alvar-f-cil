@@ -76,9 +76,10 @@ const ClientesPage = () => {
   const filtroAtivo = !!(filtroColuna && filtroOpcao);
 
   const filteredClientes = useMemo(() => {
-    let base = clientes;
+    const clientesList = Array.isArray(clientes) ? clientes : [];
+    let base = clientesList;
     if (isFiltroTaxasPaga) {
-      base = clientes.filter((c) => taxasPaga[c.id]?.paga);
+      base = clientesList.filter((c) => taxasPaga[c.id]?.paga);
     }
     return base.filter((cliente) => {
       if (!cliente || !cliente.razaoSocial) return false;
@@ -122,7 +123,7 @@ const ClientesPage = () => {
   };
 
   const handleDelete = (id: string) => {
-    const cliente = clientes.find((c) => c.id === id);
+    const cliente = (Array.isArray(clientes) ? clientes : []).find((c) => c.id === id);
     if (cliente) setClienteParaExcluir(cliente);
   };
 
@@ -191,8 +192,8 @@ const ClientesPage = () => {
               </p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {isFiltroTaxasPaga
-                  ? clientes.filter((c) => taxasPaga[c.id]?.paga).length
-                  : clientes.length}
+                  ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
+                  : (Array.isArray(clientes) ? clientes : []).length}
               </p>
             </div>
           </div>
@@ -259,8 +260,8 @@ const ClientesPage = () => {
           <p>
             {filteredClientes.length} de{' '}
             {isFiltroTaxasPaga
-              ? clientes.filter((c) => taxasPaga[c.id]?.paga).length
-              : clientes.length}{' '}
+              ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
+              : (Array.isArray(clientes) ? clientes : []).length}{' '}
             clientes
             {filtroAtivo && ` (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
           </p>

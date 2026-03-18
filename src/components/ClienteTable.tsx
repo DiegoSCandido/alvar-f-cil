@@ -1,9 +1,9 @@
-import { useState, Fragment } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { Cliente } from '@/types/cliente';
 import { Alvara, AlvaraStatus } from '@/types/alvara';
 import { formatCnpj } from '@/lib/alvara-utils';
 import { formatDateSafe } from '@/lib/alvara-utils';
-import { Trash2, Edit, CheckCircle2, Clock, XCircle, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Edit, CheckCircle2, Clock, XCircle, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useClienteModal } from '@/contexts/ClienteModalContext';
+
+type SortColumn = 'cnpj' | 'razaoSocial' | 'uf' | 'municipio' | 'sanitario' | 'bombeiros' | 'funcionamento' | 'taxas' | null;
+type SortDirection = 'asc' | 'desc';
 
 export interface TaxaPagaMap {
   [clienteId: string]: { paga: boolean };
@@ -115,11 +118,104 @@ const truncateText = (text: string, maxLength: number) => {
   return text.substring(0, maxLength) + '...';
 };
 
-export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEdit }: ClienteTableProps) {
+// Retorna timestamp da data de vencimento do alvará (Infinity se sem data)
+function getAlvaraExpirationTimestamp(alvaras: Alvara[], clienteId: string, tipo: string): number {
+  const alvara = tipo === 'sanitario'
+    ? getAlvaraSanitario(alvaras, clienteId)
+    : getAlvaraByTipo(alvaras, clienteId, tipo);
+  if (!alvara?.expirationDate) return Infinity;
+  return new Date(alvara.expirationDate).getTime();
+}
+
+export function ClienteTable({ clientes = [], alvaras = [], taxasPaga = {}, onDelete, onEdit }: ClienteTableProps) {
   const [showCnpj, setShowCnpj] = useState(true);
+  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { openModal } = useClienteModal();
 
-  if (clientes.length === 0) {
+  const safeClientes = Array.isArray(clientes) ? clientes : [];
+  const safeAlvaras = Array.isArray(alvaras) ? alvaras : [];
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedClientes = useMemo(() => {
+    if (!sortColumn) return [...safeClientes];
+
+    return [...safeClientes].sort((a, b) => {
+      let comparison = 0;
+      switch (sortColumn) {
+        case 'cnpj':
+          comparison = (a.cnpj || '').localeCompare(b.cnpj || '');
+          break;
+        case 'razaoSocial':
+          comparison = (a.razaoSocial || '').localeCompare(b.razaoSocial || '', 'pt-BR', { sensitivity: 'base' });
+          break;
+        case 'uf':
+          comparison = (a.uf || '').localeCompare(b.uf || '', 'pt-BR', { sensitivity: 'base' });
+          break;
+        case 'municipio':
+          comparison = (a.municipio || '').localeCompare(b.municipio || '', 'pt-BR', { sensitivity: 'base' });
+          break;
+        case 'sanitario': {
+          const tsA = getAlvaraExpirationTimestamp(safeAlvaras, a.id, 'sanitario');
+          const tsB = getAlvaraExpirationTimestamp(safeAlvaras, b.id, 'sanitario');
+          comparison = tsA === tsB ? 0 : tsA < tsB ? -1 : 1;
+          break;
+        }
+        case 'bombeiros': {
+          const tsA = getAlvaraExpirationTimestamp(safeAlvaras, a.id, 'Alvará de Bombeiros');
+          const tsB = getAlvaraExpirationTimestamp(safeAlvaras, b.id, 'Alvará de Bombeiros');
+          comparison = tsA === tsB ? 0 : tsA < tsB ? -1 : 1;
+          break;
+        }
+        case 'funcionamento': {
+          const tsA = getAlvaraExpirationTimestamp(safeAlvaras, a.id, 'Alvará de Funcionamento');
+          const tsB = getAlvaraExpirationTimestamp(safeAlvaras, b.id, 'Alvará de Funcionamento');
+          comparison = tsA === tsB ? 0 : tsA < tsB ? -1 : 1;
+          break;
+        }
+        case 'taxas': {
+          const pagaA = taxasPaga[a.id]?.paga ? 1 : 0;
+          const pagaB = taxasPaga[b.id]?.paga ? 1 : 0;
+          comparison = pagaA - pagaB;
+          break;
+        }
+        default:
+          return 0;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [safeClientes, safeAlvaras, taxasPaga, sortColumn, sortDirection]);
+
+  const SortableHeader = ({ column, children, className }: { column: SortColumn; children: React.ReactNode; className?: string }) => {
+    const isSorted = sortColumn === column;
+    return (
+      <TableHead
+        className={cn('font-semibold cursor-pointer hover:bg-muted/70 transition-colors select-none', className)}
+        onClick={() => handleSort(column)}
+      >
+        <div className="flex items-center gap-1">
+          <span>{children}</span>
+          <div className="flex flex-col">
+            {isSorted ? (
+              sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3 text-muted-foreground opacity-50" />
+            )}
+          </div>
+        </div>
+      </TableHead>
+    );
+  };
+
+  if (safeClientes.length === 0) {
     return (
       <div className="bg-card rounded-lg border p-8 sm:p-12 text-center">
         <p className="text-muted-foreground text-sm sm:text-base">Nenhum cliente cadastrado</p>
@@ -131,10 +227,10 @@ export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEd
     <Fragment>
       {/* Mobile Card Layout */}
       <div className="space-y-3 sm:hidden">
-        {clientes.map((cliente, index) => {
-          const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
-          const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
-          const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
+        {sortedClientes.map((cliente, index) => {
+          const alvaraFuncionamento = getAlvaraByTipo(safeAlvaras, cliente.id, 'Alvará de Funcionamento');
+          const alvaraSanitario = getAlvaraSanitario(safeAlvaras, cliente.id);
+          const alvaraBombeiros = getAlvaraByTipo(safeAlvaras, cliente.id, 'Alvará de Bombeiros');
           const taxaPaga = taxasPaga[cliente.id]?.paga;
 
           return (
@@ -152,7 +248,7 @@ export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEd
                   >
                     {cliente.razaoSocial}
                   </p>
-                  <p className="text-xs text-muted-foreground font-mono">{formatCnpj(cliente.cnpj)}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{formatCnpj(cliente.cnpj || '')}</p>
                 </div>
                 <div className="flex items-center gap-0.5 flex-shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => onEdit(cliente)} className="h-7 w-7" title="Editar">
@@ -227,23 +323,39 @@ export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEd
               <TableHeader>
                 <TableRow className="bg-muted/50 h-10">
                   {showCnpj && (
-                    <TableHead className="font-semibold text-xs w-[110px] lg:w-[115px] px-1.5">CNPJ</TableHead>
+                    <SortableHeader column="cnpj" className="font-semibold text-xs w-[110px] lg:w-[115px] px-1.5">
+                      CNPJ
+                    </SortableHeader>
                   )}
-                  <TableHead className="font-semibold text-xs w-[140px] lg:w-[150px] px-1.5">Razão Social</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[45px] px-1.5">UF</TableHead>
-                <TableHead className="font-semibold text-xs hidden xl:table-cell w-[110px] px-1.5">Município</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Sanitário</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">Bombeiros</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5 text-center">Funcionamento</TableHead>
-                <TableHead className="font-semibold text-xs hidden md:table-cell w-[70px] lg:w-[75px] px-1.5 text-center">Taxas</TableHead>
-                <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px] px-1.5">Ações</TableHead>
+                  <SortableHeader column="razaoSocial" className="font-semibold text-xs w-[140px] lg:w-[150px] px-1.5">
+                    Razão Social
+                  </SortableHeader>
+                  <SortableHeader column="uf" className="font-semibold text-xs hidden md:table-cell w-[45px] px-1.5">
+                    UF
+                  </SortableHeader>
+                  <SortableHeader column="municipio" className="font-semibold text-xs hidden xl:table-cell w-[110px] px-1.5">
+                    Município
+                  </SortableHeader>
+                  <SortableHeader column="sanitario" className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">
+                    Sanitário
+                  </SortableHeader>
+                  <SortableHeader column="bombeiros" className="font-semibold text-xs hidden md:table-cell w-[85px] lg:w-[90px] px-1.5 text-center">
+                    Bombeiros
+                  </SortableHeader>
+                  <SortableHeader column="funcionamento" className="font-semibold text-xs hidden md:table-cell w-[100px] lg:w-[105px] px-1.5 text-center">
+                    Funcionamento
+                  </SortableHeader>
+                  <SortableHeader column="taxas" className="font-semibold text-xs hidden md:table-cell w-[70px] lg:w-[75px] px-1.5 text-center">
+                    Taxas
+                  </SortableHeader>
+                  <TableHead className="font-semibold text-xs text-right whitespace-nowrap w-[70px] lg:w-[75px] px-1.5">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clientes.map((cliente, index) => {
-                const alvaraFuncionamento = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Funcionamento');
-                const alvaraSanitario = getAlvaraSanitario(alvaras, cliente.id);
-                const alvaraBombeiros = getAlvaraByTipo(alvaras, cliente.id, 'Alvará de Bombeiros');
+              {sortedClientes.map((cliente, index) => {
+                const alvaraFuncionamento = getAlvaraByTipo(safeAlvaras, cliente.id, 'Alvará de Funcionamento');
+                const alvaraSanitario = getAlvaraSanitario(safeAlvaras, cliente.id);
+                const alvaraBombeiros = getAlvaraByTipo(safeAlvaras, cliente.id, 'Alvará de Bombeiros');
                 const taxaPaga = taxasPaga[cliente.id]?.paga;
 
                 return (
@@ -254,7 +366,7 @@ export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEd
                   >
                     {showCnpj && (
                       <TableCell className="font-mono text-muted-foreground whitespace-nowrap text-xs px-1.5 py-1.5">
-                        {formatCnpj(cliente.cnpj)}
+                        {formatCnpj(cliente.cnpj || '')}
                       </TableCell>
                     )}
                     <TableCell className="font-medium text-xs px-1.5 py-1.5">
@@ -263,7 +375,7 @@ export function ClienteTable({ clientes, alvaras, taxasPaga = {}, onDelete, onEd
                         title={cliente.razaoSocial}
                         onClick={() => openModal(cliente)}
                       >
-                        {truncateText(cliente.razaoSocial, 40)}
+                        {truncateText(cliente.razaoSocial || '', 40)}
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs px-1.5 py-1.5">
