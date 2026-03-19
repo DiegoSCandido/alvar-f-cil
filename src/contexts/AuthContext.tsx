@@ -42,7 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Restaura usuário do localStorage ao carregar (ou SSO quando vindo do Hub)
   useEffect(() => {
     const hash = window.location.hash;
-    const ssoMatch = hash.match(/sso_token=([^&]+)/);
+    // Aceita sso_token (Hub) ou access_token (OAuth padrão)
+    const ssoMatch = hash.match(/(?:sso_token|access_token)=([^&]+)/);
 
     // SSO: token passado pelo Hub - validar e fazer login automático
     if (ssoMatch) {
