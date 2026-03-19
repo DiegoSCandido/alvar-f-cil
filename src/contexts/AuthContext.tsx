@@ -66,6 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('user', JSON.stringify(userObj));
           localStorage.setItem('loginTime', Date.now().toString());
           window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          // Se estava na raiz (/), redireciona para dashboard
+          if (window.location.pathname === '/' || window.location.pathname === '') {
+            window.location.replace('/dashboard');
+          }
         })
         .catch(() => {
           // Token inválido - fluxo normal (mostrar login)
