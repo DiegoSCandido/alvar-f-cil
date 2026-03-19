@@ -39,9 +39,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Restaura usuário do localStorage ao carregar
+  // Restaura usuário do localStorage ao carregar (ou SSO quando vindo do Hub)
   useEffect(() => {
-    // Se estiver em modo desenvolvimento, usar mock auth
+    const hash = window.location.hash;
+    const ssoMatch = hash.match(/sso_token=([^&]+)/);
+
+    // SSO: token passado pelo Hub - validar e fazer login automático
+    if (ssoMatch) {
+      const token = decodeURIComponent(ssoMatch[1]);
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+
+      fetch(`${apiUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+        .then(({ user: apiUser }) => {
+          const userObj: User = {
+            id: typeof apiUser.id === 'string' ? parseInt(apiUser.id, 10) : apiUser.id,
+            email: apiUser.email,
+            fullName: apiUser.name || apiUser.email,
+          };
+          setUser(userObj);
+          setAuthToken(token);
+          setMustChangePassword(false);
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('user', JSON.stringify(userObj));
+          localStorage.setItem('loginTime', Date.now().toString());
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        })
+        .catch(() => {
+          // Token inválido - fluxo normal (mostrar login)
+        })
+        .finally(() => setIsInitializing(false));
+      return;
+    }
+
+    // Fluxo normal: restore do localStorage
     if (USE_MOCK_AUTH) {
       setUser(MOCK_USER);
       setAuthToken(MOCK_TOKEN);
