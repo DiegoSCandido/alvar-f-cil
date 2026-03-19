@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // SSO: token passado pelo Hub - validar e fazer login automático
     if (ssoMatch) {
       const token = decodeURIComponent(ssoMatch[1]);
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      // Em produção (Vercel) /api não funciona; usar URL do Render
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://o2controle-backend.onrender.com/api';
 
       fetch(`${apiUrl}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
