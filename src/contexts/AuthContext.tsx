@@ -48,33 +48,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // SSO: token passado pelo Hub - validar e fazer login automático
     if (ssoMatch) {
       const token = decodeURIComponent(ssoMatch[1]);
-      // Em produção (Vercel) /api não funciona; usar URL do Render
+
+      const applySsoLogin = (apiUser: { id: string | number; email: string; name?: string }) => {
+        const userObj: User = {
+          id: typeof apiUser.id === 'string' ? parseInt(apiUser.id, 10) : apiUser.id,
+          email: apiUser.email,
+          fullName: apiUser.name || apiUser.email,
+        };
+        setUser(userObj);
+        setAuthToken(token);
+        setMustChangePassword(false);
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('user', JSON.stringify(userObj));
+        localStorage.setItem('loginTime', Date.now().toString());
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          window.location.replace('/dashboard');
+        }
+      };
+
       const apiUrl = import.meta.env.VITE_API_URL || 'https://o2controle-backend.onrender.com/api';
 
       fetch(`${apiUrl}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-        .then(({ user: apiUser }) => {
-          const userObj: User = {
-            id: typeof apiUser.id === 'string' ? parseInt(apiUser.id, 10) : apiUser.id,
-            email: apiUser.email,
-            fullName: apiUser.name || apiUser.email,
-          };
-          setUser(userObj);
-          setAuthToken(token);
-          setMustChangePassword(false);
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('user', JSON.stringify(userObj));
-          localStorage.setItem('loginTime', Date.now().toString());
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-          // Se estava na raiz (/), redireciona para dashboard
-          if (window.location.pathname === '/' || window.location.pathname === '') {
-            window.location.replace('/dashboard');
-          }
-        })
+        .then(({ user: apiUser }) => applySsoLogin(apiUser))
         .catch(() => {
-          // Token inválido - fluxo normal (mostrar login)
+          // Fallback: decodifica JWT localmente se /me falhar (CORS, rede, etc.)
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.id && payload.email) {
+              applySsoLogin({
+                id: payload.id,
+                email: payload.email,
+                name: payload.fullName || payload.email,
+              });
+            }
+          } catch {
+            // Token inválido - fluxo normal (mostrar login)
+          }
         })
         .finally(() => setIsInitializing(false));
       return;
