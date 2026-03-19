@@ -734,7 +734,7 @@ export function AlvaraForm({
           >
             {isRenewing && editingAlvara?.expirationDate && (
               <Alert className="bg-amber-50 border-amber-200">
-                <RotateCw className="h-4 w-4 text-amber-600" />
+                <RotateCw className="h-4 w-4 text-purple-600" />
                 <AlertDescription>
                   <div className="text-amber-900">
                     <div className="font-semibold">Modo Renovação</div>

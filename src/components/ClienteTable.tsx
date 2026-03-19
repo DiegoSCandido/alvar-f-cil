@@ -62,7 +62,7 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
 
   const getStatusIcon = (status: AlvaraStatus, processingStatus?: string) => {
     if (processingStatus === 'renovacao') {
-      return <RotateCw className="h-3.5 w-3.5 text-amber-600" title="Em renovação" />;
+      return <RotateCw className="h-3.5 w-3.5 text-purple-600" title="Em renovação" />;
     }
     switch (status) {
       case 'valid':

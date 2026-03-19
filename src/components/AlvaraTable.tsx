@@ -284,7 +284,7 @@ export function AlvaraTable({
           variant="ghost"
           size="icon"
           onClick={() => onRenew(alvara)}
-          className="h-6 w-6 text-amber-600 hover:text-amber-700"
+          className="h-6 w-6 text-purple-600 hover:text-purple-700"
           title="Renovar Alvará"
         >
           <RotateCw className="h-3 w-3" />
