@@ -7,7 +7,7 @@ import { ClienteForm } from '@/components/ClienteForm';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Users, Filter } from 'lucide-react';
+import { Plus, Search, Users, Filter, UserCheck, UserX } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/logo-o2con.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const COLUNA_OPTIONS = [
   { value: 'sanitario', label: 'Sanitário' },
@@ -40,6 +41,7 @@ const OPCAO_OPTIONS = [
 const ANO_ATUAL = new Date().getFullYear();
 
 const ClientesPage = () => {
+  const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
   const [filtroColuna, setFiltroColuna] = useState<string>('');
   const [filtroOpcao, setFiltroOpcao] = useState<string>('');
   const [taxasPaga, setTaxasPaga] = useState<TaxaPagaMap>({});
@@ -80,8 +82,15 @@ const ClientesPage = () => {
 
   const filtroAtivo = !!(filtroColuna && filtroOpcao);
 
-  const filteredClientes = useMemo(() => {
+  const clientesPorTab = useMemo(() => {
     const clientesList = Array.isArray(clientes) ? clientes : [];
+    const ativos = clientesList.filter((c) => c.ativo !== false);
+    const inativos = clientesList.filter((c) => c.ativo === false);
+    return { ativos, inativos };
+  }, [clientes]);
+
+  const filteredClientes = useMemo(() => {
+    const clientesList = activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos;
     const alvarasList = Array.isArray(alvaras) ? alvaras : [];
     let base = clientesList;
     if (isFiltroTaxasPaga) {
@@ -110,7 +119,7 @@ const ClientesPage = () => {
       const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
-  }, [clientes, alvaras, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
+  }, [activeTab, clientesPorTab, alvaras, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
 
   const handleAddCliente = async (data: ClienteFormData) => {
     try {
@@ -129,6 +138,11 @@ const ClientesPage = () => {
       }
       setIsFormOpen(false);
       setEditingCliente(null);
+      if (editingCliente && data.ativo === false) {
+        setActiveTab('inativos');
+      } else if (editingCliente && data.ativo !== false) {
+        setActiveTab('ativos');
+      }
     } catch (error) {
       toast({
         title: 'Erro',
@@ -203,6 +217,29 @@ const ClientesPage = () => {
       </header>
 
       <main className="container px-1 sm:px-1 lg:px-1 xl:px-8 py-4 sm:py-5 lg:py-4 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-4 xl:space-y-6 w-full">
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'ativos' | 'inativos')}>
+          <TabsList className="grid w-full max-w-md sm:max-w-lg grid-cols-2 text-xs sm:text-sm lg:text-base">
+            <TabsTrigger value="ativos" className="gap-1 sm:gap-2">
+              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+              Ativos
+              {clientesPorTab.ativos.length > 0 && (
+                <span className="ml-0.5 sm:ml-1 rounded-full bg-primary/10 px-1.5 sm:px-2 py-0.5 text-xs">
+                  {clientesPorTab.ativos.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="inativos" className="gap-1 sm:gap-2">
+              <UserX className="h-3 w-3 sm:h-4 sm:w-4" />
+              Inativos
+              {clientesPorTab.inativos.length > 0 && (
+                <span className="ml-0.5 sm:ml-1 rounded-full bg-muted px-1.5 sm:px-2 py-0.5 text-xs">
+                  {clientesPorTab.inativos.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
         {/* Stats */}
         <div className="flex overflow-x-auto gap-3 sm:gap-4 lg:gap-5 pb-2">
           <div className="bg-card rounded-lg border p-3 sm:p-4 lg:p-5 flex items-center gap-3 flex-shrink-0 min-w-[200px] sm:min-w-0 sm:flex-1">
@@ -213,9 +250,9 @@ const ClientesPage = () => {
               </p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {isFiltroTaxasPaga
-                  ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
+                  ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => taxasPaga[c.id]?.paga).length
                   : isFiltroRenovacao
-                    ? (Array.isArray(clientes) ? clientes : []).filter((c) => {
+                    ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => {
                         const tiposPorColuna: Record<string, string[]> = {
                           sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
                           bombeiros: ['Alvará de Bombeiros'],
@@ -229,7 +266,7 @@ const ClientesPage = () => {
                             a.processingStatus === 'renovacao'
                         );
                       }).length
-                    : (Array.isArray(clientes) ? clientes : []).length}
+                    : (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).length}
               </p>
             </div>
           </div>
@@ -296,9 +333,9 @@ const ClientesPage = () => {
           <p>
             {filteredClientes.length} de{' '}
             {isFiltroTaxasPaga
-              ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
+              ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => taxasPaga[c.id]?.paga).length
               : isFiltroRenovacao
-                ? (Array.isArray(clientes) ? clientes : []).filter((c) => {
+                ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => {
                     const tiposPorColuna: Record<string, string[]> = {
                       sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
                       bombeiros: ['Alvará de Bombeiros'],
@@ -312,7 +349,7 @@ const ClientesPage = () => {
                         a.processingStatus === 'renovacao'
                     );
                   }).length
-                : (Array.isArray(clientes) ? clientes : []).length}{' '}
+                : (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).length}{' '}
             clientes
             {filtroAtivo && ` (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
           </p>
@@ -326,6 +363,7 @@ const ClientesPage = () => {
           onDelete={handleDelete}
           onEdit={handleEdit}
         />
+        </Tabs>
       </main>
 
       {/* Form Dialog */}

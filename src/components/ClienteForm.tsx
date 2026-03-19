@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip, Eye } from 'lucide-react';
+import { AlertCircle, Trash2, Plus, Download, Search, Loader, Paperclip, Eye, UserCheck, UserX } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -34,6 +34,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
 import { CnaeSelect } from '@/components/CnaeSelect';
 import { AtividadeSecundariaSelect } from '@/components/AtividadeSecundariaSelect';
 import { fetchCNPJData, convertCNPJDataToFormData } from '@/lib/cnpj-api';
@@ -81,6 +82,7 @@ export function ClienteForm({
     atividadePrincipalCodigo: editingCliente?.atividadePrincipalCodigo || '',
     atividadePrincipalDescricao: editingCliente?.atividadePrincipalDescricao || '',
     alvaras: editingCliente?.alvaras || [],
+    ativo: editingCliente?.ativo !== false,
   }));
 
   // Comentado - usamos apenas a cidade que vem do CNPJ
@@ -137,6 +139,7 @@ export function ClienteForm({
           atividadePrincipalCodigo: editingCliente.atividadePrincipalCodigo,
           atividadePrincipalDescricao: editingCliente.atividadePrincipalDescricao,
           alvaras: editingCliente.alvaras || [],
+          ativo: editingCliente.ativo !== false,
         });
         loadAtividades(editingCliente.id);
         loadDocumentos(editingCliente.id);
@@ -150,6 +153,7 @@ export function ClienteForm({
           atividadePrincipalCodigo: '',
           atividadePrincipalDescricao: '',
           alvaras: [],
+          ativo: true,
         });
         setAtividades([]);
         setDocumentos([]);
@@ -261,6 +265,7 @@ export function ClienteForm({
       const formDataLimpo = {
         ...formData,
         cnpj: limparCNPJ(formData.cnpj),
+        ativo: formData.ativo !== false,
         // Incluir atividades secundárias da API se existirem (para novo cliente)
         ...(atividadesSecundariasAPI.length > 0 && !editingCliente && {
           atividadesSecundarias: atividadesSecundariasAPI.map(atividade => ({
@@ -434,6 +439,27 @@ export function ClienteForm({
           {/* Aba Dados Básicos */}
           <TabsContent value="dados">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Ativo / Inativo */}
+              <div className="flex items-center justify-between gap-2 rounded-lg border p-3 sm:p-4 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  {formData.ativo !== false ? (
+                    <UserCheck className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <UserX className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <Label htmlFor="ativo" className="text-sm font-medium cursor-pointer">
+                    Cliente ativo
+                  </Label>
+                </div>
+                <Switch
+                  id="ativo"
+                  checked={formData.ativo !== false}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, ativo: checked })
+                  }
+                />
+              </div>
+
               {/* CNPJ */}
               <div className="space-y-2">
                 <Label htmlFor="cnpj" className="text-xs sm:text-sm">CNPJ <span className="text-red-500">*</span></Label>

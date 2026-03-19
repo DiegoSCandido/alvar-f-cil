@@ -8,6 +8,7 @@ export interface Cliente {
   atividadePrincipalCodigo: string;
   atividadePrincipalDescricao: string;
   alvaras: string[];
+  ativo?: boolean;
 }
 
 export interface ClienteFormData {
@@ -19,4 +20,5 @@ export interface ClienteFormData {
   atividadePrincipalCodigo: string;
   atividadePrincipalDescricao: string;
   alvaras: string[];
+  ativo?: boolean;
 }
