@@ -3,7 +3,7 @@ import { Cliente } from '@/types/cliente';
 import { Alvara, AlvaraStatus } from '@/types/alvara';
 import { formatCnpj } from '@/lib/alvara-utils';
 import { formatDateSafe } from '@/lib/alvara-utils';
-import { Trash2, Edit, CheckCircle2, Clock, XCircle, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Trash2, Edit, CheckCircle2, Clock, XCircle, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -60,7 +60,10 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
   const spf = alvara.semPontoFixo;
   const temData = !!alvara.expirationDate;
 
-  const getStatusIcon = (status: AlvaraStatus) => {
+  const getStatusIcon = (status: AlvaraStatus, processingStatus?: string) => {
+    if (processingStatus === 'renovacao') {
+      return <RotateCw className="h-3.5 w-3.5 text-amber-600" title="Em renovação" />;
+    }
     switch (status) {
       case 'valid':
         return <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />;
@@ -103,7 +106,7 @@ function AlvaraCell({ alvara }: { alvara?: Alvara }) {
       {temData ? (
         <div className="flex items-center gap-1">
           <span className="text-xs font-medium whitespace-nowrap">{formatDate(alvara.expirationDate)}</span>
-          <span className="flex-shrink-0">{getStatusIcon(alvara.status)}</span>
+          <span className="flex-shrink-0">{getStatusIcon(alvara.status, alvara.processingStatus)}</span>
         </div>
       ) : temBadges ? null : (
         <span className="text-muted-foreground text-xs">-</span>

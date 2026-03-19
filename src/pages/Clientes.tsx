@@ -30,6 +30,7 @@ const OPCAO_OPTIONS = [
   { value: 'ativo', label: 'Ativo' },
   { value: 'vencendo', label: 'Vencendo' },
   { value: 'vencido', label: 'Vencido' },
+  { value: 'renovacao', label: 'Em Renovação' },
   { value: 'spf', label: 'SPF' },
   { value: 'isento', label: 'Isento' },
   { value: 'sem_status', label: 'Sem alvará' },
@@ -44,9 +45,13 @@ const ClientesPage = () => {
   const [taxasPaga, setTaxasPaga] = useState<TaxaPagaMap>({});
 
   const isFiltroTaxasPaga = (filtroColuna === 'funcionamento' || filtroColuna === 'taxas') && filtroOpcao === 'paga';
+  const isFiltroRenovacao =
+    (filtroColuna === 'sanitario' || filtroColuna === 'bombeiros' || filtroColuna === 'funcionamento') &&
+    filtroOpcao === 'renovacao';
+  const isFiltroClientSide = isFiltroTaxasPaga || isFiltroRenovacao;
   const { clientes, addCliente, updateCliente, deleteCliente } = useClientes({
-    coluna: isFiltroTaxasPaga ? undefined : (filtroColuna || undefined),
-    opcao: isFiltroTaxasPaga ? undefined : (filtroOpcao || undefined),
+    coluna: isFiltroClientSide ? undefined : (filtroColuna || undefined),
+    opcao: isFiltroClientSide ? undefined : (filtroOpcao || undefined),
   });
   const { alvaras } = useAlvaras();
 
@@ -77,9 +82,25 @@ const ClientesPage = () => {
 
   const filteredClientes = useMemo(() => {
     const clientesList = Array.isArray(clientes) ? clientes : [];
+    const alvarasList = Array.isArray(alvaras) ? alvaras : [];
     let base = clientesList;
     if (isFiltroTaxasPaga) {
       base = clientesList.filter((c) => taxasPaga[c.id]?.paga);
+    } else if (isFiltroRenovacao) {
+      const tiposPorColuna: Record<string, string[]> = {
+        sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
+        bombeiros: ['Alvará de Bombeiros'],
+        funcionamento: ['Alvará de Funcionamento'],
+      };
+      const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
+      base = clientesList.filter((c) =>
+        alvarasList.some(
+          (a) =>
+            a.clienteId === c.id &&
+            tipos.includes(a.type) &&
+            a.processingStatus === 'renovacao'
+        )
+      );
     }
     return base.filter((cliente) => {
       if (!cliente || !cliente.razaoSocial) return false;
@@ -89,7 +110,7 @@ const ClientesPage = () => {
       const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
-  }, [clientes, searchTerm, isFiltroTaxasPaga, taxasPaga]);
+  }, [clientes, alvaras, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
 
   const handleAddCliente = async (data: ClienteFormData) => {
     try {
@@ -193,7 +214,22 @@ const ClientesPage = () => {
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {isFiltroTaxasPaga
                   ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
-                  : (Array.isArray(clientes) ? clientes : []).length}
+                  : isFiltroRenovacao
+                    ? (Array.isArray(clientes) ? clientes : []).filter((c) => {
+                        const tiposPorColuna: Record<string, string[]> = {
+                          sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
+                          bombeiros: ['Alvará de Bombeiros'],
+                          funcionamento: ['Alvará de Funcionamento'],
+                        };
+                        const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
+                        return (Array.isArray(alvaras) ? alvaras : []).some(
+                          (a) =>
+                            a.clienteId === c.id &&
+                            tipos.includes(a.type) &&
+                            a.processingStatus === 'renovacao'
+                        );
+                      }).length
+                    : (Array.isArray(clientes) ? clientes : []).length}
               </p>
             </div>
           </div>
@@ -261,7 +297,22 @@ const ClientesPage = () => {
             {filteredClientes.length} de{' '}
             {isFiltroTaxasPaga
               ? (Array.isArray(clientes) ? clientes : []).filter((c) => taxasPaga[c.id]?.paga).length
-              : (Array.isArray(clientes) ? clientes : []).length}{' '}
+              : isFiltroRenovacao
+                ? (Array.isArray(clientes) ? clientes : []).filter((c) => {
+                    const tiposPorColuna: Record<string, string[]> = {
+                      sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
+                      bombeiros: ['Alvará de Bombeiros'],
+                      funcionamento: ['Alvará de Funcionamento'],
+                    };
+                    const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
+                    return (Array.isArray(alvaras) ? alvaras : []).some(
+                      (a) =>
+                        a.clienteId === c.id &&
+                        tipos.includes(a.type) &&
+                        a.processingStatus === 'renovacao'
+                    );
+                  }).length
+                : (Array.isArray(clientes) ? clientes : []).length}{' '}
             clientes
             {filtroAtivo && ` (${COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
           </p>
