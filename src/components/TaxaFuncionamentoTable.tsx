@@ -4,6 +4,7 @@ import { clienteAPI, taxaAPI } from '@/lib/api-client';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ export default function TaxaFuncionamentoTable() {
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filtroCidade, setFiltroCidade] = useState<string>('todas');
   const { toast } = useToast();
   const { openModal } = useClienteModal();
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
@@ -185,13 +187,29 @@ export default function TaxaFuncionamentoTable() {
   const totalEnviadas = Object.values(taxas).filter(t => t.enviada).length;
   const totalPagas = Object.values(taxas).filter(t => t.paga).length;
 
-  // Clientes filtrados por status (cards) e busca (nome/CNPJ/município) - padrão do sistema
+  // Lista única de municípios para o filtro por cidade
+  const municipiosUnicos = useMemo(() => {
+    const set = new Set<string>();
+    clientes.forEach(c => {
+      const m = (c.municipio || '').trim();
+      if (m) set.add(m);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [clientes]);
+
+  // Clientes filtrados por status (cards), busca (nome/CNPJ/município) e filtro por cidade
   const clientesFiltrados = useMemo(() => {
     let lista = clientes;
     if (filtroStatus) {
       lista = lista.filter(cliente => {
         const taxa = taxas[cliente.id];
         return taxa && taxa[filtroStatus];
+      });
+    }
+    if (filtroCidade && filtroCidade !== 'todas') {
+      lista = lista.filter(cliente => {
+        const m = (cliente.municipio || '').trim();
+        return m === filtroCidade;
       });
     }
     if (searchTerm.trim()) {
@@ -204,7 +222,7 @@ export default function TaxaFuncionamentoTable() {
       });
     }
     return lista;
-  }, [clientes, taxas, filtroStatus, searchTerm]);
+  }, [clientes, taxas, filtroStatus, filtroCidade, searchTerm]);
 
   if (loading) return (
     <div className="flex items-center justify-center p-8">
@@ -273,9 +291,9 @@ export default function TaxaFuncionamentoTable() {
         </Card>
       </div>
 
-      {/* Busca por nome de empresa - padrão do sistema */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Busca e filtro por cidade */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar cliente..."
@@ -283,6 +301,19 @@ export default function TaxaFuncionamentoTable() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 text-sm sm:text-base"
           />
+        </div>
+        <div className="w-full sm:w-48">
+          <Select value={filtroCidade} onValueChange={setFiltroCidade}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as cidades</SelectItem>
+              {municipiosUnicos.map(mun => (
+                <SelectItem key={mun} value={mun}>{mun}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -339,6 +370,9 @@ export default function TaxaFuncionamentoTable() {
                   {cliente.razaoSocial}
                 </p>
                 <p className="text-xs text-muted-foreground font-mono">{cliente.cnpj}</p>
+                {cliente.municipio && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{cliente.municipio}</p>
+                )}
               </div>
               <div className="flex items-center gap-4 sm:gap-6">
                 <label className="flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
@@ -374,6 +408,7 @@ export default function TaxaFuncionamentoTable() {
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold text-sm min-w-[200px]">Cliente</TableHead>
                 <TableHead className="font-semibold text-sm whitespace-nowrap">CNPJ</TableHead>
+                <TableHead className="font-semibold text-sm min-w-[120px]">Município</TableHead>
                 <TableHead className="font-semibold text-sm text-center">Gerada</TableHead>
                 <TableHead className="font-semibold text-sm text-center">Enviada</TableHead>
                 <TableHead className="font-semibold text-sm text-center">Paga</TableHead>
@@ -383,7 +418,7 @@ export default function TaxaFuncionamentoTable() {
             <TableBody>
               {clientesFiltrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     {filtroStatus
                       ? 'Nenhum cliente encontrado com esse filtro.'
                       : 'Nenhum cliente cadastrado.'}
@@ -406,6 +441,7 @@ export default function TaxaFuncionamentoTable() {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground whitespace-nowrap">{cliente.cnpj}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{cliente.municipio || '-'}</TableCell>
                     <TableCell className="text-center">
                       <Checkbox checked={!!taxa.gerada} onCheckedChange={checked => handleCheckbox(cliente.id, 'gerada', !!checked)} />
                     </TableCell>

@@ -403,8 +403,11 @@ export function AlvaraForm({
     try {
       setIsLoading(true);
       setError(null);
+      const alvaraType = editingAlvara?.type || formData.type;
       const dataToSubmit = {
         ...formData,
+        // taxasPorAno só é relevante para Alvará de Funcionamento; omitir para outros tipos evita erro de validação
+        ...(alvaraType !== "Alvará de Funcionamento" && { taxasPorAno: undefined }),
       };
       await onSubmit(dataToSubmit);
       setFormData((prev) => ({ ...prev, notes: "" }));
@@ -450,11 +453,13 @@ export function AlvaraForm({
           return;
         }
       }
+      const alvaraType = editingAlvara?.type || formData.type;
       const dataToSubmit: AlvaraFormData = {
         ...formData,
-        type: editingAlvara?.type || formData.type,
+        type: alvaraType,
         expirationDate: parsedRenewalExpirationDate || undefined,
         processingStatus: "lançado" as AlvaraProcessingStatus,
+        ...(alvaraType !== "Alvará de Funcionamento" && { taxasPorAno: undefined }),
       };
       await onSubmit(dataToSubmit);
       // Upload documento apenas se houver arquivo (não obrigatório para isento/sem ponto fixo)
@@ -558,11 +563,14 @@ export function AlvaraForm({
       }
 
       // Em renovação, o tipo já está preenchido do alvará original
+      const alvaraType = editingAlvara?.type || formData.type;
       const dataToSubmit = {
         ...formData,
         notes: notasAtualizadas,
-        type: editingAlvara?.type || formData.type,
+        type: alvaraType,
         processingStatus: "renovacao" as AlvaraProcessingStatus,
+        // taxasPorAno só é relevante para Alvará de Funcionamento; omitir para outros tipos evita erro de validação
+        ...(alvaraType !== "Alvará de Funcionamento" && { taxasPorAno: undefined }),
       };
       await onSubmit(dataToSubmit);
 
