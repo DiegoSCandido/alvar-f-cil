@@ -1,33 +1,33 @@
-import { Alvara, AlvaraStatus } from '@/types/alvara';
-import { differenceInDays, isAfter, isBefore, addDays } from 'date-fns';
+import { Alvara, AlvaraStatus } from "@/types/alvara";
+import { differenceInDays, isAfter, isBefore, addDays } from "date-fns";
 
 export function calculateAlvaraStatus(alvara: Alvara): AlvaraStatus {
   const today = new Date();
-  
+
   // If no issue date, it's still pending
   if (!alvara.issueDate) {
-    return 'pending';
+    return "pending";
   }
-  
+
   // If no expiration date, consider it valid
   if (!alvara.expirationDate) {
-    return 'valid';
+    return "valid";
   }
-  
+
   const expirationDate = new Date(alvara.expirationDate);
-  
+
   // Check if expired
   if (isBefore(expirationDate, today)) {
-    return 'expired';
+    return "expired";
   }
-  
+
   // Check if expiring within 30 days
   const thirtyDaysFromNow = addDays(today, 30);
   if (isBefore(expirationDate, thirtyDaysFromNow)) {
-    return 'expiring';
+    return "expiring";
   }
-  
-  return 'valid';
+
+  return "valid";
 }
 
 export function getDaysUntilExpiration(expirationDate?: Date): number | null {
@@ -37,19 +37,20 @@ export function getDaysUntilExpiration(expirationDate?: Date): number | null {
 
 export function getStatusLabel(status: AlvaraStatus): string {
   const labels: Record<AlvaraStatus, string> = {
-    pending: 'Pendente',
-    valid: 'Ativo',
-    expiring: 'Vencendo',
-    expired: 'Vencido',
+    pending: "Pendente",
+    valid: "Ativo",
+    expiring: "Vencendo",
+    expired: "Vencido",
   };
   return labels[status];
 }
 
-export function formatCnpj(cnpj: string): string {
-  const cleaned = cnpj.replace(/\D/g, '');
+export function formatCnpj(cnpj?: string | null): string {
+  if (!cnpj) return "-";
+  const cleaned = cnpj.replace(/\D/g, "");
   return cleaned.replace(
     /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    '$1.$2.$3/$4-$5'
+    "$1.$2.$3/$4-$5",
   );
 }
 
@@ -62,46 +63,46 @@ export function generateId(): string {
  * Extrai apenas a parte da data (dia, mês, ano) sem considerar hora/timezone
  */
 export function formatDateSafe(date?: Date | string | null): string {
-  if (!date) return '-';
-  
+  if (!date) return "-";
+
   try {
     let year: number;
     let month: number;
     let day: number;
-    
-    if (typeof date === 'string') {
+
+    if (typeof date === "string") {
       // Se for ISO string ou formato YYYY-MM-DD, extrai diretamente
-      if (date.includes('T')) {
+      if (date.includes("T")) {
         // ISO string: "2026-03-31T00:00:00.000Z" -> extrai "2026-03-31"
-        const datePart = date.split('T')[0];
-        const parts = datePart.split('-').map(Number);
+        const datePart = date.split("T")[0];
+        const parts = datePart.split("-").map(Number);
         if (parts.length === 3) {
           year = parts[0];
           month = parts[1];
           day = parts[2];
         } else {
-          return '-';
+          return "-";
         }
-      } else if (date.includes('-') && date.match(/^\d{4}-\d{2}-\d{2}/)) {
+      } else if (date.includes("-") && date.match(/^\d{4}-\d{2}-\d{2}/)) {
         // Formato YYYY-MM-DD
-        const parts = date.split('-').map(Number);
+        const parts = date.split("-").map(Number);
         if (parts.length === 3) {
           year = parts[0];
           month = parts[1];
           day = parts[2];
         } else {
-          return '-';
+          return "-";
         }
       } else {
         // Tenta criar como Date e extrair
         const dateObj = new Date(date);
         if (isNaN(dateObj.getTime())) {
-          return '-';
+          return "-";
         }
         // Extrai da ISO string para evitar timezone
         const isoString = dateObj.toISOString();
-        const datePart = isoString.split('T')[0];
-        const parts = datePart.split('-').map(Number);
+        const datePart = isoString.split("T")[0];
+        const parts = datePart.split("-").map(Number);
         year = parts[0];
         month = parts[1];
         day = parts[2];
@@ -110,21 +111,21 @@ export function formatDateSafe(date?: Date | string | null): string {
       // É um objeto Date
       // Extrai da ISO string para evitar problemas de timezone
       const isoString = date.toISOString();
-      const datePart = isoString.split('T')[0];
-      const parts = datePart.split('-').map(Number);
+      const datePart = isoString.split("T")[0];
+      const parts = datePart.split("-").map(Number);
       year = parts[0];
       month = parts[1];
       day = parts[2];
     }
-    
+
     // Valida os valores
     if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
-      return '-';
+      return "-";
     }
-    
-    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
   } catch (error) {
-    console.error('Erro ao formatar data:', error, date);
-    return '-';
+    console.error("Erro ao formatar data:", error, date);
+    return "-";
   }
 }

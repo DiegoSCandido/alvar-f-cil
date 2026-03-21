@@ -1,16 +1,21 @@
-export type AlvaraStatus = 'pending' | 'valid' | 'expiring' | 'expired';
-export type AlvaraProcessingStatus = 'lançado' | 'aguardando_cliente' | 'aguardando_orgao' | 'renovacao';
+export type AlvaraStatus = "pending" | "valid" | "expiring" | "expired";
+export type AlvaraProcessingStatus =
+  | "lançado"
+  | "aguardando_cliente"
+  | "aguardando_orgao"
+  | "renovacao";
 
 export const ALVARA_TYPES = [
-  'Alvará de Funcionamento',
-  'Alvará de Bombeiros',
-  'Alvará Sanitário',
-  'Alvará Polícia Civil',
-  'Dispensa de Alvará Sanitário',
+  "Alvará de Funcionamento",
+  "Alvará de Bombeiros",
+  "Alvará Sanitário",
+  "Laudo Acústico",
+  "Licenciamento Ambiental",
+  "Alvará Polícia Civil",
+  "Dispensa de Alvará Sanitário",
 ] as const;
 
-export type AlvaraType = typeof ALVARA_TYPES[number];
-
+export type AlvaraType = (typeof ALVARA_TYPES)[number];
 
 export interface TaxaAno {
   ano: number;
@@ -35,6 +40,8 @@ export interface Alvara {
   taxasPorAno?: TaxaAno[];
   isento?: boolean; // Indica se o alvará é isento (apenas para Funcionamento, Sanitário e Bombeiros)
   semPontoFixo?: boolean; // Indica se o alvará é sem ponto fixo (apenas para Funcionamento, Sanitário e Bombeiros)
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface AlvaraFormData {

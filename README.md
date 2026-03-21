@@ -1,25 +1,19 @@
 # O2Controle Frontend
 
-Frontend web application for managing clients, business permits (Alvarás),
-and related documents for an accounting office.
+Frontend web application for managing clients, business permits (Alvaras), and related documents for an accounting office.
 
-This application consumes the **O2Controle Backend API**.
+This application consumes the O2Controle Backend API.
 
----
+## Overview
 
-## 🚀 Overview
+The O2Controle Frontend provides an interface for:
 
-The O2Controle Frontend provides an intuitive interface for:
 - Client management
-- Alvará (permit) tracking
+- Alvara tracking
 - Document upload and download
 - Status monitoring
 
-This project is intended for **internal use**.
-
----
-
-## 🧩 Tech Stack
+## Tech Stack
 
 - React 18
 - TypeScript
@@ -27,94 +21,79 @@ This project is intended for **internal use**.
 - Tailwind CSS
 - shadcn/ui
 
----
-
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 18+
 - npm or bun
-- O2Controle Backend running
 
----
-
-## ⚙️ Installation
+## Installation
 
 ```bash
 npm install
-# or
+```
+
+or
+
+```bash
 bun install
+```
 
----
+## Environment Variables
 
-Environment Variables
+Create a local environment file based on `.env.example`.
 
-Create a .env file based on .env.example:
+Windows PowerShell:
 
-cp .env.example .env
-
+```powershell
+Copy-Item .env.example .env.local
+```
 
 Main variable:
 
-VITE_API_URL=http://localhost:3000
+```env
+VITE_API_URL=https://o2controle-backend.onrender.com/api
+```
 
+`VITE_API_URL` must contain the full API base, including `/api`, because the frontend appends routes such as `/clientes`, `/alvaras`, and `/auth/login` directly to this value.
 
-This variable defines the base URL of the backend API.
+## Development
 
-🧪 Development
+```bash
 npm run dev
+```
 
+The application will be available at `http://localhost:8080`.
 
-The application will be available at:
+## API Integration
 
-http://localhost:8080
-
-📁 Project Structure
-src/
-├── pages/          # Application pages
-├── components/     # Reusable UI components
-├── hooks/          # Custom React hooks
-├── lib/            # API client and utilities
-├── types/          # TypeScript types
-├── App.tsx         # Main component
-└── main.tsx        # Application entry point
-
-🔌 API Integration
-
-All API requests use the base URL defined in VITE_API_URL.
+All API requests use the base URL defined in `VITE_API_URL`.
 
 Example:
 
-fetch(`${import.meta.env.VITE_API_URL}/api/clientes`)
+```ts
+fetch(`${import.meta.env.VITE_API_URL}/clientes`);
+```
 
+The API client is centralized in `src/lib/api-client.ts`.
 
-The API client is centralized inside the src/lib directory.
+## Build
 
-🏗️ Build
+```bash
 npm run build
+```
 
+The production build will be generated in the `dist/` directory.
 
-The production build will be generated in the dist/ directory.
+## Deployment
 
-🚀 Deployment
+If you deploy the frontend, configure the same environment variable in the hosting platform:
 
-Recommended platform:
+```env
+VITE_API_URL=https://o2controle-backend.onrender.com/api
+```
 
-Vercel
+## Notes
 
-Deployment steps:
-
-Connect this repository to Vercel
-
-Configure environment variables:
-
-VITE_API_URL
-
-Deploy
-
-⚠️ Notes
-
-Do not commit .env files
-
-Ensure the backend API is running before starting the frontend
-
-This project is intended for internal use only
+- Do not commit environment files other than `.env.example`
+- Restart the Vite dev server after changing environment variables
+- The backend health check is available at `https://o2controle-backend.onrender.com/api/health`
