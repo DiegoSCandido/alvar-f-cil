@@ -95,9 +95,15 @@ const ClientesPage = () => {
     return { ativos, inativos };
   }, [clientes]);
 
+  // Ocultar alvarás de clientes inativos
+  const alvarasVisiveis = useMemo(() => {
+    const inactiveIds = new Set(clientesPorTab.inativos.map((c) => c.id));
+    return (Array.isArray(alvaras) ? alvaras : []).filter((a) => !inactiveIds.has(a.clienteId));
+  }, [alvaras, clientesPorTab.inativos]);
+
   const filteredClientes = useMemo(() => {
     const clientesList = activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos;
-    const alvarasList = Array.isArray(alvaras) ? alvaras : [];
+    const alvarasList = alvarasVisiveis;
     let base = clientesList;
     if (isFiltroTaxasPaga) {
       base = clientesList.filter((c) => taxasPaga[c.id]?.paga);
@@ -125,7 +131,7 @@ const ClientesPage = () => {
       const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
-  }, [activeTab, clientesPorTab, alvaras, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
+  }, [activeTab, clientesPorTab, alvarasVisiveis, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
 
   const handleAddCliente = async (data: ClienteFormData) => {
     try {
@@ -364,7 +370,7 @@ const ClientesPage = () => {
         {/* Table */}
         <ClienteTable
           clientes={filteredClientes}
-          alvaras={alvaras}
+          alvaras={alvarasVisiveis}
           taxasPaga={taxasPaga}
           onDelete={handleDelete}
           onEdit={handleEdit}

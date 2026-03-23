@@ -11,6 +11,12 @@ const Dashboard = () => {
   const { clientes, isLoading: isLoadingClientes } = useClientes();
   const { alvaras, isLoading: isLoadingAlvaras } = useAlvaras();
 
+  // Ocultar alvarás de clientes inativos na contagem
+  const alvarasVisiveis = (alvaras || []).filter((a) => {
+    const cliente = clientes.find((c) => c.id === a.clienteId);
+    return !cliente || cliente.ativo !== false;
+  });
+
   return (
     <div className="min-h-screen bg-background">
 
@@ -47,10 +53,10 @@ const Dashboard = () => {
             onClick={() => navigate('/clientes')}
           />
 
-          {/* Total de Alvarás */}
+          {/* Total de Alvarás (apenas de clientes ativos) */}
           <StatCard
             title="Total de Alvarás"
-            value={alvaras.length}
+            value={alvarasVisiveis.length}
             isLoading={isLoadingAlvaras}
             description="Alvarás em registro"
             variant="default"

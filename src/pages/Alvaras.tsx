@@ -58,8 +58,15 @@ import o2conLogo from '@/assets/logo-o2con.png';
 
 const AlvarasPage = () => {
   const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara, refetch } = useAlvaras();
-  const { clientes, getClienteById } = useClientes();
+  const { clientes, getClienteById, refetch: refetchClientes } = useClientes();
   const { toast } = useToast();
+
+  // Atualizar clientes quando modal salva (ex.: inativar) para refletir alvaras ocultos
+  useEffect(() => {
+    const handler = () => refetchClientes();
+    window.addEventListener('clientes-updated', handler);
+    return () => window.removeEventListener('clientes-updated', handler);
+  }, [refetchClientes]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isIntelligentUploadOpen, setIsIntelligentUploadOpen] = useState(false);
   const [editingAlvara, setEditingAlvara] = useState<Alvara | null>(null);
@@ -84,14 +91,21 @@ const AlvarasPage = () => {
   const finalizeFileInputRef = useRef<HTMLInputElement>(null);
   const { uploadAlvaraDocument } = useAlvaraUpload();
 
-  // Separar alvarás em categorias
-  // Em funcionamento: todos os alvarás emitidos (com issueDate), incluindo os em renovação
+  // Ocultar alvarás de clientes inativos
+  const alvarasVisiveis = useMemo(() => {
+    const inactiveIds = new Set(
+      (clientes || []).filter((c) => c.ativo === false).map((c) => c.id)
+    );
+    return (alvaras || []).filter((a) => !inactiveIds.has(a.clienteId));
+  }, [alvaras, clientes]);
+
+  // Separar alvarás em categorias (apenas de clientes ativos)
   const { novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao } = useMemo(() => {
-    const novos = alvaras.filter((a) => !a.issueDate && a.processingStatus !== 'renovacao');
-    const emFuncionamento = alvaras.filter((a) => a.issueDate);
-    const renovacao = alvaras.filter((a) => a.processingStatus === 'renovacao');
+    const novos = alvarasVisiveis.filter((a) => !a.issueDate && a.processingStatus !== 'renovacao');
+    const emFuncionamento = alvarasVisiveis.filter((a) => a.issueDate);
+    const renovacao = alvarasVisiveis.filter((a) => a.processingStatus === 'renovacao');
     return { novosAlvaras: novos, alvarasEmFuncionamento: emFuncionamento, alvarasRenovacao: renovacao };
-  }, [alvaras]);
+  }, [alvarasVisiveis]);
 
   // Estatísticas para novos alvarás (por status de processamento)
   const statsNovos = useMemo(() => {
@@ -739,7 +753,7 @@ const AlvarasPage = () => {
         }}
         onSubmit={handleAddAlvara}
         editingAlvara={editingAlvara}
-        clientes={clientes}
+        clientes={(clientes || []).filter((c) => c.ativo !== false)}
         isRenewing={isRenewing}
       />
       {/* Dialog de Finalização */}
