@@ -29,39 +29,15 @@ const AppContent = () => {
   const isLoginPage = location.pathname === "/";
   const isPublicPage = isLoginPage;
 
-  // Enquanto está inicializando, mostra loading apenas se não estiver na página de login
-  // Na página de login, permite renderizar normalmente para evitar loops
-  if (isInitializing && !isPublicPage) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redireciona para login se não autenticado em páginas protegidas
-  // Mas só depois que a inicialização terminar
-  if (!isInitializing && !isAuthenticated && !isPublicPage) {
-    return <Navigate to="/" replace />;
-  }
-
+  // Hooks DEVEM ser chamados antes de qualquer return condicional (Rules of Hooks)
   // Sincroniza o estado inicial da sidebar colapsada
   useEffect(() => {
     if (!isPublicPage) {
       const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
       const mainContent = document.querySelector('[data-main-content]');
       if (mainContent) {
-        // Remove ambas as classes primeiro
         mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
-        // Adiciona a classe correta
-        if (isCollapsed) {
-          mainContent.classList.add('lg:ml-16');
-        } else {
-          mainContent.classList.add('lg:ml-56');
-        }
+        mainContent.classList.add(isCollapsed ? 'lg:ml-16' : 'lg:ml-56');
       }
     }
   }, [isPublicPage]);
@@ -74,18 +50,11 @@ const AppContent = () => {
         const mainContent = document.querySelector('[data-main-content]');
         if (mainContent) {
           mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
-          if (isCollapsed) {
-            mainContent.classList.add('lg:ml-16');
-          } else {
-            mainContent.classList.add('lg:ml-56');
-          }
+          mainContent.classList.add(isCollapsed ? 'lg:ml-16' : 'lg:ml-56');
         }
       };
 
-      // Escuta mudanças no localStorage (de outras abas)
       window.addEventListener('storage', handleStorageChange);
-      
-      // Escuta eventos customizados (da mesma aba)
       window.addEventListener('sidebar-toggle', handleStorageChange);
 
       return () => {
@@ -94,6 +63,23 @@ const AppContent = () => {
       };
     }
   }, [isPublicPage]);
+
+  // Enquanto está inicializando, mostra loading apenas se não estiver na página de login
+  if (isInitializing && !isPublicPage) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redireciona para login se não autenticado em páginas protegidas
+  if (!isInitializing && !isAuthenticated && !isPublicPage) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
@@ -132,7 +118,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <ClienteModalProvider>
               <AppContent />
               <ClienteModalGlobal />

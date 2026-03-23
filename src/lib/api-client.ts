@@ -176,8 +176,11 @@ export const clienteAPI = {
   },
   get: (id: string) => apiCall(`/clientes/${id}`),
   create: (data: any) => apiCall("/clientes", { method: "POST", body: data }),
-  update: (id: string, data: any) =>
-    apiCall(`/clientes/${id}`, { method: "PUT", body: data }),
+  update: (id: string, data: any) => {
+    // Garante que 'ativo' seja enviado explicitamente (inativar cliente)
+    const payload = { ...data, ativo: data.ativo !== false };
+    return apiCall(`/clientes/${id}`, { method: "PUT", body: payload });
+  },
   delete: (id: string) => apiCall(`/clientes/${id}`, { method: "DELETE" }),
   getByCnpj: (cnpj: string) => apiCall(`/clientes/search/cnpj/${cnpj}`),
 };

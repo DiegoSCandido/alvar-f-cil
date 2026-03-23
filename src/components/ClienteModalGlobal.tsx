@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export function ClienteModalGlobal() {
   const { isAuthenticated } = useAuth();
-  const { isOpen, editingCliente, closeModal } = useClienteModal();
+  const { isOpen, editingCliente, closeModal, notifyClienteSaved } = useClienteModal();
   const { updateCliente, refetch } = useClientes();
   const { toast } = useToast();
 
@@ -26,8 +26,9 @@ export function ClienteModalGlobal() {
         description: 'As alterações foram salvas com sucesso.',
       });
       closeModal();
-      // Atualiza a lista de clientes para refletir as mudanças
-      refetch();
+      // Dispara evento para a página de clientes atualizar a lista (ex.: ativos/inativos)
+      notifyClienteSaved();
+      window.dispatchEvent(new CustomEvent('clientes-updated'));
     } catch (error) {
       toast({
         title: 'Erro',

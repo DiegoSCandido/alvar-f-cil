@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { clienteAPI } from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,15 +9,7 @@ export function useClientes(options?: { coluna?: string; opcao?: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadClientes();
-    } else {
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, options?.coluna, options?.opcao]);
-
-  const loadClientes = async () => {
+  const loadClientes = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -33,7 +25,15 @@ export function useClientes(options?: { coluna?: string; opcao?: string }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [options?.coluna, options?.opcao]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadClientes();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, loadClientes]);
 
   const addCliente = async (data: ClienteFormData) => {
     try {

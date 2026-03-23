@@ -51,11 +51,17 @@ const ClientesPage = () => {
     (filtroColuna === 'sanitario' || filtroColuna === 'bombeiros' || filtroColuna === 'funcionamento') &&
     filtroOpcao === 'renovacao';
   const isFiltroClientSide = isFiltroTaxasPaga || isFiltroRenovacao;
-  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes({
+  const { clientes, addCliente, updateCliente, deleteCliente, refetch } = useClientes({
     coluna: isFiltroClientSide ? undefined : (filtroColuna || undefined),
     opcao: isFiltroClientSide ? undefined : (filtroOpcao || undefined),
   });
   const { alvaras } = useAlvaras();
+  // Atualiza a lista quando o modal global salva (ex.: inativar cliente)
+  useEffect(() => {
+    const handler = () => refetch();
+    window.addEventListener('clientes-updated', handler);
+    return () => window.removeEventListener('clientes-updated', handler);
+  }, [refetch]);
 
   useEffect(() => {
     async function loadTaxas() {

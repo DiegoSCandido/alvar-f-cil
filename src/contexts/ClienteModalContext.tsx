@@ -6,6 +6,9 @@ interface ClienteModalContextType {
   closeModal: () => void;
   isOpen: boolean;
   editingCliente: Cliente | null;
+  /** Dispara refetch da lista de clientes quando o modal salva (ex.: ao inativar) */
+  notifyClienteSaved: () => void;
+  refreshTrigger: number;
 }
 
 const ClienteModalContext = createContext<ClienteModalContextType | undefined>(undefined);
@@ -13,6 +16,7 @@ const ClienteModalContext = createContext<ClienteModalContextType | undefined>(u
 export const ClienteModalProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const openModal = (cliente: Cliente) => {
     setEditingCliente(cliente);
@@ -24,6 +28,10 @@ export const ClienteModalProvider = ({ children }: { children: ReactNode }) => {
     setEditingCliente(null);
   };
 
+  const notifyClienteSaved = () => {
+    setRefreshTrigger((p) => p + 1);
+  };
+
   return (
     <ClienteModalContext.Provider
       value={{
@@ -31,6 +39,8 @@ export const ClienteModalProvider = ({ children }: { children: ReactNode }) => {
         closeModal,
         isOpen,
         editingCliente,
+        notifyClienteSaved,
+        refreshTrigger,
       }}
     >
       {children}
