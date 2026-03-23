@@ -26,7 +26,7 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
 
       {/* Header (same as Clientes/Alvarás pages, no action button) */}
       <header className="bg-card border-b sticky top-0 xl:top-0 z-10 xl:mt-0 mt-14 sm:mt-16">

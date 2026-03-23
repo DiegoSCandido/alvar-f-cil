@@ -18,6 +18,7 @@ import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { ClienteModalProvider } from "./contexts/ClienteModalContext";
 import { ClienteModalGlobal } from "./components/ClienteModalGlobal";
 import ErrorBoundary from "./components/ErrorBoundary";
+import bgGradient from "./assets/bg-gradient.png";
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -95,7 +96,16 @@ const AppContent = () => {
       {/* Sidebar - mobile: top, desktop: left - hidden on login page */}
       {!isPublicPage && <Sidebar />}
       {/* Main content - aplica margin-left no desktop/tablet somente quando não for página pública (login) */}
-      <div className={`flex-1 w-full ${!isPublicPage ? "lg:ml-56" : ""}`} data-main-content>
+      <div className={`flex-1 w-full relative min-h-screen bg-background ${!isPublicPage ? "lg:ml-56" : ""}`} data-main-content>
+        {/* Fundo em tela cheia, fixo (não rola com o conteúdo) - apenas em páginas autenticadas */}
+        {!isPublicPage && (
+          <div
+            className="fixed inset-0 opacity-10 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+            style={{ backgroundImage: `url(${bgGradient})` }}
+            aria-hidden
+          />
+        )}
+        <div className="relative z-[1]">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -106,6 +116,7 @@ const AppContent = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </div>
       </div>
     </div>
   );
