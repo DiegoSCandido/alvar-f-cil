@@ -141,6 +141,8 @@ const ClientesPage = () => {
           title: 'Cliente atualizado',
           description: 'As alterações foram salvas com sucesso.',
         });
+        // Dispara evento para atualizar listas em outras páginas (ex.: Alvaras, Dashboard)
+        window.dispatchEvent(new CustomEvent('clientes-updated'));
       } else {
         await addCliente(data);
         toast({

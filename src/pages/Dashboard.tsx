@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientes } from "@/hooks/useClientes";
 import { useAlvaras } from "@/hooks/useAlvaras";
@@ -8,8 +9,15 @@ import o2conLogo from '@/assets/logo-o2con.png';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { clientes, isLoading: isLoadingClientes } = useClientes();
+  const { clientes, isLoading: isLoadingClientes, refetch: refetchClientes } = useClientes();
   const { alvaras, isLoading: isLoadingAlvaras } = useAlvaras();
+
+  // Atualizar clientes em tempo real quando inativar/ativar (para refletir contagem de alvarás)
+  useEffect(() => {
+    const handler = () => refetchClientes();
+    window.addEventListener('clientes-updated', handler);
+    return () => window.removeEventListener('clientes-updated', handler);
+  }, [refetchClientes]);
 
   // Ocultar alvarás de clientes inativos na contagem
   const alvarasVisiveis = (alvaras || []).filter((a) => {
