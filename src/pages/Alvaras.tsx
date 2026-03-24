@@ -26,7 +26,6 @@ const SPECIAL_STATUS_LABELS: Record<string, string> = {
   semPontoFixo: 'SPF',
 };
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -42,7 +41,6 @@ import {
 } from '@/components/ui/tabs';
 import {
   Plus,
-  Search,
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -51,10 +49,22 @@ import {
   Building2,
   Sparkles,
   RotateCw,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/logo-o2con.png';
+import { AlvarasFiltersModal } from '@/components/AlvarasFiltersModal';
+import type { AlvarasFilterSnapshot } from '@/lib/alvaras-filter-templates';
+import { Badge } from '@/components/ui/badge';
 
+const DEFAULT_FILTERS_INITIAL: AlvarasFilterSnapshot = {
+  activeTab: 'funcionamento',
+  searchTerm: '',
+  statusFilter: 'all',
+  processingFilter: 'all',
+  typeFilter: [],
+  statusColumnFilter: [],
+};
 
 const AlvarasPage = () => {
   const { alvaras, stats, addAlvara, updateAlvara, deleteAlvara, refetch } = useAlvaras();
@@ -75,6 +85,8 @@ const AlvarasPage = () => {
   const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<string[]>([]); // Filtro por tipo de alvará
   const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]); // Filtro por status na coluna (inclui isento e SPF)
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filtersInitial, setFiltersInitial] = useState<AlvarasFilterSnapshot>(DEFAULT_FILTERS_INITIAL);
 
   // Para destacar o StatCard ativo em funcionamento
   const handleStatCardClick = (status: AlvaraStatus | 'all') => {
@@ -266,6 +278,37 @@ const AlvarasPage = () => {
     
     return filtered;
   }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilter, statusFilter, typeFilter, statusColumnFilter]);
+
+  const filterBadgeCount = useMemo(() => {
+    let n = 0;
+    if (searchTerm.trim()) n += 1;
+    if (typeFilter.length > 0) n += 1;
+    if (statusColumnFilter.length > 0) n += 1;
+    if (activeTab === 'novos' && processingFilter !== 'all') n += 1;
+    if (activeTab === 'funcionamento' && statusFilter !== 'all') n += 1;
+    return n;
+  }, [searchTerm, typeFilter, statusColumnFilter, activeTab, processingFilter, statusFilter]);
+
+  const openFiltersModal = () => {
+    setFiltersInitial({
+      activeTab,
+      searchTerm,
+      statusFilter,
+      processingFilter,
+      typeFilter: [...typeFilter],
+      statusColumnFilter: [...statusColumnFilter],
+    });
+    setFilterModalOpen(true);
+  };
+
+  const applyFiltersSnapshot = (s: AlvarasFilterSnapshot) => {
+    setActiveTab(s.activeTab);
+    setSearchTerm(s.searchTerm);
+    setStatusFilter(s.statusFilter);
+    setProcessingFilter(s.processingFilter);
+    setTypeFilter([...s.typeFilter]);
+    setStatusColumnFilter([...s.statusColumnFilter]);
+  };
 
   const handleAddAlvara = async (data: AlvaraFormData) => {
     try {
@@ -533,6 +576,40 @@ const AlvarasPage = () => {
             </TabsTrigger>
           </TabsList>
 
+          <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 rounded-full border-border/80 bg-background"
+              onClick={openFiltersModal}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
+              {filterBadgeCount > 0 && (
+                <Badge variant="secondary" className="rounded-full px-2">
+                  {filterBadgeCount}
+                </Badge>
+              )}
+            </Button>
+            {filterBadgeCount > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => {
+                  setSearchTerm('');
+                  setTypeFilter([]);
+                  setStatusColumnFilter([]);
+                  setProcessingFilter('all');
+                  setStatusFilter('all');
+                }}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+
           {/* Tab: Novos Alvarás */}
           <TabsContent value="novos" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
             {/* Cards de filtro para Novos Alvarás */}
@@ -567,33 +644,11 @@ const AlvarasPage = () => {
               />
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col gap-2 sm:gap-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar alvará..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-sm sm:text-base"
-                />
-              </div>
-            </div>
-
             {/* Results info */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
               <p>
                 {filteredAlvaras.length} de {novosAlvaras.length} alvarás em abertura
               </p>
-              {statusFilter !== 'all' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setStatusFilter('all')}
-                >
-                  Limpar filtro
-                </Button>
-              )}
             </div>
 
             {/* Table */}
@@ -646,33 +701,11 @@ const AlvarasPage = () => {
               />
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col gap-2 sm:gap-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar alvará..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-sm sm:text-base"
-                />
-              </div>
-            </div>
-
             {/* Results info */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
               <p>
                 {filteredAlvaras.length} de {alvarasEmFuncionamento.length} alvarás em funcionamento
               </p>
-              {statusFilter !== 'all' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setStatusFilter('all')}
-                >
-                  Limpar filtro
-                </Button>
-              )}
             </div>
 
             {/* Table */}
@@ -701,19 +734,6 @@ const AlvarasPage = () => {
                 icon={RotateCw}
                 variant="default"
               />
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col gap-2 sm:gap-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar alvará em renovação..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-sm sm:text-base"
-                />
-              </div>
             </div>
 
             {/* Results info */}
@@ -842,6 +862,16 @@ const AlvarasPage = () => {
             description: 'O alvará foi criado automaticamente a partir do PDF.',
           });
         }}
+      />
+
+      <AlvarasFiltersModal
+        open={filterModalOpen}
+        onOpenChange={setFilterModalOpen}
+        initial={filtersInitial}
+        onApply={applyFiltersSnapshot}
+        availableTypes={ALVARA_TYPES}
+        statusColumnOptions={[...STATUS_OPTIONS, ...SPECIAL_STATUS_OPTIONS]}
+        statusColumnLabels={{ ...STATUS_LABELS, ...SPECIAL_STATUS_LABELS }}
       />
     </div>
   );
