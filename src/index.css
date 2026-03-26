@@ -1,63 +1,65 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* Paleta alinhada ao Hub O2con (azul + magenta) */
   :root {
-    /* O2con Brand Colors */
-    --background: 210 20% 98%;
-    --foreground: 220 25% 15%;
+    --background: 210 25% 97%;
+    --foreground: 220 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 15%;
+    --card-foreground: 220 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 15%;
+    --popover-foreground: 220 30% 15%;
 
-    /* Primary: O2con Blue #2B3F8E */
-    --primary: 228 54% 36%;
+    --primary: 207 100% 33%;
     --primary-foreground: 0 0% 100%;
+    --primary-light: 207 85% 55%;
+    --primary-glow: 207 100% 65%;
 
-    /* Secondary: O2con Purple #9B2FAA */
-    --secondary: 293 57% 43%;
+    --secondary: 311 69% 34%;
     --secondary-foreground: 0 0% 100%;
+    --secondary-light: 311 65% 50%;
+    --secondary-glow: 311 70% 60%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 220 15% 45%;
 
-    /* Accent uses the purple */
-    --accent: 293 50% 95%;
-    --accent-foreground: 293 57% 43%;
+    --accent: 311 60% 96%;
+    --accent-foreground: 311 69% 34%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 228 54% 36%;
+    --border: 210 25% 90%;
+    --input: 210 25% 92%;
+    --ring: 207 100% 45%;
 
     --radius: 0.75rem;
 
-    /* Custom status colors */
+    /* Status (específico alvarás) */
     --status-valid: 145 70% 40%;
     --status-valid-bg: 145 70% 95%;
     --status-expiring: 40 90% 50%;
     --status-expiring-bg: 40 90% 95%;
     --status-expired: 0 75% 55%;
     --status-expired-bg: 0 75% 95%;
-    --status-pending: 228 54% 45%;
-    --status-pending-bg: 228 50% 95%;
+    --status-pending: 207 85% 45%;
+    --status-pending-bg: 207 55% 96%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 228 54% 36%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 293 50% 95%;
-    --sidebar-accent-foreground: 293 57% 43%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 228 54% 45%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 30% 15%;
+    --sidebar-primary: 207 100% 33%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 311 60% 96%;
+    --sidebar-accent-foreground: 311 69% 34%;
+    --sidebar-border: 210 25% 92%;
+    --sidebar-ring: 207 100% 45%;
+    --sidebar-muted: 220 15% 45%;
   }
 
   .dark {
@@ -70,24 +72,28 @@
     --popover: 220 25% 12%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 228 49% 46%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 207 90% 55%;
+    --primary-foreground: 220 30% 8%;
+    --primary-light: 207 85% 62%;
+    --primary-glow: 207 100% 70%;
 
-    --secondary: 293 50% 50%;
+    --secondary: 311 55% 52%;
     --secondary-foreground: 0 0% 100%;
+    --secondary-light: 311 60% 58%;
+    --secondary-glow: 311 65% 65%;
 
     --muted: 220 15% 18%;
     --muted-foreground: 210 10% 60%;
 
-    --accent: 293 40% 20%;
-    --accent-foreground: 293 50% 70%;
+    --accent: 311 35% 22%;
+    --accent-foreground: 311 50% 85%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 228 49% 46%;
+    --ring: 207 90% 55%;
 
     --status-valid: 145 60% 45%;
     --status-valid-bg: 145 40% 15%;
@@ -95,17 +101,18 @@
     --status-expiring-bg: 40 40% 15%;
     --status-expired: 0 65% 50%;
     --status-expired-bg: 0 40% 15%;
-    --status-pending: 228 50% 55%;
-    --status-pending-bg: 228 40% 15%;
+    --status-pending: 207 70% 50%;
+    --status-pending-bg: 207 35% 18%;
 
     --sidebar-background: 220 25% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 228 49% 46%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 293 40% 20%;
-    --sidebar-accent-foreground: 293 50% 70%;
+    --sidebar-primary: 207 90% 55%;
+    --sidebar-primary-foreground: 220 30% 8%;
+    --sidebar-accent: 311 35% 22%;
+    --sidebar-accent-foreground: 311 50% 85%;
     --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 228 49% 46%;
+    --sidebar-ring: 207 90% 55%;
+    --sidebar-muted: 210 10% 60%;
   }
 }
 
@@ -115,8 +122,16 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
   }
 }
 
@@ -124,44 +139,132 @@
   .status-valid {
     @apply bg-[hsl(var(--status-valid-bg))] text-[hsl(var(--status-valid))];
   }
-  
+
   .status-expiring {
     @apply bg-[hsl(var(--status-expiring-bg))] text-[hsl(var(--status-expiring))];
   }
-  
+
   .status-expired {
     @apply bg-[hsl(var(--status-expired-bg))] text-[hsl(var(--status-expired))];
   }
-  
+
   .status-pending {
     @apply bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending))];
   }
 
   .brand-gradient {
-    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 100%
+    );
   }
 
-  /* Tab trigger active state with brand gradient */
+  .brand-gradient-light {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary-light, var(--primary))) 0%,
+      hsl(var(--secondary-light, var(--secondary))) 100%
+    );
+  }
+
+  .brand-gradient-soft {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.1) 0%,
+      hsl(var(--secondary) / 0.1) 100%
+    );
+  }
+
+  .brand-gradient-text {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .o2-tab-trigger[data-state="active"] {
-    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 100%
+    );
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 100%
+    );
+    color: white;
+    box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.3);
+    transition: opacity 0.15s ease;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #3B5BAE 0%, #7B1F8A 100%);
-    box-shadow: 0 4px 14px rgba(43, 63, 142, 0.3);
+    opacity: 0.9;
+  }
+
+  .btn-primary:active {
+    opacity: 0.85;
   }
 
   .login-card {
-    @apply bg-card border border-border rounded-lg p-8 shadow-lg mx-auto;
+    @apply bg-card border border-border rounded-lg p-8 shadow-soft mx-auto;
   }
 
-  /* Force override for hosting environments where parent layout adds left margin */
   .login-override {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
 }

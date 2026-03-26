@@ -37,8 +37,8 @@ const AppContent = () => {
       const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
       const mainContent = document.querySelector('[data-main-content]');
       if (mainContent) {
-        mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
-        mainContent.classList.add(isCollapsed ? 'lg:ml-16' : 'lg:ml-56');
+        mainContent.classList.remove("lg:ml-[260px]", "lg:ml-[72px]");
+        mainContent.classList.add(isCollapsed ? "lg:ml-[72px]" : "lg:ml-[260px]");
       }
     }
   }, [isPublicPage]);
@@ -50,8 +50,8 @@ const AppContent = () => {
         const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
         const mainContent = document.querySelector('[data-main-content]');
         if (mainContent) {
-          mainContent.classList.remove('lg:ml-56', 'lg:ml-16');
-          mainContent.classList.add(isCollapsed ? 'lg:ml-16' : 'lg:ml-56');
+          mainContent.classList.remove("lg:ml-[260px]", "lg:ml-[72px]");
+          mainContent.classList.add(isCollapsed ? "lg:ml-[72px]" : "lg:ml-[260px]");
         }
       };
 
@@ -83,7 +83,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:flex-row">
       {/* Modal obrigatório de redefinição de senha no primeiro login */}
       {!isPublicPage && isAuthenticated && mustChangePassword && (
         <ChangePasswordModal
@@ -96,7 +96,10 @@ const AppContent = () => {
       {/* Sidebar - mobile: top, desktop: left - hidden on login page */}
       {!isPublicPage && <Sidebar />}
       {/* Main content - aplica margin-left no desktop/tablet somente quando não for página pública (login) */}
-      <div className={`flex-1 w-full relative min-h-screen bg-background ${!isPublicPage ? "lg:ml-56" : ""}`} data-main-content>
+      <div
+        className={`relative min-h-screen w-full min-w-0 flex-1 bg-background ${!isPublicPage ? "lg:ml-[260px]" : ""}`}
+        data-main-content
+      >
         {/* Fundo em tela cheia, fixo (não rola com o conteúdo) - apenas em páginas autenticadas */}
         {!isPublicPage && (
           <div

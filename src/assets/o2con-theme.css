@@ -29,22 +29,23 @@
  */
 
 /* ===== VARIÁVEIS (PALETA DE CORES) ===== */
+/* Derivadas dos tokens do index.css (Hub O2con) — --primary / --secondary */
 :root {
-  /* Cores principais */
-  --o2-blue-dark: #2B3F8E;
-  --o2-blue-mid: #3B5BAE;
-  --o2-cyan: #00B4D8;
-  --o2-purple: #9B2FAA;
-  --o2-purple-dark: #7B1F8A;
+  /* Cores principais (aliases para compatibilidade) */
+  --o2-blue-dark: hsl(var(--primary));
+  --o2-blue-mid: hsl(var(--primary-light));
+  --o2-cyan: #00b4d8;
+  --o2-purple: hsl(var(--secondary));
+  --o2-purple-dark: hsl(var(--accent-foreground));
 
   /* Gradientes */
-  --o2-gradient: linear-gradient(135deg, #2B3F8E 0%, #9B2FAA 100%);
-  --o2-gradient-cyan: linear-gradient(135deg, #2B3F8E 0%, #00B4D8 100%);
-  --o2-gradient-soft: linear-gradient(135deg, #3B5BAE 0%, #9B2FAA 100%);
+  --o2-gradient: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  --o2-gradient-cyan: linear-gradient(135deg, hsl(var(--primary)) 0%, #00b4d8 100%);
+  --o2-gradient-soft: linear-gradient(135deg, hsl(var(--primary-light)) 0%, hsl(var(--secondary)) 100%);
 
   /* Sombras */
-  --o2-shadow: rgba(43, 63, 142, 0.15);
-  --o2-shadow-strong: rgba(43, 63, 142, 0.3);
+  --o2-shadow: hsl(var(--primary) / 0.15);
+  --o2-shadow-strong: hsl(var(--primary) / 0.3);
 
   /* Fundos */
   --o2-light-bg: #f8f9fc;
@@ -52,8 +53,8 @@
   --o2-white: #ffffff;
 
   /* Bordas */
-  --o2-border: #e8eaf2;
-  --o2-border-focus: #2B3F8E;
+  --o2-border: hsl(var(--border));
+  --o2-border-focus: hsl(var(--primary));
 
   /* Texto */
   --o2-text-dark: #333333;
@@ -96,13 +97,14 @@
   font-size: 0.88rem;
   font-family: var(--o2-font);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
   text-decoration: none;
+  box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.25);
 }
 
 .o2-btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px var(--o2-shadow-strong);
+  opacity: 0.9;
+  box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.35);
 }
 
 .o2-btn-primary:disabled {
@@ -131,8 +133,8 @@
 .o2-btn-outline:hover:not(:disabled) {
   background: var(--o2-blue-dark);
   color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--o2-shadow-strong);
+  opacity: 0.95;
+  box-shadow: 0 0 20px -4px hsl(var(--primary) / 0.25);
 }
 
 .o2-btn-outline:disabled {
@@ -180,8 +182,8 @@
 }
 
 .o2-card-elevated:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 24px var(--o2-shadow-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px hsl(var(--primary) / 0.12);
 }
 
 /* --- Header / Navbar --- */
@@ -220,7 +222,7 @@
 .o2-input:focus {
   outline: none;
   border-color: var(--o2-blue-dark);
-  box-shadow: 0 0 0 3px rgba(43, 63, 142, 0.08);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
 }
 
 .o2-input:disabled {
@@ -354,7 +356,7 @@
 .o2-tab.active {
   background: var(--o2-gradient);
   color: white;
-  box-shadow: 0 2px 8px var(--o2-shadow-strong);
+  box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.35);
 }
 
 /* --- Mensagens --- */

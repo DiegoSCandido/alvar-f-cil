@@ -29,7 +29,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ["Inter", "sans-serif"],
+        display: ["Plus Jakarta Sans", "Space Grotesk", "sans-serif"],
+        body: ["Inter", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -40,10 +42,14 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          light: "hsl(var(--primary-light))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          light: "hsl(var(--secondary-light))",
+          glow: "hsl(var(--secondary-glow))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -84,16 +90,17 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          muted: "hsl(var(--sidebar-muted))",
         },
-        // O2con Brand Colors
+        /* Aliases legados — derivados dos tokens Hub */
         o2: {
-          blue: "#2B3F8E",
-          "blue-mid": "#3B5BAE",
+          blue: "hsl(var(--primary))",
+          "blue-mid": "hsl(var(--primary-light))",
+          "blue-light": "hsl(var(--primary) / 0.12)",
           cyan: "#00B4D8",
-          purple: "#9B2FAA",
-          "purple-dark": "#7B1F8A",
-          "blue-light": "#E8EBF5",
-          "purple-light": "#F5E8F8",
+          purple: "hsl(var(--secondary))",
+          "purple-dark": "hsl(var(--accent-foreground))",
+          "purple-light": "hsl(var(--accent))",
           "cyan-light": "#E0F7FA",
         },
       },
@@ -101,6 +108,14 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
+        "soft-lg":
+          "0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 2px 10px -2px rgba(0, 0, 0, 0.04)",
+        "glow-primary": "0 0 25px -5px hsl(var(--primary) / 0.3)",
+        "glow-secondary": "0 0 25px -5px hsl(var(--secondary) / 0.3)",
+        "inner-glow": "inset 0 1px 0 0 rgba(255, 255, 255, 0.1)",
       },
       keyframes: {
         "accordion-down": {

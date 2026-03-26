@@ -503,24 +503,22 @@ const AlvarasPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-card border-b sticky top-0 xl:top-0 z-10 xl:mt-0 mt-14 sm:mt-16">
-        <div className="container px-1 sm:px-1 lg:px-1 xl:px-8 py-3 sm:py-4 lg:py-4 xl:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 lg:gap-4 xl:gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4 flex-1 min-w-0">
-              <img 
+      <header className="sticky top-0 z-10 mt-14 border-b border-border bg-card sm:mt-16 lg:mt-0 lg:flex lg:h-16 lg:items-center xl:top-0">
+        <div className="container flex w-full min-w-0 flex-col justify-center px-3 py-3 sm:px-4 sm:py-4 lg:h-full lg:min-h-0 lg:flex-row lg:items-center lg:px-6 lg:py-0 xl:px-8">
+          <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4 lg:gap-4">
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 lg:gap-3">
+              <img
                 src={o2conLogo}
-                alt="O2con Soluções Contábeis" 
-                className="h-7 sm:h-8 lg:h-8 xl:h-10 object-contain flex-shrink-0"
+                alt="O2con Soluções Contábeis"
+                className="h-7 shrink-0 object-contain sm:h-8 lg:h-8"
               />
-              <div className="hidden sm:block h-6 sm:h-8 w-px bg-border flex-shrink-0" />
+              <div className="hidden h-8 w-px shrink-0 bg-border sm:block" aria-hidden />
               <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-base lg:text-base xl:text-xl font-bold text-foreground truncate">Gestão de Alvarás</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                  Controle de documentos e vencimentos
-                </p>
+                <h1 className="truncate text-sm font-bold text-foreground sm:text-base">Gestão de Alvarás</h1>
+                <p className="hidden text-xs text-muted-foreground sm:block">Controle de documentos e vencimentos</p>
               </div>
             </div>
-            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="flex w-full shrink-0 gap-2 sm:w-auto sm:gap-3">
               <Button onClick={handleOpenForm} className="gap-2 flex-1 sm:flex-none text-xs sm:text-sm lg:text-base px-3 sm:px-4">
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden md:inline">Novo Alvará</span>
@@ -540,7 +538,7 @@ const AlvarasPage = () => {
         </div>
       </header>
 
-      <main className="container px-1 sm:px-1 lg:px-1 xl:px-8 py-4 sm:py-5 lg:py-4 xl:py-8 space-y-4 sm:space-y-5 lg:space-y-4 xl:space-y-6 w-full">
+      <main className="container w-full min-w-0 space-y-4 px-3 py-4 sm:px-4 sm:space-y-5 sm:py-5 lg:space-y-4 lg:px-6 lg:py-4 xl:space-y-6 xl:px-8 xl:py-8">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'novos' | 'funcionamento' | 'renovacao')}>
           <TabsList className="grid w-full max-w-md sm:max-w-lg lg:max-w-2xl grid-cols-3 text-xs sm:text-sm lg:text-base">

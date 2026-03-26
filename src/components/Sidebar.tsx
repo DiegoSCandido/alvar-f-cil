@@ -1,11 +1,34 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Users, FileText, Menu, X, LogOut, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutGrid,
+  Users,
+  ScrollText,
+  ShieldCheck,
+  Menu,
+  X,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import o2conIcon from "@/assets/o2con-icon.png";
+import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
+
+const navItems = [
+  { label: "Início", path: "/dashboard", icon: LayoutGrid },
+  { label: "Clientes", path: "/clientes", icon: Users },
+  { label: "Alvarás", path: "/alvaras", icon: ScrollText },
+  { label: "Taxas de Funcionamento", path: "/taxas", icon: ShieldCheck },
+];
 
 const Sidebar = () => {
   const location = useLocation();
@@ -14,36 +37,12 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-    return saved === 'true';
+    return saved === "true";
   });
-
-  const navItems = [
-    {
-      label: 'Início',
-      path: '/dashboard',
-      icon: Home,
-    },
-    {
-      label: 'Clientes',
-      path: '/clientes',
-      icon: Users,
-    },
-    {
-      label: 'Alvarás',
-      path: '/alvaras',
-      icon: FileText,
-    },
-    {
-      label: 'Taxas de Funcionamento',
-      path: '/taxas',
-      icon: Shield,
-    },
-    // 'Certificados' removed from nav until page is implemented
-  ];
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
     setIsOpen(false);
   };
 
@@ -51,166 +50,183 @@ const Sidebar = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newState));
-    // Dispara evento customizado para sincronizar com App.tsx
-    window.dispatchEvent(new Event('sidebar-toggle'));
+    window.dispatchEvent(new Event("sidebar-toggle"));
   };
 
-  // Ajusta o margin do conteúdo principal quando colapsado
   useEffect(() => {
-    const mainContent = document.querySelector('[data-main-content]');
+    const mainContent = document.querySelector("[data-main-content]");
     if (mainContent) {
       if (isCollapsed) {
-        mainContent.classList.remove('lg:ml-56');
-        mainContent.classList.add('lg:ml-16');
+        mainContent.classList.remove("lg:ml-[260px]");
+        mainContent.classList.add("lg:ml-[72px]");
       } else {
-        mainContent.classList.remove('lg:ml-16');
-        mainContent.classList.add('lg:ml-56');
+        mainContent.classList.remove("lg:ml-[72px]");
+        mainContent.classList.add("lg:ml-[260px]");
       }
     }
   }, [isCollapsed]);
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-50 p-3 sm:p-4 flex justify-between items-center">
-        <h1 className="text-lg sm:text-xl font-bold text-o2-blue">O2controle</h1>
+      {/* Barra superior — mobile (estilo Hub: tipografia + bordas do tema) */}
+      <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-border bg-card p-3 sm:p-4 lg:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <img
+            src={o2conIcon}
+            alt="O2con"
+            className="h-8 w-8 shrink-0 object-contain"
+          />
+          <span className="font-display text-base font-semibold tracking-tight text-sidebar-foreground truncate">
+            Alvarás
+          </span>
+        </div>
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 hover:bg-slate-100 rounded-lg transition"
-          aria-label="Toggle menu"
+          className="rounded-lg p-2 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground"
+          aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
         >
-          {isOpen ? <X size={20} className="sm:w-6 sm:h-6" /> : <Menu size={20} className="sm:w-6 sm:h-6" />}
+          {isOpen ? (
+            <X className="h-5 w-5" strokeWidth={1.5} />
+          ) : (
+            <Menu className="h-5 w-5" strokeWidth={1.5} />
+          )}
         </button>
       </div>
 
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setIsOpen(false)}
+          aria-hidden
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={cn(
-        'fixed lg:fixed left-0 top-0 h-screen bg-white border-r border-slate-200 shadow-lg z-40',
-        'transition-all duration-300 transform lg:transform-none',
-        'flex flex-col',
-        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-        'lg:mt-0 mt-14 sm:mt-16',
-        isCollapsed ? 'lg:w-16 w-56' : 'lg:w-56 w-56'
-      )}>
-        {/* Logo/Header - Desktop/Tablet only */}
-        <div className={cn(
-          'p-4 lg:p-6 border-b border-slate-200 hidden lg:flex flex-shrink-0 items-center justify-between',
-          isCollapsed && 'lg:justify-center lg:px-2'
-        )}>
-          {!isCollapsed && (
-            <h1 className="text-xl 2xl:text-2xl font-bold text-o2-blue">Menu</h1>
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-150",
+          "lg:z-50 lg:mt-0 mt-14",
+          isCollapsed ? "lg:w-[72px]" : "lg:w-[260px]",
+          "w-[260px]",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* Logo + título — mesmo bloco do Hub (h-16) */}
+        <div
+          className={cn(
+            "flex h-16 shrink-0 items-center border-b border-sidebar-border",
+            isCollapsed ? "justify-center overflow-visible px-0" : "gap-3 px-5"
           )}
-          {/* Botão Circular para Toggle - Desktop/Tablet only */}
-          <button
-            onClick={toggleCollapse}
-            className={cn(
-              'hidden lg:flex items-center justify-center',
-              'w-9 h-9 rounded-full',
-              'bg-o2-blue hover:bg-o2-blue-mid text-white',
-              'shadow-md hover:shadow-lg',
-              'transition-all duration-200',
-              'hover:scale-105 active:scale-95',
-              isCollapsed && 'lg:mx-auto'
-            )}
-            aria-label={isCollapsed ? 'Expandir menu' : 'Minimizar menu'}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-            ) : (
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-            )}
-          </button>
+        >
+          <img
+            src={o2conIcon}
+            alt="O2con"
+            className="h-9 w-9 shrink-0 object-contain"
+          />
+          {!isCollapsed && (
+            <span className="font-display text-lg font-semibold tracking-tight text-sidebar-foreground">
+              Alvarás
+            </span>
+          )}
         </div>
-        {/* Navigation Items - com scroll independente */}
-        <nav className="flex-1 flex flex-col gap-2 p-4 lg:p-6 overflow-y-auto">
-          <TooltipProvider delayDuration={300}>
+
+        <TooltipProvider delayDuration={300}>
+          <div className="flex min-h-0 flex-1 flex-col">
+          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Navegação principal">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
 
-              const linkContent = (
+              const linkClass = cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-opacity duration-150",
+                isCollapsed && "justify-center px-2",
+                isActive
+                  ? "brand-gradient text-white shadow-glow-primary hover:opacity-90"
+                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              );
+
+              const inner = (
+                <>
+                  <Icon className="h-5 w-5 shrink-0" strokeWidth={1.5} />
+                  {!isCollapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </>
+              );
+
+              const link = (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  className={cn(
-                    'flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-lg transition-all duration-200 flex-shrink-0 text-sm lg:text-base',
-                    'lg:justify-start',
-                    isCollapsed && 'lg:justify-center lg:px-2',
-                    isActive
-                      ? 'brand-gradient text-white shadow-lg'
-                      : 'text-foreground hover:bg-o2-blue-light'
-                  )}
+                  className={linkClass}
                 >
-                  <Icon size={18} className="lg:w-5 lg:h-5 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <span className="font-medium">{item.label}</span>
-                  )}
+                  {inner}
                 </Link>
               );
 
               if (isCollapsed) {
                 return (
                   <Tooltip key={item.path}>
-                    <TooltipTrigger asChild>
-                      {linkContent}
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="lg:block hidden">
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" className="hidden lg:block">
                       <p>{item.label}</p>
                     </TooltipContent>
                   </Tooltip>
                 );
               }
 
-              return linkContent;
+              return link;
             })}
-          </TooltipProvider>
-        </nav>
+          </nav>
 
-        {/* User Info & Logout - fixo na base */}
-        <div className="border-t border-slate-200 p-4 lg:p-6 space-y-3 lg:space-y-4 flex-shrink-0">
-          {user && !isCollapsed && (
-            <div className="text-xs lg:text-sm text-muted-foreground px-1">
-              <p className="font-medium text-foreground truncate">{user.fullName || user.email}</p>
-            </div>
-          )}
-          <TooltipProvider delayDuration={300}>
+          {/* Rodapé — alinhado ao Hub (rótulo + Sair) */}
+          <div className="border-t border-sidebar-border px-5 py-3">
+            {!isCollapsed && (
+              <p className="mb-2 truncate text-xs font-medium text-sidebar-muted">
+                {user?.fullName || user?.email || "Administrador"}
+              </p>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className={cn(
-                    'w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-foreground hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 text-sm lg:text-base',
-                    'lg:justify-start',
-                    isCollapsed && 'lg:justify-center lg:px-2'
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors duration-150 hover:bg-sidebar-accent",
+                    isCollapsed && "justify-center px-2"
                   )}
                 >
-                  <LogOut size={18} className="lg:w-5 lg:h-5 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <span className="font-medium">Sair</span>
-                  )}
+                  <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.5} />
+                  {!isCollapsed && <span>Sair</span>}
                 </button>
               </TooltipTrigger>
               {isCollapsed && (
-                <TooltipContent side="right" className="lg:block hidden">
+                <TooltipContent side="right" className="hidden lg:block">
                   <p>Sair</p>
                 </TooltipContent>
               )}
             </Tooltip>
-          </TooltipProvider>
-        </div>
+          </div>
+          </div>
+        </TooltipProvider>
+
+        {/* Toggle recolher — igual ao Hub (absoluto, canto da sidebar) */}
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          className="absolute -right-3 top-20 hidden h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors duration-150 hover:text-foreground lg:flex"
+          aria-label={isCollapsed ? "Expandir menu" : "Minimizar menu"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3" strokeWidth={1.5} />
+          ) : (
+            <ChevronLeft className="h-3 w-3" strokeWidth={1.5} />
+          )}
+        </button>
       </aside>
     </>
   );
 };
 
 export default Sidebar;
-
