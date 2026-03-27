@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,15 +22,15 @@ import {
   type SavedClientesFilterTemplate,
   CLIENTES_COLUNA_OPTIONS,
   CLIENTES_OPCAO_OPTIONS,
+  CLIENTES_NIVEL3_OPTIONS,
   listClientesFilterTemplates,
   saveClientesFilterTemplate,
   deleteClientesFilterTemplate,
+  migrateClientesFilterSnapshot,
 } from '@/lib/clientes-filters';
+import { MultiCheckboxPill, filterPillInputClass } from '@/components/MultiCheckboxPill';
 import { Check, Search, Trash2, BookmarkPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const pillInput =
-  'flex min-h-10 w-full items-center rounded-full border border-input bg-background px-3 shadow-sm';
 
 const TAB_LABELS: Record<ClientesFilterSnapshot['activeTab'], string> = {
   ativos: 'Clientes ativos',
@@ -46,16 +46,21 @@ interface ClientesFiltersModalProps {
 
 function FilterField({
   label,
+  hint,
   children,
   className,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <Label className="text-sm font-semibold text-foreground/90">{label}</Label>
+      <div>
+        <Label className="text-sm font-semibold text-foreground/90">{label}</Label>
+        {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
+      </div>
       {children}
     </div>
   );
@@ -76,13 +81,25 @@ export function ClientesFiltersModal({
 
   useEffect(() => {
     if (open) {
-      setDraft(initial);
+      setDraft(migrateClientesFilterSnapshot(initial));
       setTemplates(listClientesFilterTemplates());
       setSelectedTemplateId('');
       setSaveName('');
       setShowSaveRow(false);
     }
   }, [open, initial]);
+
+  const nivel3Labels = useMemo(() => {
+    const m: Record<string, string> = {};
+    CLIENTES_NIVEL3_OPTIONS.forEach((o) => {
+      m[o.value] = o.label;
+    });
+    return m;
+  }, []);
+
+  const nivel3Keys = useMemo(() => CLIENTES_NIVEL3_OPTIONS.map((o) => o.value), []);
+
+  const apiBloqueado = !draft.nivel1Coluna?.trim();
 
   const applySnapshot = (s: ClientesFilterSnapshot) => {
     onApply(s);
@@ -110,7 +127,7 @@ export function ClientesFiltersModal({
   const handleLoadTemplate = (id: string) => {
     setSelectedTemplateId(id);
     const t = templates.find((x) => x.id === id);
-    if (t) setDraft({ ...t.snapshot });
+    if (t) setDraft(migrateClientesFilterSnapshot(t.snapshot));
   };
 
   const handleDeleteTemplate = () => {
@@ -120,19 +137,39 @@ export function ClientesFiltersModal({
     setSelectedTemplateId('');
   };
 
+  const setNivel1 = (v: string) => {
+    const col = v === '__none__' ? '' : v;
+    setDraft((d) => ({
+      ...d,
+      nivel1Coluna: col,
+      nivel2Opcao: '',
+      nivel3Refinamento: [],
+    }));
+  };
+
+  const setNivel2 = (v: string) => {
+    const op = v === '__none__' ? '' : v;
+    setDraft((d) => ({
+      ...d,
+      nivel2Opcao: op,
+      nivel3Refinamento: [],
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-[min(100vw-1rem,900px)] gap-0 overflow-y-auto p-0 pr-10 pt-12 sm:rounded-xl">
+      <DialogContent className="max-h-[92vh] max-w-[min(100vw-1rem,920px)] gap-0 overflow-y-auto p-0 pr-10 pt-12 sm:rounded-xl">
         <div className="border-b bg-muted/30 px-6 py-4">
           <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="text-lg font-semibold">Filtros</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Filtros em camadas</DialogTitle>
             <p className="text-sm text-muted-foreground">
-              Busca, coluna e opção de alvará/taxas; salve um modelo para reutilizar depois.
+              Filtro 1 define a coluna; filtro 2 a opção da API; filtro 3 refina por situação dos alvarás do
+              cliente (ex.: taxas pagas e depois vencendo ou sem alvará).
             </p>
           </DialogHeader>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <FilterField label="Carregar modelo" className="min-w-0 flex-1">
-              <div className={cn(pillInput, 'gap-2')}>
+              <div className={cn(filterPillInputClass, 'gap-2')}>
                 <Select
                   value={selectedTemplateId || '__none__'}
                   onValueChange={(v) => (v === '__none__' ? setSelectedTemplateId('') : handleLoadTemplate(v))}
@@ -175,7 +212,7 @@ export function ClientesFiltersModal({
           {showSaveRow && (
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Input
-                placeholder="Nome do modelo (ex.: Taxas pagas)"
+                placeholder="Nome do modelo"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 className="rounded-full border-input sm:flex-1"
@@ -188,10 +225,10 @@ export function ClientesFiltersModal({
           )}
         </div>
 
-        <div className="space-y-4 px-6 py-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-6 px-6 py-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FilterField label="Lista">
-              <div className={pillInput}>
+              <div className={filterPillInputClass}>
                 <Select
                   value={draft.activeTab}
                   onValueChange={(v) =>
@@ -212,8 +249,8 @@ export function ClientesFiltersModal({
               </div>
             </FilterField>
 
-            <FilterField label="Busca" className="sm:col-span-2">
-              <div className={cn(pillInput, 'gap-2 pl-3')}>
+            <FilterField label="Busca">
+              <div className={cn(filterPillInputClass, 'gap-2 pl-3')}>
                 <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <Input
                   placeholder="Razão social, CNPJ ou município..."
@@ -223,60 +260,74 @@ export function ClientesFiltersModal({
                 />
               </div>
             </FilterField>
-
-            <FilterField label="Coluna (filtro API)">
-              <div className={pillInput}>
-                <Select
-                  value={draft.filtroColuna || '__todos__'}
-                  onValueChange={(v) =>
-                    setDraft((d) => ({
-                      ...d,
-                      filtroColuna: v === '__todos__' ? '' : v,
-                      filtroOpcao: v === '__todos__' ? '' : d.filtroOpcao,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__todos__">Todos</SelectItem>
-                    {CLIENTES_COLUNA_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </FilterField>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <FilterField label="Opção" className="lg:col-span-2">
-              <div className={cn(pillInput, !draft.filtroColuna && 'opacity-60')}>
-                <Select
-                  value={draft.filtroOpcao || '__todos__'}
-                  onValueChange={(v) =>
-                    setDraft((d) => ({ ...d, filtroOpcao: v === '__todos__' ? '' : v }))
-                  }
-                  disabled={!draft.filtroColuna}
-                >
-                  <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0 disabled:opacity-100">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__todos__">Todos</SelectItem>
-                    {CLIENTES_OPCAO_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </FilterField>
+          <div className="rounded-xl border bg-muted/20 p-4 space-y-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Critérios da API (ordem)
+            </p>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <FilterField
+                label="Filtro 1 — Coluna"
+                hint="Área do cadastro (sanitário, bombeiros, funcionamento, taxas)."
+              >
+                <div className={filterPillInputClass}>
+                  <Select value={draft.nivel1Coluna || '__none__'} onValueChange={setNivel1}>
+                    <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Todos</SelectItem>
+                      {CLIENTES_COLUNA_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </FilterField>
+
+              <FilterField
+                label="Filtro 2 — Opção"
+                hint="Ex.: Paga (taxas), Vencendo, Em renovação… Depende do filtro 1."
+              >
+                <div className={cn(filterPillInputClass, apiBloqueado && 'opacity-50')}>
+                  <Select
+                    value={draft.nivel2Opcao || '__none__'}
+                    onValueChange={setNivel2}
+                    disabled={apiBloqueado}
+                  >
+                    <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Todos</SelectItem>
+                      {CLIENTES_OPCAO_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </FilterField>
+            </div>
           </div>
+
+          <FilterField
+            label="Filtro 3 — Refino por alvará"
+            hint="Considera só os alvarás do tipo da coluna (ex.: Taxas/Funcionamento → só alvará de funcionamento). Múltipla escolha em OR. Vazio = não refinar."
+            className="lg:col-span-2"
+          >
+            <MultiCheckboxPill
+              options={nivel3Keys}
+              labels={nivel3Labels}
+              selected={draft.nivel3Refinamento}
+              onChange={(nivel3Refinamento) => setDraft((d) => ({ ...d, nivel3Refinamento }))}
+              placeholder="Opcional: refine por situação real dos alvarás."
+            />
+          </FilterField>
         </div>
 
         <DialogFooter className="flex flex-col gap-3 border-t bg-muted/20 px-6 py-4 sm:flex-row sm:justify-end">

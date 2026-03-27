@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -17,42 +16,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { AlvaraStatus } from '@/types/alvara';
 import {
   type AlvarasFilterSnapshot,
-  type ProcessingFilterValue,
   type SavedAlvarasFilterTemplate,
   listAlvarasFilterTemplates,
   saveAlvarasFilterTemplate,
   deleteAlvarasFilterTemplate,
+  migrateAlvarasFilterSnapshot,
 } from '@/lib/alvaras-filter-templates';
-import { Check, ChevronDown, Clock, Search, Trash2, BookmarkPlus } from 'lucide-react';
+import { MultiCheckboxPill, filterPillInputClass } from '@/components/MultiCheckboxPill';
+import { Check, Clock, Search, Trash2, BookmarkPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const pillInput =
-  'flex min-h-10 w-full items-center rounded-full border border-input bg-background px-3 shadow-sm';
+const PROCESSING_KEYS = ['lançado', 'aguardando_cliente', 'aguardando_orgao'] as const;
+const PROCESSING_LABELS: Record<string, string> = {
+  lançado: 'Iniciado',
+  aguardando_cliente: 'Aguardando cliente',
+  aguardando_orgao: 'Aguardando órgão',
+};
 
-const PROCESSING_OPTIONS: { value: ProcessingFilterValue; label: string }[] = [
-  { value: 'all', label: 'Todos' },
-  { value: 'lançado', label: 'Iniciado' },
-  { value: 'aguardando_cliente', label: 'Aguardando cliente' },
-  { value: 'aguardando_orgao', label: 'Aguardando órgão' },
-];
-
-const STATUS_OVERVIEW_OPTIONS: { value: AlvaraStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'Todos' },
-  { value: 'valid', label: 'Válidos' },
-  { value: 'expiring', label: 'Vencendo' },
-  { value: 'expired', label: 'Vencidos' },
-  { value: 'pending', label: 'Pendente' },
-];
+const STATUS_OVERVIEW_KEYS: AlvaraStatus[] = ['pending', 'valid', 'expiring', 'expired'];
+const STATUS_OVERVIEW_LABELS: Record<AlvaraStatus, string> = {
+  pending: 'Pendente',
+  valid: 'Válidos',
+  expiring: 'Vencendo',
+  expired: 'Vencidos',
+};
 
 const TAB_LABELS: Record<AlvarasFilterSnapshot['activeTab'], string> = {
   funcionamento: 'Em funcionamento',
@@ -87,89 +78,6 @@ function FilterField({
   );
 }
 
-function MultiCheckboxPill({
-  options,
-  labels,
-  selected,
-  onChange,
-  placeholder,
-}: {
-  options: string[];
-  labels: Record<string, string>;
-  selected: string[];
-  onChange: (next: string[]) => void;
-  placeholder: string;
-}) {
-  const uid = useId();
-  const [open, setOpen] = useState(false);
-  const summary = useMemo(() => {
-    if (selected.length === 0 || selected.length === options.length) return 'Todos';
-    if (selected.length === 1) return labels[selected[0]] ?? selected[0];
-    return `${selected.length} selecionados`;
-  }, [selected, options.length, labels, options]);
-
-  const toggle = (v: string) => {
-    if (selected.includes(v)) onChange(selected.filter((x) => x !== v));
-    else onChange([...selected, v]);
-  };
-
-  const selectAll = () => {
-    if (selected.length === options.length) onChange([]);
-    else onChange([...options]);
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            pillInput,
-            'justify-between gap-2 text-left text-sm text-foreground'
-          )}
-        >
-          <span className="truncate">{summary}</span>
-          <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[min(100vw-2rem,320px)] p-0" align="start">
-        <div className="border-b px-3 py-2">
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 text-sm font-medium"
-            onClick={selectAll}
-          >
-            <Checkbox
-              checked={options.length > 0 && selected.length === options.length}
-              className="pointer-events-none"
-            />
-            Selecionar todos
-          </button>
-        </div>
-        <ScrollArea className="h-[220px]">
-          <div className="space-y-2 p-3">
-            {options.map((opt) => (
-              <div key={opt} className="flex items-center gap-2">
-                <Checkbox
-                  id={`${uid}-${opt}`}
-                  checked={selected.includes(opt)}
-                  onCheckedChange={() => toggle(opt)}
-                />
-                <label htmlFor={`${uid}-${opt}`} className="cursor-pointer text-sm leading-tight">
-                  {labels[opt] ?? opt}
-                </label>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-        <div className="border-t px-3 py-2 text-xs text-muted-foreground">
-          {placeholder}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 export function AlvarasFiltersModal({
   open,
   onOpenChange,
@@ -188,7 +96,7 @@ export function AlvarasFiltersModal({
 
   useEffect(() => {
     if (open) {
-      setDraft(initial);
+      setDraft(migrateAlvarasFilterSnapshot(initial));
       setTemplates(listAlvarasFilterTemplates());
       setSelectedTemplateId('');
       setSaveName('');
@@ -228,7 +136,7 @@ export function AlvarasFiltersModal({
   const handleLoadTemplate = (id: string) => {
     setSelectedTemplateId(id);
     const t = templates.find((x) => x.id === id);
-    if (t) setDraft({ ...t.snapshot });
+    if (t) setDraft(migrateAlvarasFilterSnapshot(t.snapshot));
   };
 
   const handleDeleteTemplate = () => {
@@ -253,7 +161,7 @@ export function AlvarasFiltersModal({
           </DialogHeader>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <FilterField label="Carregar modelo" className="min-w-0 flex-1">
-              <div className={cn(pillInput, 'gap-2')}>
+              <div className={cn(filterPillInputClass, 'gap-2')}>
                 <Select
                   value={selectedTemplateId || '__none__'}
                   onValueChange={(v) => (v === '__none__' ? setSelectedTemplateId('') : handleLoadTemplate(v))}
@@ -312,7 +220,7 @@ export function AlvarasFiltersModal({
         <div className="space-y-4 px-6 py-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FilterField label="Aba / contexto">
-              <div className={pillInput}>
+              <div className={filterPillInputClass}>
                 <Select
                   value={draft.activeTab}
                   onValueChange={(v) =>
@@ -334,7 +242,7 @@ export function AlvarasFiltersModal({
             </FilterField>
 
             <FilterField label="Busca" className="sm:col-span-2">
-              <div className={cn(pillInput, 'gap-2 pl-3')}>
+              <div className={cn(filterPillInputClass, 'gap-2 pl-3')}>
                 <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <Input
                   placeholder="Cliente, CNPJ ou tipo de alvará..."
@@ -346,43 +254,28 @@ export function AlvarasFiltersModal({
             </FilterField>
 
             <FilterField label={showProcessing ? 'Andamento (novos)' : showStatusOverview ? 'Situação (vencimento)' : '—'}>
-              <div className={cn(pillInput, !showProcessing && !showStatusOverview && 'opacity-50')}>
+              <div className={cn('min-w-0', !showProcessing && !showStatusOverview && 'opacity-50')}>
                 {showProcessing ? (
-                  <Select
-                    value={draft.processingFilter}
-                    onValueChange={(v) =>
-                      setDraft((d) => ({ ...d, processingFilter: v as ProcessingFilterValue }))
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROCESSING_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiCheckboxPill
+                    options={[...PROCESSING_KEYS]}
+                    labels={PROCESSING_LABELS}
+                    selected={draft.processingFilters}
+                    onChange={(processingFilters) => setDraft((d) => ({ ...d, processingFilters }))}
+                    placeholder="Vazio = todos os andamentos."
+                  />
                 ) : showStatusOverview ? (
-                  <Select
-                    value={draft.statusFilter}
-                    onValueChange={(v) =>
-                      setDraft((d) => ({ ...d, statusFilter: v as AlvaraStatus | 'all' }))
+                  <MultiCheckboxPill
+                    options={[...STATUS_OVERVIEW_KEYS]}
+                    labels={STATUS_OVERVIEW_LABELS}
+                    selected={draft.statusFilters}
+                    onChange={(statusFilters) =>
+                      setDraft((d) => ({
+                        ...d,
+                        statusFilters: statusFilters as AlvaraStatus[],
+                      }))
                     }
-                  >
-                    <SelectTrigger className="h-9 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OVERVIEW_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Vazio = todas as situações de vencimento."
+                  />
                 ) : (
                   <div className="flex h-9 w-full items-center text-sm text-muted-foreground">
                     <Clock className="mr-2 h-4 w-4" />

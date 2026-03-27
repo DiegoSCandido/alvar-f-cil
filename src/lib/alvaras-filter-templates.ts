@@ -11,10 +11,51 @@ export type ProcessingFilterValue =
 export interface AlvarasFilterSnapshot {
   activeTab: AlvarasFilterTab;
   searchTerm: string;
-  statusFilter: AlvaraStatus | 'all';
-  processingFilter: ProcessingFilterValue;
+  /** Vazio = todas as situações (aba Funcionamento). */
+  statusFilters: AlvaraStatus[];
+  /** Vazio = todos os andamentos (aba Novos). Valores: lançado, aguardando_cliente, aguardando_orgao */
+  processingFilters: string[];
   typeFilter: string[];
   statusColumnFilter: string[];
+}
+
+/** Compatível com modelos antigos que usavam statusFilter / processingFilter únicos. */
+export function migrateAlvarasFilterSnapshot(raw: unknown): AlvarasFilterSnapshot {
+  const base: AlvarasFilterSnapshot = {
+    activeTab: 'funcionamento',
+    searchTerm: '',
+    statusFilters: [],
+    processingFilters: [],
+    typeFilter: [],
+    statusColumnFilter: [],
+  };
+  if (!raw || typeof raw !== 'object') return base;
+  const o = raw as Record<string, unknown>;
+  if (Array.isArray(o.statusFilters) && Array.isArray(o.processingFilters)) {
+    return {
+      activeTab: (o.activeTab as AlvarasFilterTab) || 'funcionamento',
+      searchTerm: typeof o.searchTerm === 'string' ? o.searchTerm : '',
+      statusFilters: (o.statusFilters as AlvaraStatus[]).filter(Boolean),
+      processingFilters: (o.processingFilters as string[]).filter(Boolean),
+      typeFilter: Array.isArray(o.typeFilter) ? (o.typeFilter as string[]).filter(Boolean) : [],
+      statusColumnFilter: Array.isArray(o.statusColumnFilter)
+        ? (o.statusColumnFilter as string[]).filter(Boolean)
+        : [],
+    };
+  }
+  const sf = o.statusFilter as string | undefined;
+  const pf = o.processingFilter as string | undefined;
+  return {
+    ...base,
+    activeTab: (o.activeTab as AlvarasFilterTab) || 'funcionamento',
+    searchTerm: typeof o.searchTerm === 'string' ? o.searchTerm : '',
+    statusFilters: sf && sf !== 'all' ? [sf as AlvaraStatus] : [],
+    processingFilters: pf && pf !== 'all' ? [pf] : [],
+    typeFilter: Array.isArray(o.typeFilter) ? (o.typeFilter as string[]).filter(Boolean) : [],
+    statusColumnFilter: Array.isArray(o.statusColumnFilter)
+      ? (o.statusColumnFilter as string[]).filter(Boolean)
+      : [],
+  };
 }
 
 export interface SavedAlvarasFilterTemplate {

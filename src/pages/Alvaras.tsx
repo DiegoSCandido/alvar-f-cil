@@ -26,6 +26,7 @@ const SPECIAL_STATUS_LABELS: Record<string, string> = {
   semPontoFixo: 'SPF',
 };
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ import {
 } from '@/components/ui/tabs';
 import {
   Plus,
+  Search,
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -60,8 +62,8 @@ import { Badge } from '@/components/ui/badge';
 const DEFAULT_FILTERS_INITIAL: AlvarasFilterSnapshot = {
   activeTab: 'funcionamento',
   searchTerm: '',
-  statusFilter: 'all',
-  processingFilter: 'all',
+  statusFilters: [],
+  processingFilters: [],
   typeFilter: [],
   statusColumnFilter: [],
 };
@@ -82,15 +84,31 @@ const AlvarasPage = () => {
   const [editingAlvara, setEditingAlvara] = useState<Alvara | null>(null);
   const [isRenewing, setIsRenewing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<AlvaraStatus | 'all'>('all');
+  /** Vazio = todas as situações (funcionamento). */
+  const [statusFilters, setStatusFilters] = useState<AlvaraStatus[]>([]);
+  /** Vazio = todos os andamentos (novos). */
+  const [processingFilters, setProcessingFilters] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]); // Filtro por tipo de alvará
   const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]); // Filtro por status na coluna (inclui isento e SPF)
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filtersInitial, setFiltersInitial] = useState<AlvarasFilterSnapshot>(DEFAULT_FILTERS_INITIAL);
 
-  // Para destacar o StatCard ativo em funcionamento
   const handleStatCardClick = (status: AlvaraStatus | 'all') => {
-    setStatusFilter((prev) => (prev === status ? 'all' : status));
+    if (status === 'all') {
+      setStatusFilters([]);
+      return;
+    }
+    setStatusFilters((prev) => (prev.length === 1 && prev[0] === status ? [] : [status]));
+  };
+
+  const handleProcessingStatClick = (
+    key: 'all' | 'lançado' | 'aguardando_cliente' | 'aguardando_orgao'
+  ) => {
+    if (key === 'all') {
+      setProcessingFilters([]);
+      return;
+    }
+    setProcessingFilters((prev) => (prev.length === 1 && prev[0] === key ? [] : [key]));
   };
   const [activeTab, setActiveTab] = useState<'novos' | 'funcionamento' | 'renovacao'>('funcionamento');
   const [finalizandoAlvara, setFinalizandoAlvara] = useState<Alvara | null>(null);
@@ -149,17 +167,14 @@ const AlvarasPage = () => {
     };
   }, [alvarasRenovacao]);
 
-  // Filtro de processamento para novos alvarás
-  const [processingFilter, setProcessingFilter] = useState<'all' | 'lançado' | 'aguardando_cliente' | 'aguardando_orgao'>('all');
-
   // Garante que ao trocar de aba, o filtro correto é resetado
   // (evita bug de filtro travado ao alternar abas)
   useEffect(() => {
-    if (activeTab === 'novos') setStatusFilter('all');
-    if (activeTab === 'funcionamento') setProcessingFilter('all');
+    if (activeTab === 'novos') setStatusFilters([]);
+    if (activeTab === 'funcionamento') setProcessingFilters([]);
     if (activeTab === 'renovacao') {
-      setStatusFilter('all');
-      setProcessingFilter('all');
+      setStatusFilters([]);
+      setProcessingFilters([]);
     }
     // Não resetamos o filtro de tipo ao trocar de aba, pois pode ser útil manter
   }, [activeTab]);
@@ -176,7 +191,8 @@ const AlvarasPage = () => {
           alvara.clientCnpj.includes(searchTerm) ||
           alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesProcessing =
-          processingFilter === 'all' || alvara.processingStatus === processingFilter;
+          processingFilters.length === 0 ||
+          (!!alvara.processingStatus && processingFilters.includes(alvara.processingStatus));
         const matchesType =
           typeFilter.length === 0 || typeFilter.includes(alvara.type);
         const matchesStatusColumn =
@@ -241,7 +257,7 @@ const AlvarasPage = () => {
           alvara.clientCnpj.includes(searchTerm) ||
           alvara.type.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus =
-          statusFilter === 'all' || alvara.status === statusFilter;
+          statusFilters.length === 0 || statusFilters.includes(alvara.status);
         const matchesType =
           typeFilter.length === 0 || typeFilter.includes(alvara.type);
         const matchesStatusColumn =
@@ -277,24 +293,24 @@ const AlvarasPage = () => {
     }
     
     return filtered;
-  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilter, statusFilter, typeFilter, statusColumnFilter]);
+  }, [activeTab, novosAlvaras, alvarasEmFuncionamento, alvarasRenovacao, searchTerm, processingFilters, statusFilters, typeFilter, statusColumnFilter]);
 
   const filterBadgeCount = useMemo(() => {
     let n = 0;
     if (searchTerm.trim()) n += 1;
     if (typeFilter.length > 0) n += 1;
     if (statusColumnFilter.length > 0) n += 1;
-    if (activeTab === 'novos' && processingFilter !== 'all') n += 1;
-    if (activeTab === 'funcionamento' && statusFilter !== 'all') n += 1;
+    if (activeTab === 'novos' && processingFilters.length > 0) n += 1;
+    if (activeTab === 'funcionamento' && statusFilters.length > 0) n += 1;
     return n;
-  }, [searchTerm, typeFilter, statusColumnFilter, activeTab, processingFilter, statusFilter]);
+  }, [searchTerm, typeFilter, statusColumnFilter, activeTab, processingFilters, statusFilters]);
 
   const openFiltersModal = () => {
     setFiltersInitial({
       activeTab,
       searchTerm,
-      statusFilter,
-      processingFilter,
+      statusFilters: [...statusFilters],
+      processingFilters: [...processingFilters],
       typeFilter: [...typeFilter],
       statusColumnFilter: [...statusColumnFilter],
     });
@@ -304,8 +320,8 @@ const AlvarasPage = () => {
   const applyFiltersSnapshot = (s: AlvarasFilterSnapshot) => {
     setActiveTab(s.activeTab);
     setSearchTerm(s.searchTerm);
-    setStatusFilter(s.statusFilter);
-    setProcessingFilter(s.processingFilter);
+    setStatusFilters([...s.statusFilters]);
+    setProcessingFilters([...s.processingFilters]);
     setTypeFilter([...s.typeFilter]);
     setStatusColumnFilter([...s.statusColumnFilter]);
   };
@@ -574,38 +590,51 @@ const AlvarasPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2 rounded-full border-border/80 bg-background"
-              onClick={openFiltersModal}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filtros
-              {filterBadgeCount > 0 && (
-                <Badge variant="secondary" className="rounded-full px-2">
-                  {filterBadgeCount}
-                </Badge>
-              )}
-            </Button>
-            {filterBadgeCount > 0 && (
+          <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar por nome do cliente, CNPJ ou tipo de alvará..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-sm sm:text-base"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => {
-                  setSearchTerm('');
-                  setTypeFilter([]);
-                  setStatusColumnFilter([]);
-                  setProcessingFilter('all');
-                  setStatusFilter('all');
-                }}
+                variant="outline"
+                className="gap-2 rounded-full border-border/80 bg-background"
+                onClick={openFiltersModal}
               >
-                Limpar filtros
+                <SlidersHorizontal className="h-4 w-4" />
+                Filtros
+                {filterBadgeCount > 0 && (
+                  <Badge variant="secondary" className="rounded-full px-2">
+                    {filterBadgeCount}
+                  </Badge>
+                )}
               </Button>
-            )}
+              {filterBadgeCount > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setTypeFilter([]);
+                    setStatusColumnFilter([]);
+                    setProcessingFilters([]);
+                    setStatusFilters([]);
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Tab: Novos Alvarás */}
@@ -616,29 +645,29 @@ const AlvarasPage = () => {
                 title="Todos"
                 value={statsNovos.total}
                 icon={FileText}
-                variant={processingFilter === 'all' ? 'valid' : 'default'}
-                onClick={() => setProcessingFilter('all')}
+                variant={processingFilters.length === 0 ? 'valid' : 'default'}
+                onClick={() => handleProcessingStatClick('all')}
               />
               <StatCard
                 title="Iniciado"
                 value={statsNovos.iniciado}
                 icon={CheckCircle}
-                variant={processingFilter === 'lançado' ? 'valid' : 'default'}
-                onClick={() => setProcessingFilter('lançado')}
+                variant={processingFilters.includes('lançado') ? 'valid' : 'default'}
+                onClick={() => handleProcessingStatClick('lançado')}
               />
               <StatCard
                 title="Aguardando Cliente"
                 value={statsNovos.aguardandoCliente}
                 icon={Clock}
-                variant={processingFilter === 'aguardando_cliente' ? 'expiring' : 'default'}
-                onClick={() => setProcessingFilter('aguardando_cliente')}
+                variant={processingFilters.includes('aguardando_cliente') ? 'expiring' : 'default'}
+                onClick={() => handleProcessingStatClick('aguardando_cliente')}
               />
               <StatCard
                 title="Aguardando Órgão"
                 value={statsNovos.aguardandoOrgao}
                 icon={Building2}
-                variant={processingFilter === 'aguardando_orgao' ? 'expired' : 'default'}
-                onClick={() => setProcessingFilter('aguardando_orgao')}
+                variant={processingFilters.includes('aguardando_orgao') ? 'expired' : 'default'}
+                onClick={() => handleProcessingStatClick('aguardando_orgao')}
               />
             </div>
 
@@ -673,28 +702,28 @@ const AlvarasPage = () => {
                 title="Total"
                 value={statsFuncionamento.total}
                 icon={Building2}
-                variant={statusFilter === 'all' ? 'valid' : 'default'}
+                variant={statusFilters.length === 0 ? 'valid' : 'default'}
                 onClick={() => handleStatCardClick('all')}
               />
               <StatCard
                 title="Válidos"
                 value={statsFuncionamento.valid}
                 icon={CheckCircle}
-                variant={statusFilter === 'valid' ? 'valid' : 'default'}
+                variant={statusFilters.includes('valid') ? 'valid' : 'default'}
                 onClick={() => handleStatCardClick('valid')}
               />
               <StatCard
                 title="Vencendo"
                 value={statsFuncionamento.expiring}
                 icon={AlertTriangle}
-                variant={statusFilter === 'expiring' ? 'expiring' : 'default'}
+                variant={statusFilters.includes('expiring') ? 'expiring' : 'default'}
                 onClick={() => handleStatCardClick('expiring')}
               />
               <StatCard
                 title="Vencidos"
                 value={statsFuncionamento.expired}
                 icon={XCircle}
-                variant={statusFilter === 'expired' ? 'expired' : 'default'}
+                variant={statusFilters.includes('expired') ? 'expired' : 'default'}
                 onClick={() => handleStatCardClick('expired')}
               />
             </div>

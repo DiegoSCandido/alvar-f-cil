@@ -6,7 +6,8 @@ import { taxaAPI } from '@/lib/api-client';
 import { ClienteForm } from '@/components/ClienteForm';
 import { Cliente, ClienteFormData } from '@/types/cliente';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, UserCheck, UserX, SlidersHorizontal } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Search, Users, UserCheck, UserX, SlidersHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import o2conLogo from '@/assets/logo-o2con.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -16,7 +17,11 @@ import {
   type ClientesFilterSnapshot,
   CLIENTES_COLUNA_OPTIONS,
   CLIENTES_OPCAO_OPTIONS,
+  CLIENTES_NIVEL3_OPTIONS,
+  buildApiPair,
+  isClientSidePair,
 } from '@/lib/clientes-filters';
+import { clienteMatchesNivel3Refinamento } from '@/lib/clientes-nivel3';
 import { Badge } from '@/components/ui/badge';
 
 const ANO_ATUAL = new Date().getFullYear();
@@ -24,27 +29,45 @@ const ANO_ATUAL = new Date().getFullYear();
 const DEFAULT_FILTERS_INITIAL: ClientesFilterSnapshot = {
   activeTab: 'ativos',
   searchTerm: '',
-  filtroColuna: '',
-  filtroOpcao: '',
+  nivel1Coluna: '',
+  nivel2Opcao: '',
+  nivel3Refinamento: [],
 };
 
 const ClientesPage = () => {
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
-  const [filtroColuna, setFiltroColuna] = useState<string>('');
-  const [filtroOpcao, setFiltroOpcao] = useState<string>('');
+  const [nivel1Coluna, setNivel1Coluna] = useState('');
+  const [nivel2Opcao, setNivel2Opcao] = useState('');
+  const [nivel3Refinamento, setNivel3Refinamento] = useState<string[]>([]);
   const [taxasPaga, setTaxasPaga] = useState<TaxaPagaMap>({});
 
-  const isFiltroTaxasPaga = (filtroColuna === 'funcionamento' || filtroColuna === 'taxas') && filtroOpcao === 'paga';
+  const apiPair = useMemo(
+    () => buildApiPair({ nivel1Coluna, nivel2Opcao }),
+    [nivel1Coluna, nivel2Opcao]
+  );
+
+  const isFiltroTaxasPaga =
+    !!apiPair &&
+    (apiPair.coluna === 'funcionamento' || apiPair.coluna === 'taxas') &&
+    apiPair.opcao === 'paga';
   const isFiltroRenovacao =
-    (filtroColuna === 'sanitario' || filtroColuna === 'bombeiros' || filtroColuna === 'funcionamento') &&
-    filtroOpcao === 'renovacao';
-  const isFiltroClientSide = isFiltroTaxasPaga || isFiltroRenovacao;
-  const { clientes, addCliente, updateCliente, deleteCliente, refetch } = useClientes({
-    coluna: isFiltroClientSide ? undefined : (filtroColuna || undefined),
-    opcao: isFiltroClientSide ? undefined : (filtroOpcao || undefined),
-  });
+    !!apiPair &&
+    (apiPair.coluna === 'sanitario' ||
+      apiPair.coluna === 'bombeiros' ||
+      apiPair.coluna === 'funcionamento') &&
+    apiPair.opcao === 'renovacao';
+
+  const useClientesOpts = useMemo(() => {
+    if (!apiPair) return {};
+    if (!isClientSidePair(apiPair)) {
+      return { coluna: apiPair.coluna, opcao: apiPair.opcao };
+    }
+    return {};
+  }, [apiPair]);
+
+  const { clientes, addCliente, updateCliente, deleteCliente, refetch } = useClientes(useClientesOpts);
   const { alvaras } = useAlvaras();
-  // Atualiza a lista quando o modal global salva (ex.: inativar cliente)
+
   useEffect(() => {
     const handler = () => refetch();
     window.addEventListener('clientes-updated', handler);
@@ -76,21 +99,51 @@ const ClientesPage = () => {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filtersInitial, setFiltersInitial] = useState<ClientesFilterSnapshot>(DEFAULT_FILTERS_INITIAL);
 
-  const filtroAtivo = !!(filtroColuna && filtroOpcao);
+  const inactiveClienteIds = useMemo(() => {
+    const list = Array.isArray(clientes) ? clientes : [];
+    return new Set(list.filter((c) => c.ativo === false).map((c) => c.id));
+  }, [clientes]);
+
+  const alvarasVisiveis = useMemo(() => {
+    return (Array.isArray(alvaras) ? alvaras : []).filter((a) => !inactiveClienteIds.has(a.clienteId));
+  }, [alvaras, inactiveClienteIds]);
+
+  const rawClientes = clientes;
+
+  const filtroAtivo =
+    !!(nivel1Coluna && nivel2Opcao) || nivel3Refinamento.length > 0;
+
+  const filtroResumoLabel = useMemo(() => {
+    const parts: string[] = [];
+    if (nivel1Coluna && nivel2Opcao) {
+      const c = CLIENTES_COLUNA_OPTIONS.find((x) => x.value === nivel1Coluna)?.label;
+      const o = CLIENTES_OPCAO_OPTIONS.find((x) => x.value === nivel2Opcao)?.label;
+      parts.push(`${c ?? nivel1Coluna} → ${o ?? nivel2Opcao}`);
+    }
+    if (nivel3Refinamento.length > 0) {
+      const labels = nivel3Refinamento
+        .map((v) => CLIENTES_NIVEL3_OPTIONS.find((x) => x.value === v)?.label ?? v)
+        .join(', ');
+      parts.push(`Refino: ${labels}`);
+    }
+    return parts.join(' · ');
+  }, [nivel1Coluna, nivel2Opcao, nivel3Refinamento]);
 
   const filterBadgeCount = useMemo(() => {
     let n = 0;
     if (searchTerm.trim()) n += 1;
-    if (filtroColuna && filtroOpcao) n += 1;
+    if (nivel1Coluna && nivel2Opcao) n += 1;
+    if (nivel3Refinamento.length > 0) n += 1;
     return n;
-  }, [searchTerm, filtroColuna, filtroOpcao]);
+  }, [searchTerm, nivel1Coluna, nivel2Opcao, nivel3Refinamento]);
 
   const openFiltersModal = () => {
     setFiltersInitial({
       activeTab,
       searchTerm,
-      filtroColuna,
-      filtroOpcao,
+      nivel1Coluna,
+      nivel2Opcao,
+      nivel3Refinamento: [...nivel3Refinamento],
     });
     setFilterModalOpen(true);
   };
@@ -98,36 +151,33 @@ const ClientesPage = () => {
   const applyFiltersSnapshot = (s: ClientesFilterSnapshot) => {
     setActiveTab(s.activeTab);
     setSearchTerm(s.searchTerm);
-    setFiltroColuna(s.filtroColuna);
-    setFiltroOpcao(s.filtroOpcao);
+    setNivel1Coluna(s.nivel1Coluna);
+    setNivel2Opcao(s.nivel2Opcao);
+    setNivel3Refinamento([...s.nivel3Refinamento]);
   };
 
   const clientesPorTab = useMemo(() => {
-    const clientesList = Array.isArray(clientes) ? clientes : [];
+    const clientesList = Array.isArray(rawClientes) ? rawClientes : [];
     const ativos = clientesList.filter((c) => c.ativo !== false);
     const inativos = clientesList.filter((c) => c.ativo === false);
     return { ativos, inativos };
-  }, [clientes]);
+  }, [rawClientes]);
 
-  // Ocultar alvarás de clientes inativos
-  const alvarasVisiveis = useMemo(() => {
-    const inactiveIds = new Set(clientesPorTab.inativos.map((c) => c.id));
-    return (Array.isArray(alvaras) ? alvaras : []).filter((a) => !inactiveIds.has(a.clienteId));
-  }, [alvaras, clientesPorTab.inativos]);
-
-  const filteredClientes = useMemo(() => {
+  const clientesAfterCamadasSemBusca = useMemo(() => {
     const clientesList = activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos;
     const alvarasList = alvarasVisiveis;
     let base = clientesList;
+
     if (isFiltroTaxasPaga) {
       base = clientesList.filter((c) => taxasPaga[c.id]?.paga);
-    } else if (isFiltroRenovacao) {
+    } else if (isFiltroRenovacao && apiPair) {
       const tiposPorColuna: Record<string, string[]> = {
         sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
         bombeiros: ['Alvará de Bombeiros'],
         funcionamento: ['Alvará de Funcionamento'],
       };
-      const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
+      const col = apiPair.coluna;
+      const tipos = tiposPorColuna[col] ?? [];
       base = clientesList.filter((c) =>
         alvarasList.some(
           (a) =>
@@ -137,7 +187,33 @@ const ClientesPage = () => {
         )
       );
     }
-    return base.filter((cliente) => {
+
+    if (nivel3Refinamento.length > 0) {
+      base = base.filter((c) =>
+        clienteMatchesNivel3Refinamento(
+          c.id,
+          nivel3Refinamento,
+          alvarasList,
+          nivel1Coluna || undefined
+        )
+      );
+    }
+
+    return base;
+  }, [
+    activeTab,
+    clientesPorTab,
+    alvarasVisiveis,
+    isFiltroTaxasPaga,
+    isFiltroRenovacao,
+    taxasPaga,
+    apiPair,
+    nivel3Refinamento,
+    nivel1Coluna,
+  ]);
+
+  const filteredClientes = useMemo(() => {
+    return clientesAfterCamadasSemBusca.filter((cliente) => {
       if (!cliente || !cliente.razaoSocial) return false;
       const searchLower = searchTerm.toLowerCase();
       const razaoSocialMatch = cliente.razaoSocial?.toLowerCase().includes(searchLower) ?? false;
@@ -145,7 +221,7 @@ const ClientesPage = () => {
       const municipioMatch = cliente.municipio?.toLowerCase().includes(searchLower) ?? false;
       return razaoSocialMatch || cnpjMatch || municipioMatch;
     });
-  }, [activeTab, clientesPorTab, alvarasVisiveis, searchTerm, isFiltroTaxasPaga, isFiltroRenovacao, taxasPaga, filtroColuna]);
+  }, [clientesAfterCamadasSemBusca, searchTerm]);
 
   const handleAddCliente = async (data: ClienteFormData) => {
     try {
@@ -155,7 +231,6 @@ const ClientesPage = () => {
           title: 'Cliente atualizado',
           description: 'As alterações foram salvas com sucesso.',
         });
-        // Dispara evento para atualizar listas em outras páginas (ex.: Alvaras, Dashboard)
         window.dispatchEvent(new CustomEvent('clientes-updated'));
       } else {
         await addCliente(data);
@@ -217,7 +292,6 @@ const ClientesPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="sticky top-0 z-10 mt-14 border-b border-border bg-card sm:mt-16 lg:mt-0 lg:flex lg:h-16 lg:items-center xl:top-0">
         <div className="container flex w-full min-w-0 flex-col justify-center px-3 py-3 sm:px-4 sm:py-4 lg:h-full lg:min-h-0 lg:flex-row lg:items-center lg:px-6 lg:py-0 xl:px-8">
           <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4 lg:gap-4">
@@ -243,7 +317,6 @@ const ClientesPage = () => {
       </header>
 
       <main className="container w-full min-w-0 space-y-4 px-3 py-4 sm:px-4 sm:space-y-5 sm:py-5 lg:space-y-4 lg:px-6 lg:py-4 xl:space-y-6 xl:px-8 xl:py-8">
-        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'ativos' | 'inativos')}>
           <TabsList className="grid w-full max-w-md sm:max-w-lg grid-cols-2 text-xs sm:text-sm lg:text-base">
             <TabsTrigger value="ativos" className="gap-1 sm:gap-2">
@@ -266,47 +339,58 @@ const ClientesPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2 rounded-full border-border/80 bg-background"
-              onClick={openFiltersModal}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filtros
-              {filterBadgeCount > 0 && (
-                <Badge variant="secondary" className="rounded-full px-2">
-                  {filterBadgeCount}
-                </Badge>
-              )}
-            </Button>
-            {filterBadgeCount > 0 && (
+          <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar por nome do cliente, CNPJ ou município..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-sm sm:text-base"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => {
-                  setSearchTerm('');
-                  setFiltroColuna('');
-                  setFiltroOpcao('');
-                }}
+                variant="outline"
+                className="gap-2 rounded-full border-border/80 bg-background"
+                onClick={openFiltersModal}
               >
-                Limpar filtros
+                <SlidersHorizontal className="h-4 w-4" />
+                Filtros
+                {filterBadgeCount > 0 && (
+                  <Badge variant="secondary" className="rounded-full px-2">
+                    {filterBadgeCount}
+                  </Badge>
+                )}
               </Button>
-            )}
+              {filterBadgeCount > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setNivel1Coluna('');
+                    setNivel2Opcao('');
+                    setNivel3Refinamento([]);
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
           </div>
 
-        {/* Stats */}
         <div className="flex overflow-x-auto gap-3 sm:gap-4 lg:gap-5 pb-2">
           <div className="bg-card rounded-lg border p-3 sm:p-4 lg:p-5 flex items-center gap-3 flex-shrink-0 min-w-[200px] sm:min-w-0 sm:flex-1">
             <Users className="h-5 w-5 lg:h-6 lg:w-6 text-muted-foreground flex-shrink-0" />
             <div className="min-w-0">
               <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-                {filtroAtivo
-                  ? `Clientes (${CLIENTES_COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${CLIENTES_OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`
-                  : 'Total de Clientes'}
+                {filtroAtivo ? `Clientes (${filtroResumoLabel})` : 'Total de Clientes'}
               </p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {isFiltroTaxasPaga
@@ -318,7 +402,8 @@ const ClientesPage = () => {
                           bombeiros: ['Alvará de Bombeiros'],
                           funcionamento: ['Alvará de Funcionamento'],
                         };
-                        const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
+                        const col = apiPair?.coluna;
+                        const tipos = col ? tiposPorColuna[col] ?? [] : [];
                         return (Array.isArray(alvaras) ? alvaras : []).some(
                           (a) =>
                             a.clienteId === c.id &&
@@ -332,35 +417,13 @@ const ClientesPage = () => {
           </div>
         </div>
 
-        {/* Results info */}
         <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
           <p>
-            {filteredClientes.length} de{' '}
-            {isFiltroTaxasPaga
-              ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => taxasPaga[c.id]?.paga).length
-              : isFiltroRenovacao
-                ? (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).filter((c) => {
-                    const tiposPorColuna: Record<string, string[]> = {
-                      sanitario: ['Alvará Sanitário', 'Dispensa de Alvará Sanitário'],
-                      bombeiros: ['Alvará de Bombeiros'],
-                      funcionamento: ['Alvará de Funcionamento'],
-                    };
-                    const tipos = filtroColuna ? tiposPorColuna[filtroColuna] ?? [] : [];
-                    return (Array.isArray(alvaras) ? alvaras : []).some(
-                      (a) =>
-                        a.clienteId === c.id &&
-                        tipos.includes(a.type) &&
-                        a.processingStatus === 'renovacao'
-                    );
-                  }).length
-                : (activeTab === 'ativos' ? clientesPorTab.ativos : clientesPorTab.inativos).length}{' '}
-            clientes
-            {filtroAtivo &&
-              ` (${CLIENTES_COLUNA_OPTIONS.find((c) => c.value === filtroColuna)?.label} - ${CLIENTES_OPCAO_OPTIONS.find((o) => o.value === filtroOpcao)?.label})`}
+            {filteredClientes.length} de {clientesAfterCamadasSemBusca.length} clientes
+            {filtroAtivo && ` (${filtroResumoLabel})`}
           </p>
         </div>
 
-        {/* Table */}
         <ClienteTable
           clientes={filteredClientes}
           alvaras={alvarasVisiveis}
@@ -371,14 +434,12 @@ const ClientesPage = () => {
         </Tabs>
       </main>
 
-      {/* Form Dialog */}
       <ClienteForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSubmit={handleAddCliente}
         editingCliente={editingCliente}
       />
-      {/* Dialog de Confirmação de Exclusão de Cliente */}
       <Dialog open={!!clienteParaExcluir} onOpenChange={(open) => { if (!open) setClienteParaExcluir(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
